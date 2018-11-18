@@ -8,7 +8,7 @@
 // </auto-generated>
 //------------------------------------------------------------------------------
 
-namespace SmartHouse_Client.Properties
+namespace GUI.Properties
 {
 
 

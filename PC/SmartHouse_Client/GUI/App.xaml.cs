@@ -6,7 +6,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.Windows;
 
-namespace SmartHouse_Client
+namespace GUI
 {
     /// <summary>
     /// Логика взаимодействия для App.xaml
