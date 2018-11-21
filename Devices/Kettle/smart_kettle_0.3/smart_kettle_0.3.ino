@@ -101,7 +101,7 @@ double maxWaterAmount = 2;
 
 //\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\//\\
 // Ручное включение и выключение
-void on();
+void on(bool force = false); // Функция проверяет уровень воды перед включением. При force=true проверка игнорируется
 void off();
 
 // Отправка данных о температуре и объеме воды
@@ -238,8 +238,24 @@ void loop()
     }
 }
 
-void on()
+void on(bool force = false)
 {
+    if(!force)
+    {
+        // Проверка уровня воды
+        double water = getWaterAmount();
+        if(water < minWaterAmount)
+        {
+            Serial.println("Низкий уровень воды!");
+            return;
+        }
+        else if(water > maxWaterAmount)
+        {
+            Serial.println("Резервуар переполнен!");
+            return;
+        }
+    }
+    
     // Замыкаем реле
     digitalWrite(RELAY, LOW);
     
