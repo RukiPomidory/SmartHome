@@ -1,0 +1,40 @@
+// {type:class}
+// {direction:leftToRight}
+
+// ---- Colors ----
+[Facade {bg:#6C2E2C}]
+
+[Client {bg:#2C6A6C}]
+
+[Creator  {bg:#4A6C2C}]
+[InCreator {bg:#6A6C2C}]
+[OutCreator {bg:#6A6C2C}]
+[DesktopClient {bg:#2C6C4E}]
+[MobileClient {bg:#2C6C4E}]
+[DesktopCreator {bg:#2C6C2E}]
+[MobileCreator {bg:#2C6C2E}]
+
+[Device{bg:#9C4A2C}]
+[InDevice{bg:#7C5E2C}]
+[OutDevice{bg:#7C5E2C}]
+// --------------------
+
+
+[Creator]^[InCreator]
+[Creator]^[OutCreator]
+[Creator]^[DesktopCreator]
+[Creator]^[MobileCreator]
+
+[Device]^[InDevice]
+[Device]^[OutDevice]
+[InDevice]<-[InCreator]
+[OutDevice]<-[OutCreator]
+
+[Client]^[DesktopClient]
+[Client]^[MobileClient]
+[DesktopClient]<-[DesktopCreator]
+[MobileClient]<-[MobileCreator]
+
+[Client]->[Facade]
+[Facade]<>->[InDevice]
+[Facade]<>->[OutDevice]

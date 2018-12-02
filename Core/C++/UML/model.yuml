@@ -1,0 +1,42 @@
+// {type:class}
+// {direction:leftToRight}
+
+// -- Descriptions --
+[Facade|-instance: Facade|-Facade();+getInstance: Facade]->[Facade]
+
+[Client]
+
+[Creator|+Creator();+Create(): T]
+[note: T:class]-[Creator]
+
+[InCreator {bg:#6A6C2C}]
+[OutCreator {bg:#6A6C2C}]
+[DesktopClient {bg:#2C6C4E}]
+[MobileClient {bg:#2C6C4E}]
+[DesktopCreator {bg:#2C6C2E}]
+[MobileCreator {bg:#2C6C2E}]
+
+[Device|-timeout: int|+Device();+setTimeout()]
+[InDevice{bg:#7C5E2C}]
+[OutDevice{bg:#7C5E2C}]
+// --------------------
+
+
+[Creator]^[InCreator]
+[Creator]^[OutCreator]
+[Creator]^[DesktopCreator]
+[Creator]^[MobileCreator]
+
+[Device]^[InDevice]
+[Device]^[OutDevice]
+[InDevice]<-[InCreator]
+[OutDevice]<-[OutCreator]
+
+[Client]^[DesktopClient]
+[Client]^[MobileClient]
+[DesktopClient]<-[DesktopCreator]
+[MobileClient]<-[MobileCreator]
+
+[Client]->[Facade]
+[Facade]<>->[InDevice]
+[Facade]<>->[OutDevice]
