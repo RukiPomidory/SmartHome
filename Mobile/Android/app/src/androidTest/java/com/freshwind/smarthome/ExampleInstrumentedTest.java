@@ -1,4 +1,4 @@
-package com.unpredictable_procrastination.smarthomemobileclient;
+package com.freshwind.smarthome;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

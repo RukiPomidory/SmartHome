@@ -1,4 +1,4 @@
-package com.unpredictable_procrastination.smarthomemobileclient;
+package com.freshwind.smarthome;
 
 import org.junit.Test;
 
