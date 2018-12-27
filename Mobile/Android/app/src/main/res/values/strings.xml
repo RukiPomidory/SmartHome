@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">Smart Home Mobile Client</string>
     <string name="connect">Connect</string>
+    <string name="off">Off</string>
+    <string name="on">On</string>
+    <string name="on_off">on/off</string>
 </resources>
