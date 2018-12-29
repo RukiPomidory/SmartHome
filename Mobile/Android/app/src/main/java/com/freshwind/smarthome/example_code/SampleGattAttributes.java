@@ -1,4 +1,4 @@
-package com.freshwind.smarthome;
+package com.freshwind.smarthome.example_code;
 
 import java.util.HashMap;
 

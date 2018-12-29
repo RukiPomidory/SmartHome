@@ -1,4 +1,4 @@
-package com.freshwind.smarthome;
+package com.freshwind.smarthome.example_code;
 
 import android.app.Activity;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -22,6 +22,8 @@ import java.util.List;
 import java.util.UUID;
 
 import android.widget.SeekBar;
+
+import com.freshwind.smarthome.R;
 
 public class DeviceControlActivity extends Activity {
     private final static String TAG = DeviceControlActivity.class.getSimpleName();

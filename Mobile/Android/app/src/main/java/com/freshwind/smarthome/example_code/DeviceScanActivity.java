@@ -1,4 +1,4 @@
-package com.freshwind.smarthome;
+package com.freshwind.smarthome.example_code;
 
 import android.app.Activity;
 import android.app.ListActivity;
@@ -20,8 +20,9 @@ import android.widget.ListView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.freshwind.smarthome.R;
+
 import java.util.ArrayList;
-import java.util.UUID;
 
 /**
  * Activity for scanning and displaying available Bluetooth LE devices.
