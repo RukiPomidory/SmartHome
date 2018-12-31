@@ -15,6 +15,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.Switch;
+import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -22,9 +23,10 @@ public class MainActivity extends AppCompatActivity {
 
     Button connectBtn;
     Switch onOffSwitch;
+    TextView inData;
 
     private BluetoothLeService BLEService;
-    private boolean connected = false;
+    private boolean mConnected = false;
     private BluetoothGattCharacteristic charTX;
     private BluetoothGattCharacteristic charRX;
     //private String deviceName = "kettle";
@@ -61,12 +63,13 @@ public class MainActivity extends AppCompatActivity {
 
         connectBtn = findViewById(R.id.connectBtn);
         onOffSwitch = findViewById(R.id.onOff);
+        inData = findViewById(R.id.incomingData);
 
 
         connectBtn.setOnClickListener(new OnClickListener() {
             public void onClick(View view)
             {
-
+                BLEService.connect(deviceMAC);
             }
         });
 
@@ -75,12 +78,12 @@ public class MainActivity extends AppCompatActivity {
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
                 if(onOffSwitch.isChecked())
                 {
-                    sendData("K");
+                    sendData("K\n");
                     Log.i(TAG ,"turned off");
                 }
                 else
                 {
-                    sendData("O");
+                    sendData("O\n");
                     Log.i(TAG ,"turned on");
                 }
             }
@@ -107,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
     private void sendData(byte[] data)
     {
 
-        if(connected)
+        if(mConnected)
         {
             charTX.setValue(data);
             BLEService.writeCharacteristic(charTX);
@@ -128,18 +131,18 @@ public class MainActivity extends AppCompatActivity {
             final String action = intent.getAction();
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
                 mConnected = true;
-                updateConnectionState(R.string.connected);
                 invalidateOptionsMenu();
             } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
                 mConnected = false;
-                updateConnectionState(R.string.disconnected);
                 invalidateOptionsMenu();
-                clearUI();
             } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
                 // Show all the supported services and characteristics on the user interface.
-                displayGattServices(mBluetoothLeService.getSupportedGattServices());
+                //displayGattServices(mBluetoothLeService.getSupportedGattServices());
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
-                displayData(intent.getStringExtra(mBluetoothLeService.EXTRA_DATA));
+                //displayData(intent.getStringExtra(mBluetoothLeService.EXTRA_DATA));
+                String data = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
+                inData.setText(":" + data);
+
             }
         }
     };

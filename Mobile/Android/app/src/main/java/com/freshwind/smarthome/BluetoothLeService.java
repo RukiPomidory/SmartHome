@@ -16,8 +16,6 @@ import android.os.Binder;
 import android.os.IBinder;
 import android.util.Log;
 
-import com.freshwind.smarthome.example_code.SampleGattAttributes;
-
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
@@ -36,7 +34,8 @@ public class BluetoothLeService extends Service {
     private static final int STATE_CONNECTING = 1;
     private static final int STATE_CONNECTED = 2;
 
-
+    public static String HM_RX_TX = "0000ffe1-0000-1000-8000-00805f9b34fb";
+    public static String CLIENT_CHARACTERISTIC_CONFIG = "00002902-0000-1000-8000-00805f9b34fb";
 
 
     public final static String ACTION_GATT_CONNECTED =
@@ -50,7 +49,7 @@ public class BluetoothLeService extends Service {
     public final static String EXTRA_DATA =
             "com.example.bluetooth.le.EXTRA_DATA";
     public final static UUID UUID_HM_RX_TX =
-            UUID.fromString(SampleGattAttributes.HM_RX_TX);
+            UUID.fromString(HM_RX_TX);
 
 
     // Implements callback methods for GATT events that the app cares about.  For example,
@@ -278,7 +277,7 @@ public class BluetoothLeService extends Service {
         if (UUID_HM_RX_TX.equals(characteristic.getUuid()))
         {
             BluetoothGattDescriptor descriptor = characteristic.getDescriptor(
-                    UUID.fromString(SampleGattAttributes.CLIENT_CHARACTERISTIC_CONFIG));
+                    UUID.fromString(CLIENT_CHARACTERISTIC_CONFIG));
             descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
             mBluetoothGatt.writeDescriptor(descriptor);
         }
