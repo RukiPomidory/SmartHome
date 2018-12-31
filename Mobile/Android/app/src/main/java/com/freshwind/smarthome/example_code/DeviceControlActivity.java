@@ -23,6 +23,7 @@ import java.util.UUID;
 
 import android.widget.SeekBar;
 
+import com.freshwind.smarthome.BluetoothLeService;
 import com.freshwind.smarthome.R;
 
 public class DeviceControlActivity extends Activity {
