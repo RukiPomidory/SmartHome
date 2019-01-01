@@ -26,7 +26,7 @@ double getTemperature();
 double getWaterAmount();
 
 // Отправка значения с указанного датчика
-void sendSensorData(byte);
+void sendSensorData();
 
 // Отправка сообщения о конкретной ошибке
 void Error(byte);
@@ -61,7 +61,7 @@ void loop()
     if(temperature >= maxTemperature && heating)
     {
         off();
-        Serial.println("Вода вскипела!");
+        Serial.print("D");
     }
 
     // Обработка входящих сообщений
@@ -69,7 +69,7 @@ void loop()
     {
         // Читаем символ
         char c = Serial.read();
-        
+
         // Выбираем команду
         switch(c)
         {
@@ -78,20 +78,23 @@ void loop()
                 on();
                 break;
 
-            // Запрос значения с датчиков
-            case 'R':
-                byte id = Serial.read();
-                sendSensorData(id);
-                break;
-
             // Проверка связи
             case 'A':
-                Serial.write('A');
+                Serial.write(0x41);
                 break;
             
             // Выключение
             case 'K':
                 off();
+                break;
+
+            // Запрос значения с датчика
+            case 'R':
+                sendSensorData();
+                break;
+                
+            default:
+                Error(11);
                 break;
         }
     }
@@ -105,12 +108,12 @@ void on(bool force = false)
         double water = getWaterAmount();
         if(water < minWaterAmount)
         {
-            Serial.println("Низкий уровень воды!");
+            Error(1);
             return;
         }
         else if(water > maxWaterAmount)
         {
-            Serial.println("Резервуар переполнен!");
+            Error(2);
             return;
         }
     }
@@ -177,8 +180,10 @@ double getWaterAmount()
     return amount * K;
 }
 
-void sendSensorData(byte id)
+void sendSensorData()
 {
+    byte id = Serial.read();
+    
     int data;
     switch (id)
     {
@@ -241,5 +246,6 @@ void Error(byte id)
 {
     Serial.write('E');
     Serial.write(id);
+    delay(20);
 }
 
