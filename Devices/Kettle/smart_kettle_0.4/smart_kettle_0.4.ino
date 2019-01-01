@@ -12,6 +12,8 @@
 // Идет ли сейчас нагрев
 bool heating = false;
 
+// Контроль нескончаемого потока данных с датчиков
+bool flow = false;
 
 // -------------- Функции --------------
 // Включение и выключение нагревателя
@@ -92,7 +94,17 @@ void loop()
             case 'R':
                 sendSensorData();
                 break;
-                
+
+            // Калибровка датчиков
+            case 'C':
+                calibrate();
+                break;
+
+            // Вкл/Выкл потока информации с датчиков
+            case 'F':
+                flowHandler();
+                break;
+            
             default:
                 Error(11);
                 break;
@@ -239,6 +251,31 @@ void sendSensorData()
         buf[2] = 0;
         buf[3] = data;
         Serial.write(buf, 4);
+    }
+}
+
+void calibrate()
+{
+    off();
+    
+    Error(12);
+    
+}
+
+void flowHandler()
+{
+    byte mode = Serial.read();
+    if (1 == mode)
+    {
+        flow = true;
+    }
+    else if (0 == mode)
+    {
+        flow = false;
+    }
+    else
+    {
+        Error(10);
     }
 }
 
