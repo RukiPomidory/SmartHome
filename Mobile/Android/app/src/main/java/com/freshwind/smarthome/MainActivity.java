@@ -126,12 +126,11 @@ public class MainActivity extends AppCompatActivity {
     }
 
 
-    // Handles various events fired by the Service.
-    // ACTION_GATT_CONNECTED: connected to a GATT server.
-    // ACTION_GATT_DISCONNECTED: disconnected from a GATT server.
-    // ACTION_GATT_SERVICES_DISCOVERED: discovered GATT services.
-    // ACTION_DATA_AVAILABLE: received data from the device.  This can be a result of read
-    //                        or notification operations.
+    // Обрабатывает различные события bluetooth сервиса
+    // ACTION_GATT_CONNECTED: подключение к GATT серверу.
+    // ACTION_GATT_DISCONNECTED: отключение от GATT сервера.
+    // ACTION_GATT_SERVICES_DISCOVERED: найдены GATT службы.
+    // ACTION_DATA_AVAILABLE: Получены данные с устройства.
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
