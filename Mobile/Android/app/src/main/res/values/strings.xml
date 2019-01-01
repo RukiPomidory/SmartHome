@@ -1,7 +1,12 @@
 <resources>
-    <string name="app_name">Smart Home Mobile Client</string>
+    <string name="app_name">Smart Home</string>
     <string name="connect">Connect</string>
     <string name="off">Off</string>
     <string name="on">On</string>
     <string name="on_off">on/off</string>
+    <string name="title_search">Поиск чайников</string>
+    <string name="menu_refresh">Обновить</string>
+    <string name="menu_scan">Поиск</string>
+    <string name="menu_stop">Стоп</string>
+    <string name="unknown_device">Неизвестное Устройство</string>
 </resources>

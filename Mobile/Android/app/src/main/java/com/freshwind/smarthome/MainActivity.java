@@ -20,6 +20,7 @@ import android.widget.Switch;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Dictionary;
 import java.util.HashMap;
 import java.util.List;
 
@@ -38,6 +39,9 @@ public class MainActivity extends AppCompatActivity {
     //private String deviceName = "kettle";
     //private String deviceMAC = "64:CC:2E:B7:08:B3";
     private String deviceMAC = "A8:1B:6A:75:9E:17";
+
+    public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
+    public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
 
 
     private final ServiceConnection mServiceConnection = new ServiceConnection()
@@ -83,15 +87,15 @@ public class MainActivity extends AppCompatActivity {
         onOffSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(onOffSwitch.isChecked())
+                if(isChecked)
                 {
-                    sendData("K\n");
-                    Log.i(TAG ,"turned off");
+                    sendData("H");
+                    Log.i(TAG ,"turned on");
                 }
                 else
                 {
-                    sendData("O\n");
-                    Log.i(TAG ,"turned on");
+                    sendData("K");
+                    Log.i(TAG ,"turned off");
                 }
             }
         });
@@ -146,9 +150,8 @@ public class MainActivity extends AppCompatActivity {
                 displayGattServices(BLEService.getSupportedGattServices());
             } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
                 //displayData(intent.getStringExtra(mBluetoothLeService.EXTRA_DATA));
-                String data = intent.getStringExtra(BluetoothLeService.EXTRA_DATA);
-                inData.setText(":" + data);
-
+                final byte[] data = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
+                processInputData(data);
             }
         }
     };
@@ -193,5 +196,22 @@ public class MainActivity extends AppCompatActivity {
             charRX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
         }
 
+    }
+
+    /**
+     * Обрабатывает полученные по bluetooth данные
+     * @param data данные
+     */
+    private void processInputData(byte[] data)
+    {
+        char command = (char) data[0];
+        StringBuilder sb = new StringBuilder();
+        sb.append(command);
+        for (int i = 1; i < data.length; i++)
+        {
+            sb.append(data[i]);
+        }
+
+        inData.setText(sb.toString());
     }
 }

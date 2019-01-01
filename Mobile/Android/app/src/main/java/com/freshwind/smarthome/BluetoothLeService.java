@@ -47,7 +47,7 @@ public class BluetoothLeService extends Service {
     public final static String ACTION_DATA_AVAILABLE =
             "com.example.bluetooth.le.ACTION_DATA_AVAILABLE";
     public final static String EXTRA_DATA =
-            "com.example.bluetooth.le.EXTRA_DATA";
+            "EXTRA_DATA";
     public final static UUID UUID_HM_RX_TX =
             UUID.fromString(HM_RX_TX);
 
@@ -137,7 +137,7 @@ public class BluetoothLeService extends Service {
 
             Log.d(TAG, String.format("%s", new String(data)));
             // getting cut off when longer, need to push on new line, 0A
-            intent.putExtra(EXTRA_DATA, String.format("%s", new String(data)));
+            intent.putExtra(EXTRA_DATA, data);
 
         }
 
