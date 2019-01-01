@@ -9,12 +9,6 @@
 #define RELAY 4         // Реле
 
 
-// Вкл/выкл отправку сообщений со значениями с датчиков
-bool muted = false;
-
-// Режим отладки
-bool debug = false;
-
 // Идет ли сейчас нагрев
 bool heating = false;
 
@@ -25,14 +19,17 @@ void on(bool force = false); // Проверяет уровень воды и е
 							// При force=true проверка игнорируется
 void off();
 
-// Отправка данных о температуре и объеме воды
-void sendData(double, double);
-
 // Получение температуры
 double getTemperature();
 
 // Получение количества воды
 double getWaterAmount();
+
+// Отправка значения с указанного датчика
+void sendSensorData(byte);
+
+// Отправка сообщения о конкретной ошибке
+void Error(byte);
 //--^--^--^--^--^--^--^--^--^--^--^--^--
 
 
@@ -67,90 +64,33 @@ void loop()
         Serial.println("Вода вскипела!");
     }
 
-    // Если отправка разрешена и прошло достаточно времени, посылаем значения с датчиков
-    if(!muted && millis() - start > sendDataDelay)
-    {
-        sendData(temperature, waterAmount);
-
-        // Обновляем время
-        start = millis();
-    }
-
     // Обработка входящих сообщений
     if(Serial.available())
     {
         // Читаем символ
         char c = Serial.read();
         
-        if(c == ' ')
-        {
-            return;
-        }
-
         // Выбираем команду
         switch(c)
         {
             // Включение
-            case 'O':
+            case 'H':
                 on();
                 break;
 
-            // Увеличение временного интервала
-            case '+':
-                // Увеличиваем задержку в 2 раза
-                sendDataDelay *= 2;
-                
-                // Сообщаем об изменившейся задержке
-                Serial.println("delay time: " + String(sendDataDelay));
+            // Запрос значения с датчиков
+            case 'R':
+                byte id = Serial.read();
+                sendSensorData(id);
                 break;
 
-            // Уменьшенье временного интервала
-            case '-':
-                // Уменьшаем задержку в 2 раза
-                sendDataDelay /= 2;
-
-                // При целочисленном делении может получиться 0 - отлавливаем эту ситуацию
-                if (sendDataDelay <= 0)
-                {
-                    sendDataDelay = 1;
-                }
-
-                // Сообщаем об изменившейся задержке
-                Serial.println("delay time: " + String(sendDataDelay));
+            // Проверка связи
+            case 'A':
+                Serial.write('A');
                 break;
-
-            // Mute - выключение сообщений
-            case 'M':
-                muted = true;
-                Serial.println("muted");
-                break;
-
-            // Unmute - включение сообщений
-            case 'U':
-                muted = false;
-                Serial.println("unmuted");
-                break;
-
-            // Debug - отладка
-            case 'D':
-                // Уведомляем о включении или выключении отладки
-                if(debug)
-                {
-                    Serial.println("</debug>");
-                    Serial.println("[:>_-_-_RELEASE_-_-_<:]");
-                }
-                else
-                {
-                    Serial.println("<debug>");
-                }
-
-                // Переворачиваем флаг
-                debug = !debug;
-                break;
-                
             
-            // Если команда не распознана - возможно, произошла ошибка. Выключаем чайник.
-            default:
+            // Выключение
+            case 'K':
                 off();
                 break;
         }
@@ -207,13 +147,6 @@ double getTemperature()
 
     // Температура в градусах цельсия
     double tempC = tKelvin - 273.15;
-
-    // Датчик у нас инертный, так что придется отсекать слишком большие значения,
-    // чтобы температура воды не была больше температуры кипения
-    if(tempC > 100 && !debug)
-    {
-        tempC = 100;
-    }
             
     //Возвращаем температуру в градусах цельсия
     return tempC;
@@ -234,8 +167,8 @@ double getWaterAmount()
     // Берем среднее арифметическое
     double amount = (amountF + amountR + amountL) / 3;
 
-    // Убираем отрицательные значения, если выключен режим отладки
-    if(amount < 0 && !debug)
+    // Убираем отрицательные значения
+    if(amount < 0)
     {
         amount = 0;
     }
@@ -244,30 +177,69 @@ double getWaterAmount()
     return amount * K;
 }
 
-void sendData(double tempValue, double waterValue)
+void sendSensorData(byte id)
 {
-    // Получаем строковые представления значений с датчиков
-    String temperature = String(tempValue, 1);
-    String waterAmount = String(waterValue, 1);
-
-    // Строим итоговую строку
-    String data = "\nТемпература: " + temperature + " °C\n" +
-            "Количество: " + waterAmount + "л";
-    
-    // Отправляем
-    Serial.println(data);
-
-    // Если режим отладки выключен, выходим
-    if(!debug)
+    int data;
+    switch (id)
     {
-        return;
+        // Состояние нагревателя
+        case 0:
+            data = (int) heating;
+            break;
+
+        // Датчики давления
+        case 1:
+            data = pressureSensorF.getValue();
+            break;
+        case 2:
+            data = pressureSensorL.getValue();
+            break;
+        case 3:
+            data = pressureSensorR.getValue();
+            break;
+
+        // Термистор
+        case 4:
+            data = temperatureSensor.getValue();
+            break;
+
+        // Уровень воды
+        case 5:
+            data = getWaterAmount() * 10;
+            break;
+
+        // Температура
+        case 6:
+            data = getTemperature() * 10;
+            break;
+
+        default:
+            Error(10);
+            return;
     }
 
-    String debugData =  "\nF: " + String(pressureSensorF.getValue()) + 
-                        "\nL: " + String(pressureSensorL.getValue()) + 
-                        "\nR: " + String(pressureSensorR.getValue()) +
-                        "\nTEMP: " + String(temperatureSensor.getValue());
+    byte buf[5];
+    buf[0] = 'T';
+    buf[1] = id;
+    
+    if (data > 256)
+    {
+        buf[2] = 1;
+        buf[3] = data / 256;
+        buf[4] = data % 256;
+        Serial.write(buf, 5);
+    }
+    else
+    {
+        buf[2] = 0;
+        buf[3] = data;
+        Serial.write(buf, 4);
+    }
+}
 
-    Serial.println(debugData);
+void Error(byte id)
+{
+    Serial.write('E');
+    Serial.write(id);
 }
 
