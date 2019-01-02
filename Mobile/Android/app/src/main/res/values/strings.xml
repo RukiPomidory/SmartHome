@@ -12,4 +12,5 @@
     <string name="title_devices">Поиск чайников</string>
     <string name="ble_not_supported">BLE не поддерживается</string>
     <string name="error_bluetooth_not_supported">bluetooth не поддерживается</string>
+    <string name="launch">Запуск</string>
 </resources>

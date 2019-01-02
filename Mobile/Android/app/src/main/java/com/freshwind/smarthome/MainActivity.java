@@ -28,9 +28,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "bluetooth1";
 
-    Button connectBtn;
-    Switch onOffSwitch;
-    TextView inData;
+//    Button connectBtn;
+//    Switch onOffSwitch;
+//    TextView inData;
 
     private BluetoothLeService BLEService;
     private boolean mConnected = false;
@@ -72,33 +72,33 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-        connectBtn = findViewById(R.id.connectBtn);
-        onOffSwitch = findViewById(R.id.onOff);
-        inData = findViewById(R.id.incomingData);
-
-
-        connectBtn.setOnClickListener(new OnClickListener() {
-            public void onClick(View view)
-            {
-                BLEService.connect(deviceMAC);
-            }
-        });
-
-        onOffSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-            @Override
-            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-                if(isChecked)
-                {
-                    sendData("H");
-                    Log.i(TAG ,"turned on");
-                }
-                else
-                {
-                    sendData("K");
-                    Log.i(TAG ,"turned off");
-                }
-            }
-        });
+//        connectBtn = findViewById(R.id.connectBtn);
+//        onOffSwitch = findViewById(R.id.onOff);
+//        inData = findViewById(R.id.incomingData);
+//
+//
+//        connectBtn.setOnClickListener(new OnClickListener() {
+//            public void onClick(View view)
+//            {
+//                BLEService.connect(deviceMAC);
+//            }
+//        });
+//
+//        onOffSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+//            @Override
+//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
+//                if(isChecked)
+//                {
+//                    sendData("H");
+//                    Log.i(TAG ,"turned on");
+//                }
+//                else
+//                {
+//                    sendData("K");
+//                    Log.i(TAG ,"turned off");
+//                }
+//            }
+//        });
 
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
@@ -212,6 +212,6 @@ public class MainActivity extends AppCompatActivity {
             sb.append(data[i]);
         }
 
-        inData.setText(sb.toString());
+        //inData.setText(sb.toString());
     }
 }
