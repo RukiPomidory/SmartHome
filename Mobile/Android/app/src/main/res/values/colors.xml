@@ -1,6 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <color name="primary_900">#02402d</color>
+    <color name="primary_800">#034e37</color>
+    <color name="primary_700">#037854</color>
     <color name="primary_500">#07a978</color>
+    <color name="primary_300">#73f1cc</color>
+    <color name="primary_200">#b6ffea</color>
+    <color name="primary_100">#d0faee</color>
 
     <color name="neutral_900">#212934</color>
     <color name="neutral_700">#778494</color>
@@ -8,5 +14,21 @@
     <color name="neutral_300">#d4dbe1</color>
     <color name="neutral_100">#f7f8f9</color>
 
+    <color name="redAccent_900">#611818</color>
+    <color name="redAccent_700">#a11f1f</color>
     <color name="redAccent_500">#db3030</color>
+    <color name="redAccent_300">#e98282</color>
+    <color name="redAccent_100">#f5d6d6</color>
+
+    <color name="yellowAccent_900">#5c4813</color>
+    <color name="yellowAccent_700">#b38e2e</color>
+    <color name="yellowAccent_500">#f3c964</color>
+    <color name="yellowAccent_300">#edda9e</color>
+    <color name="yellowAccent_100">#fdfbf3</color>
+
+    <color name="cyanAccent_900">#124544</color>
+    <color name="cyanAccent_700">#1d6962</color>
+    <color name="cyanAccent_500">#3cada2</color>
+    <color name="cyanAccent_300">#88e6e2</color>
+    <color name="cyanAccent_100">#e6fdfd</color>
 </resources>

@@ -4,10 +4,24 @@
     <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
         <!-- Customize your theme here. -->
 
+        <item name="colorPrimary">@color/primary_500</item>
+        <item name="colorPrimaryDark">@color/primary_900</item>
+        <item name="colorAccent">@color/primary_700</item>
+        <item name="android:colorBackground">@color/neutral_100</item>
+        <item name="android:navigationBarColor">@color/primary_800</item>
+        <item name="android:windowBackground">@color/neutral_300</item>
+        <item name="android:colorForeground">@color/neutral_500</item>
+        <item name="android:textColorPrimaryInverse">@color/primary_300</item>
+        <item name="android:textColorPrimary">@color/neutral_900</item>
+        <item name="android:textColorSecondary">@color/neutral_700</item>
+        <item name="android:textColorSecondaryInverse">@color/neutral_500</item>
+        <item name="android:statusBarColor">@color/primary_700</item>
     </style>
 
     <style name="LaunchButton">
         <item name="android:background">@drawable/launch_button</item>
     </style>
+
+    <style name="Theme" parent="AppTheme" />
 
 </resources>
