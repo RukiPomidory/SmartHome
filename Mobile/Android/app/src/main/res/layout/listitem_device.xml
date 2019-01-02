@@ -10,17 +10,17 @@
         android:id="@+id/device_name"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/primary_100"
+        android:background="@color/cyanAccent_100"
         android:text="Device Name"
-        android:textColor="@color/primary_700"
+        android:textColor="@color/cyanAccent_900"
         android:textSize="24sp" />
 
     <TextView
         android:id="@+id/device_address"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/primary_200"
+        android:background="@color/cyanAccent_500"
         android:text="40:A8:46:00:9E:C5"
-        android:textColor="@color/primary_900"
+        android:textColor="@color/cyanAccent_100"
         android:textSize="12sp" />
 </LinearLayout>
