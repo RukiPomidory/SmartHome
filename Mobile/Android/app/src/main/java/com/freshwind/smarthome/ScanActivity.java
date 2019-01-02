@@ -8,6 +8,7 @@ import android.bluetooth.le.BluetoothLeScanner;
 import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanResult;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -78,6 +79,23 @@ public class ScanActivity extends AppCompatActivity
         ArrayList<BluetoothDevice> list = new ArrayList<>();
         bleDevicesAdapter = new BleDevicesAdapter(list);
         recyclerView.setAdapter(bleDevicesAdapter);
+
+        recyclerView.addOnItemTouchListener(new RecyclerClickListener(this) {
+            @Override
+            public void onItemClick(RecyclerView recyclerView, View itemView, int position)
+            {
+                final Intent intent = new Intent(ScanActivity.this, MainActivity.class);
+                TextView textName = itemView.findViewById(R.id.device_name);
+                TextView textAddress = itemView.findViewById(R.id.device_address);
+                intent.putExtra(MainActivity.EXTRAS_DEVICE_NAME, textName.getText());
+                intent.putExtra(MainActivity.EXTRAS_DEVICE_ADDRESS, textAddress.getText());
+                if (isScanning) {
+                    bleScanner.stopScan(scanCallback);
+                    isScanning = false;
+                }
+                startActivity(intent);
+            }
+        });
     }
 
     @Override
@@ -162,7 +180,7 @@ public class ScanActivity extends AppCompatActivity
         invalidateOptionsMenu();
     }
 
-    private class BleDevicesAdapter extends RecyclerView.Adapter<BleDevicesAdapter.BleDeviceViewHolder> {
+    private class BleDevicesAdapter extends RecyclerView.Adapter<BleDevicesAdapter.BleDeviceViewHolder>{
         private ArrayList<BluetoothDevice> bleDevices;
         private LayoutInflater inflater;
 
@@ -194,6 +212,8 @@ public class ScanActivity extends AppCompatActivity
             bleDevices = devices;
             inflater = ScanActivity.this.getLayoutInflater();
         }
+
+
 
         @Override
         public BleDeviceViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
