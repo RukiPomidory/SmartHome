@@ -13,4 +13,6 @@
     <string name="ble_not_supported">BLE не поддерживается</string>
     <string name="error_bluetooth_not_supported">bluetooth не поддерживается</string>
     <string name="launch">Запуск</string>
+    <string name="exampleMAC">40:A8:46:00:9E:C6</string>
+    <string name="exampleName">Device Name</string>
 </resources>

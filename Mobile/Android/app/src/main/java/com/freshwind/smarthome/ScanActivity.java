@@ -56,6 +56,16 @@ public class ScanActivity extends AppCompatActivity
         }
     };
 
+    private Runnable cancelSearching = new Runnable() {
+        @Override
+        public void run()
+        {
+            isScanning = false;
+            bleScanner.stopScan(scanCallback);
+            invalidateOptionsMenu();
+        }
+    };
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState)
@@ -125,6 +135,7 @@ public class ScanActivity extends AppCompatActivity
         {
             case R.id.menu_scan:
                 bleDevicesAdapter.clear();
+                bleDevicesAdapter.notifyDataSetChanged();
                 scan(true);
                 break;
             case R.id.menu_stop:
@@ -158,21 +169,15 @@ public class ScanActivity extends AppCompatActivity
 
         if(enable)
         {
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run()
-                {
-                    isScanning = false;
-                    bleScanner.stopScan(scanCallback);
-                    invalidateOptionsMenu();
-                }
-            }, SCAN_PERIOD);
+            handler.postDelayed(cancelSearching, SCAN_PERIOD);
 
             isScanning = true;
             bleScanner.startScan(scanCallback);
         }
         else
         {
+            handler.removeCallbacks(cancelSearching);
+
             isScanning = false;
             bleScanner.stopScan(scanCallback);
         }
