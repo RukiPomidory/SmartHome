@@ -20,7 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/cyanAccent_500"
-        android:text="40:A8:46:00:9E:C5"
+        android:text="40:A8:46:00:9E:C6"
         android:textColor="@color/cyanAccent_100"
         android:textSize="12sp" />
 </LinearLayout>
