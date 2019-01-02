@@ -111,7 +111,7 @@ public class ScanActivity extends AppCompatActivity
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
-        getMenuInflater().inflate(R.menu.main, menu);
+        getMenuInflater().inflate(R.menu.scan_menu, menu);
         if (!isScanning)
         {
             menu.findItem(R.id.menu_stop).setVisible(false);
@@ -237,7 +237,16 @@ public class ScanActivity extends AppCompatActivity
             TextView nameTextView = view.findViewById(R.id.device_name);
             TextView addressTextView = view.findViewById(R.id.device_address);
 
-            nameTextView.setText(bleDevices.get(position).getName());
+            String name = bleDevices.get(position).getName();
+            if (null != name && name.length() > 0)
+            {
+                nameTextView.setText(name);
+            }
+            else
+            {
+                nameTextView.setText(R.string.unknown_device);
+            }
+
             addressTextView.setText(bleDevices.get(position).getAddress());
         }
 

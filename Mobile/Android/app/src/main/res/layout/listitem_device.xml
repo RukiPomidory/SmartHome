@@ -4,12 +4,12 @@
     android:layout_height="wrap_content"
     android:background="@color/neutral_500"
     android:orientation="vertical"
-    android:paddingBottom="2dp">
+    android:paddingBottom="3dp">
 
     <TextView
         android:id="@+id/device_name"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
+        android:layout_height="40dp"
         android:background="@color/cyanAccent_100"
         android:text="@string/exampleName"
         android:textColor="@color/cyanAccent_900"
