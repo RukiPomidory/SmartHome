@@ -42,7 +42,7 @@ public class SearchActivity extends ListActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setActionBar(new Toolbar(this));
+
         getActionBar().setTitle(R.string.title_devices);
         mHandler = new Handler();
 
