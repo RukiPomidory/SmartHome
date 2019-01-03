@@ -16,13 +16,15 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        app:progressbarColor="@color/neutral_700"
         app:layout_constraintBottom_toTopOf="@+id/launchBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:progress="45"
-        app:progressBarThickness="10dp" />
+        app:progress="43"
+        app:progressBarThickness="10dp"
+        app:frontColor="@color/primary_500"
+        app:backColor="@color/neutral_500"
+        app:innerColor="@color/neutral_300"/>
 
     <Button
         android:id="@+id/launchBtn"

@@ -23,10 +23,11 @@ public class CircleProgressBar extends View
      * Start the progress at 12 o'clock
      */
     private int startAngle = -90;
-    private int color = Color.DKGRAY;
+    private int foregroundColor = Color.DKGRAY;
+    private int backgroundColor = Color.GRAY;
+    private int innerColor = Color.LTGRAY;
     private RectF rectF;
-    private Paint backgroundPaint;
-    private Paint foregroundPaint;
+    private Paint paint;
 
 
     public CircleProgressBar(Context context, @Nullable AttributeSet attrs)
@@ -46,22 +47,17 @@ public class CircleProgressBar extends View
         try {
             strokeWidth = typedArray.getDimension(R.styleable.CircleProgressBar_progressBarThickness, strokeWidth);
             progress = typedArray.getFloat(R.styleable.CircleProgressBar_progress, progress);
-            color = typedArray.getInt(R.styleable.CircleProgressBar_progressbarColor, color);
+            foregroundColor = typedArray.getInt(R.styleable.CircleProgressBar_frontColor, foregroundColor);
+            backgroundColor = typedArray.getInt(R.styleable.CircleProgressBar_backColor, backgroundColor);
+            innerColor = typedArray.getInt(R.styleable.CircleProgressBar_innerColor, innerColor);
             min = typedArray.getInt(R.styleable.CircleProgressBar_min, min);
             max = typedArray.getInt(R.styleable.CircleProgressBar_max, max);
         } finally {
             typedArray.recycle();
         }
 
-        backgroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        backgroundPaint.setColor(adjustAlpha(color, 0.3f));
-        backgroundPaint.setStyle(Paint.Style.STROKE);
-        backgroundPaint.setStrokeWidth(strokeWidth);
-
-        foregroundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        foregroundPaint.setColor(color);
-        foregroundPaint.setStyle(Paint.Style.STROKE);
-        foregroundPaint.setStrokeWidth(strokeWidth);
+        paint = new Paint(Paint.ANTI_ALIAS_FLAG);
+        paint.setStrokeWidth(strokeWidth);
     }
 
     private int adjustAlpha(int color, float factor) {
@@ -77,18 +73,29 @@ public class CircleProgressBar extends View
 
         final int height = getDefaultSize(getSuggestedMinimumHeight(), heightMeasureSpec);
         final int width = getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec);
-        final int min = Math.min(width, height);
-        setMeasuredDimension(min, min);
-        rectF.set(0 + strokeWidth / 2, 0 + strokeWidth / 2, min - strokeWidth / 2, min - strokeWidth / 2);
+        setMeasuredDimension(width, height);
+        rectF.set(0 + strokeWidth / 2, 0 + strokeWidth / 2, width - strokeWidth / 2, height - strokeWidth / 2);
     }
 
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
-        canvas.drawOval(rectF, backgroundPaint);
+        paint.setStyle(Paint.Style.FILL);
+        paint.setColor(innerColor);
+        canvas.drawOval(rectF, paint);
+
+        paint.setStyle(Paint.Style.STROKE);
+        paint.setColor(backgroundColor);
+        canvas.drawOval(rectF, paint);
+
+        paint.setColor(foregroundColor);
         float angle = 360 * progress / max;
-        canvas.drawArc(rectF, startAngle, angle, false, foregroundPaint);
-        //canvas.drawLine(0, 0, rectF.width() / 2,rectF.height() / 2,foregroundPaint);
+        canvas.drawArc(rectF, startAngle, angle, false, paint);
+
+
+        float dx = (float) Math.cos(Math.toRadians(angle - 90)) * (rectF.right + strokeWidth / 2) / 2;
+        float dy = (float) Math.sin(Math.toRadians(angle - 90)) * (rectF.bottom + strokeWidth / 2) / 2;
+        canvas.drawLine(rectF.centerX() + dx/2, rectF.centerY() + dy/2, rectF.centerX() + dx, rectF.centerY() + dy, paint);
     }
 }

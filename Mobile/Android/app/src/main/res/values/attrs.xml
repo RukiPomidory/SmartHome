@@ -4,7 +4,12 @@
         <attr name="min" format="integer" />
         <attr name="max" format="integer" />
         <attr name="progress" format="integer" />
-        <attr name="progressbarColor" format="color" />
+        <attr name="frontColor" format="color" />
+        <attr name="backColor" format="color" />
+        <attr name="innerColor" format="color" />
         <attr name="progressBarThickness" format="dimension" />
+        <attr name="mainText" format="string" />
+        <attr name="topText" format="string" />
+        <attr name="bottomText" format="string" />
     </declare-styleable>
 </resources>
