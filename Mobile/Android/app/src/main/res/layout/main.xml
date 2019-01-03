@@ -50,8 +50,10 @@
         app:layout_constraintVertical_bias="0.802"
         app:mainText="Вода"
         app:mainTextSize="40sp"
+        app:bottomText="1.5 L"
+        app:bottomTextSize="15sp"
         app:max="20"
-        app:progress="68"
+        app:progress="15"
         app:progressBarThickness="5dp" />
 
     <Button

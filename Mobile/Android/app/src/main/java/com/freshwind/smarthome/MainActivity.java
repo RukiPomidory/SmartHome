@@ -10,6 +10,7 @@ import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Handler;
 import android.os.IBinder;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
@@ -17,6 +18,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.NumberPicker;
+import android.widget.Toast;
 
 import java.util.List;
 
@@ -28,6 +30,8 @@ public class MainActivity extends AppCompatActivity {
     private CircleProgressBar tempProgressBar;
     private CircleProgressBar waterProgressBar;
     private Handler handler;
+    private Runnable getTemperature;
+    private Runnable getWaterLevel;
 
     private BluetoothLeService BLEService;
     private boolean mConnected = false;
@@ -72,6 +76,16 @@ public class MainActivity extends AppCompatActivity {
             assert launchBtn != null;
             launchBtn.setOnClickListener(coldOnClickListener);
             launchBtn.setText(R.string.turn_off);
+
+            Snackbar
+                    .make(view, "Нагреватель запущен, мой фюрер!", Snackbar.LENGTH_SHORT)
+                    .setAction("Согласовать", new OnClickListener() {
+                        @Override
+                        public void onClick(View v) {
+                            Toast.makeText(getBaseContext(), "Согласовано!", Toast.LENGTH_SHORT).show();
+                        }
+                    })
+                    .show();
         }
     };
 
@@ -121,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
 
         handler = new Handler();
         final int delayMillis = 500;
-        Runnable getTemperature = new Runnable() {
+        getTemperature = new Runnable() {
             @Override
             public void run()
             {
@@ -130,7 +144,7 @@ public class MainActivity extends AppCompatActivity {
             }
         };
 
-        Runnable getWaterLevel = new Runnable() {
+        getWaterLevel = new Runnable() {
             @Override
             public void run()
             {
@@ -152,6 +166,8 @@ public class MainActivity extends AppCompatActivity {
         super.onDestroy();
         unbindService(mServiceConnection);
         BLEService = null;
+        handler.removeCallbacks(getTemperature);
+        handler.removeCallbacks(getWaterLevel);
     }
 
     private void sendData(String message)
@@ -173,7 +189,7 @@ public class MainActivity extends AppCompatActivity {
         }
         catch (Exception exc)
         {
-            Log.d(TAG, exc.getMessage());
+            Log.d(TAG, "dataSend failed");
         }
     }
 

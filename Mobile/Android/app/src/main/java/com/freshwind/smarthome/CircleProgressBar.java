@@ -30,6 +30,8 @@ public class CircleProgressBar extends View
     private float mainTextSize = 60;
     private float topTextSize = 20;
     private float bottomTextSize = 20;
+    private float topVerticalOffset = 1.5f;
+    private float bottomVerticalOffset = 1.5f;
     private RectF rectF;
     private Paint paint;
 
