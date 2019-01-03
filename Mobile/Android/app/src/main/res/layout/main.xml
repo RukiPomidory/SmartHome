@@ -8,7 +8,7 @@
     android:background="@color/neutral_100">
 
     <com.freshwind.smarthome.CircleProgressBar
-        android:id="@+id/custom_progressBar"
+        android:id="@+id/temperatureProgressBar"
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:layout_margin="10dp"
@@ -16,17 +16,43 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        app:backColor="@color/neutral_500"
+        app:bottomText="Градусы цельсия"
+        app:frontColor="@color/primary_500"
+        app:innerColor="@color/neutral_300"
         app:layout_constraintBottom_toTopOf="@+id/launchBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:progress="43"
-        app:progressBarThickness="10dp"
-        app:frontColor="@color/primary_500"
-        app:backColor="@color/neutral_500"
-        app:innerColor="@color/neutral_300"
+        app:layout_constraintVertical_bias="0.391"
         app:mainText="100°"
-        app:textSize="72sp"/>
+        app:mainTextSize="72sp"
+        app:progress="43"
+        app:progressBarThickness="5dp" />
+
+    <com.freshwind.smarthome.CircleProgressBar
+        android:id="@+id/waterProgressBar"
+        android:layout_width="120dp"
+        android:layout_height="120dp"
+        android:layout_margin="10dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        app:backColor="@color/neutral_500"
+        app:frontColor="@color/cyanAccent_500"
+        app:innerColor="@color/neutral_300"
+        app:layout_constraintBottom_toTopOf="@+id/launchBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="1.0"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.802"
+        app:mainText="Вода"
+        app:mainTextSize="40sp"
+        app:max="20"
+        app:progress="68"
+        app:progressBarThickness="5dp" />
 
     <Button
         android:id="@+id/launchBtn"
@@ -34,13 +60,11 @@
         android:layout_width="198dp"
         android:layout_height="80dp"
         android:layout_marginBottom="16dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
+        android:layout_marginEnd="48dp"
         android:text="@string/launch"
         android:textColor="@color/neutral_100"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <ImageButton
         android:id="@+id/timeManagerBtn"
@@ -51,10 +75,10 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
+        android:contentDescription="@string/timemanager"
         android:src="@drawable/ic_alarm"
         app:layout_constraintBottom_toBottomOf="@+id/launchBtn"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@+id/launchBtn"
-        app:layout_constraintTop_toTopOf="@+id/launchBtn"
-        android:contentDescription="@string/timemanager" />
+        app:layout_constraintEnd_toStartOf="@+id/launchBtn"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/launchBtn" />
 </android.support.constraint.ConstraintLayout>

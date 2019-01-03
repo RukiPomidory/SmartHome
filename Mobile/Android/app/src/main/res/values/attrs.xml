@@ -8,9 +8,12 @@
         <attr name="backColor" format="color" />
         <attr name="innerColor" format="color" />
         <attr name="progressBarThickness" format="dimension" />
-        <attr name="textSize" format="dimension" />
+        <attr name="mainTextSize" format="dimension" />
+        <attr name="topTextSize" format="dimension" />
+        <attr name="bottomTextSize" format="dimension" />
         <attr name="mainText" format="string" />
         <attr name="topText" format="string" />
         <attr name="bottomText" format="string" />
+
     </declare-styleable>
 </resources>

@@ -27,7 +27,9 @@ public class CircleProgressBar extends View
     private int foregroundColor = Color.DKGRAY;
     private int backgroundColor = Color.GRAY;
     private int innerColor = Color.LTGRAY;
-    private float textSize = 20;
+    private float mainTextSize = 60;
+    private float topTextSize = 20;
+    private float bottomTextSize = 20;
     private RectF rectF;
     private Paint paint;
 
@@ -54,7 +56,9 @@ public class CircleProgressBar extends View
         try {
             strokeWidth = typedArray.getDimension(R.styleable.CircleProgressBar_progressBarThickness, strokeWidth);
             progress = typedArray.getInt(R.styleable.CircleProgressBar_progress, progress);
-            textSize = typedArray.getDimension(R.styleable.CircleProgressBar_textSize, textSize);
+            mainTextSize = typedArray.getDimension(R.styleable.CircleProgressBar_mainTextSize, mainTextSize);
+            topTextSize = typedArray.getDimension(R.styleable.CircleProgressBar_topTextSize, topTextSize);
+            bottomTextSize = typedArray.getDimension(R.styleable.CircleProgressBar_bottomTextSize, bottomTextSize);
             foregroundColor = typedArray.getInt(R.styleable.CircleProgressBar_frontColor, foregroundColor);
             backgroundColor = typedArray.getInt(R.styleable.CircleProgressBar_backColor, backgroundColor);
             innerColor = typedArray.getInt(R.styleable.CircleProgressBar_innerColor, innerColor);
@@ -108,27 +112,31 @@ public class CircleProgressBar extends View
         canvas.drawArc(rectF, startAngle, angle, false, paint);
 
 
-        float dx = (float) Math.cos(Math.toRadians(angle - 90)) * (rectF.right + strokeWidth / 2) / 2;
-        float dy = (float) Math.sin(Math.toRadians(angle - 90)) * (rectF.bottom + strokeWidth / 2) / 2;
+        //float dx = (float) Math.cos(Math.toRadians(angle - 90)) * (rectF.right + strokeWidth / 2) / 2;
+        //float dy = (float) Math.sin(Math.toRadians(angle - 90)) * (rectF.bottom + strokeWidth / 2) / 2;
         //canvas.drawLine(rectF.centerX() + dx/2, rectF.centerY() + dy/2, rectF.centerX() + dx, rectF.centerY() + dy, paint);
 
         paint.setTextAlign(Paint.Align.CENTER);
         paint.setStyle(Paint.Style.FILL);
-        paint.setTextSize(textSize);
 
         if (mainText != null)
         {
-            canvas.drawText(mainText, centerX, centerY + textSize / 3, paint);
+            paint.setTextSize(mainTextSize);
+            canvas.drawText(mainText, centerX, centerY + mainTextSize / 3, paint);
         }
 
+        paint.setColor(backgroundColor);
+        paint.setTextSize(topTextSize);
         if (topText != null)
         {
-            canvas.drawText(topText, centerX, centerY - 70, paint);
+            paint.setTextSize(topTextSize);
+            canvas.drawText(topText, centerX, centerY * 0.5f, paint);
         }
 
         if (bottomText != null)
         {
-            canvas.drawText(bottomText, centerX, centerY + 70, paint);
+            paint.setTextSize(bottomTextSize);
+            canvas.drawText(bottomText, centerX, centerY * 1.5f, paint);
         }
     }
 

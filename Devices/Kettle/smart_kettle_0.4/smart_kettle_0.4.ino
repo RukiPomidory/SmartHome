@@ -60,7 +60,7 @@ void loop()
     delay(50);
 
     // Отключаемся при достижении максимальной температуры
-    if(temperature >= maxTemperature && heating)
+    if(round(temperature) >= maxTemperature && heating)
     {
         off();
         Serial.print("D");
@@ -227,7 +227,7 @@ void sendSensorData()
 
         // Температура
         case 6:
-            data = getTemperature() * 10;
+            data = round(getTemperature());
             break;
 
         default:

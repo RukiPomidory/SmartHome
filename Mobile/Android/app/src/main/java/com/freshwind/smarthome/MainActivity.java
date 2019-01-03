@@ -16,14 +16,8 @@ import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
-import android.widget.CompoundButton;
 import android.widget.NumberPicker;
-import android.widget.Switch;
-import android.widget.TextView;
 
-import java.util.ArrayList;
-import java.util.Dictionary;
-import java.util.HashMap;
 import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
@@ -31,16 +25,17 @@ public class MainActivity extends AppCompatActivity {
     private static final String TAG = "bluetooth1";
 
     private Button launchBtn;
-    private CircleProgressBar progressBar;
+    private CircleProgressBar tempProgressBar;
+    private CircleProgressBar waterProgressBar;
     private Handler handler;
 
     private BluetoothLeService BLEService;
     private boolean mConnected = false;
     private BluetoothGattCharacteristic charTX;
     private BluetoothGattCharacteristic charRX;
-    //private String deviceName = "kettle";
-    //private String deviceMAC = "64:CC:2E:B7:08:B3";
-    private String deviceMAC = "A8:1B:6A:75:9E:17";
+    private String deviceName;
+    private String deviceMAC;
+    //private String deviceMAC = "A8:1B:6A:75:9E:17";
 
     public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
     public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
@@ -92,21 +87,35 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
+        final Intent intent = getIntent();
+        deviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
+        deviceMAC = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
+
         launchBtn = findViewById(R.id.launchBtn);
         launchBtn.setOnClickListener(heatOnClickListener);
 
-        progressBar = findViewById(R.id.custom_progressBar);
-        progressBar.setOnValueChangeListener(new NumberPicker.OnValueChangeListener() {
+        tempProgressBar = findViewById(R.id.temperatureProgressBar);
+        tempProgressBar.setOnValueChangeListener(new NumberPicker.OnValueChangeListener() {
             @Override
             public void onValueChange(NumberPicker picker, int oldVal, int newVal)
             {
-                progressBar.mainText = String.valueOf(newVal) + '°';
+                tempProgressBar.mainText = String.valueOf(newVal) + '°';
+            }
+        });
+
+        waterProgressBar = findViewById(R.id.waterProgressBar);
+        waterProgressBar.setOnValueChangeListener(new NumberPicker.OnValueChangeListener() {
+            @Override
+            public void onValueChange(NumberPicker picker, int oldVal, int newVal)
+            {
+                waterProgressBar.bottomText = String.valueOf(newVal / 10.0) + " л";
             }
         });
 
@@ -116,12 +125,23 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void run()
             {
-                sendData(new byte[] {0x52 , 4});
+                sendData(new byte[] {0x52, 6});
+                handler.postDelayed(this, delayMillis);
+            }
+        };
+
+        Runnable getWaterLevel = new Runnable() {
+            @Override
+            public void run()
+            {
+                sendData(new byte[] {0x52, 5});
                 handler.postDelayed(this, delayMillis);
             }
         };
 
         handler.postDelayed(getTemperature, delayMillis);
+        handler.postDelayed(getWaterLevel, delayMillis);
+
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
@@ -248,12 +268,18 @@ public class MainActivity extends AppCompatActivity {
                     throw new AssertionError();
                 }
 
-                if (4 == data[1])
+                if (6 == data[1])
                 {
                     byte temperature = data[3];
-                    progressBar.setProgress(temperature);
+                    tempProgressBar.setProgress(temperature);
+                }
+                else if (5 == data[1])
+                {
+                    byte waterLevel = data[3];
+                    waterProgressBar.setProgress(waterLevel);
                 }
                 break;
+
         }
     }
 }
