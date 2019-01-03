@@ -9,6 +9,7 @@ import android.graphics.RectF;
 import android.support.annotation.Nullable;
 import android.util.AttributeSet;
 import android.view.View;
+import android.widget.NumberPicker;
 
 public class CircleProgressBar extends View
 {
@@ -16,7 +17,7 @@ public class CircleProgressBar extends View
      * ProgressBar's line thickness
      */
     private float strokeWidth = 4;
-    private float progress = 0;
+    private int progress = 0;
     private int min = 0;
     private int max = 100;
     /**
@@ -27,12 +28,14 @@ public class CircleProgressBar extends View
     private int backgroundColor = Color.GRAY;
     private int innerColor = Color.LTGRAY;
     private float textSize = 20;
-    private String mainText;
-    private String topText;
-    private String bottomText;
     private RectF rectF;
     private Paint paint;
 
+    private NumberPicker.OnValueChangeListener valueChangeListener;
+
+    public String mainText;
+    public String topText;
+    public String bottomText;
 
     public CircleProgressBar(Context context, @Nullable AttributeSet attrs)
     {
@@ -50,7 +53,7 @@ public class CircleProgressBar extends View
         //Reading values from the XML layout
         try {
             strokeWidth = typedArray.getDimension(R.styleable.CircleProgressBar_progressBarThickness, strokeWidth);
-            progress = typedArray.getFloat(R.styleable.CircleProgressBar_progress, progress);
+            progress = typedArray.getInt(R.styleable.CircleProgressBar_progress, progress);
             textSize = typedArray.getDimension(R.styleable.CircleProgressBar_textSize, textSize);
             foregroundColor = typedArray.getInt(R.styleable.CircleProgressBar_frontColor, foregroundColor);
             backgroundColor = typedArray.getInt(R.styleable.CircleProgressBar_backColor, backgroundColor);
@@ -107,13 +110,15 @@ public class CircleProgressBar extends View
 
         float dx = (float) Math.cos(Math.toRadians(angle - 90)) * (rectF.right + strokeWidth / 2) / 2;
         float dy = (float) Math.sin(Math.toRadians(angle - 90)) * (rectF.bottom + strokeWidth / 2) / 2;
-        canvas.drawLine(rectF.centerX() + dx/2, rectF.centerY() + dy/2, rectF.centerX() + dx, rectF.centerY() + dy, paint);
+        //canvas.drawLine(rectF.centerX() + dx/2, rectF.centerY() + dy/2, rectF.centerX() + dx, rectF.centerY() + dy, paint);
 
         paint.setTextAlign(Paint.Align.CENTER);
+        paint.setStyle(Paint.Style.FILL);
         paint.setTextSize(textSize);
+
         if (mainText != null)
         {
-            canvas.drawText(mainText, centerX, centerY, paint);
+            canvas.drawText(mainText, centerX, centerY + textSize / 3, paint);
         }
 
         if (topText != null)
@@ -125,5 +130,17 @@ public class CircleProgressBar extends View
         {
             canvas.drawText(bottomText, centerX, centerY + 70, paint);
         }
+    }
+
+    public void setProgress(int progress)
+    {
+        valueChangeListener.onValueChange(null, this.progress, progress);
+        this.progress = progress;
+        invalidate();
+    }
+
+    public void setOnValueChangeListener(NumberPicker.OnValueChangeListener listener)
+    {
+        valueChangeListener = listener;
     }
 }

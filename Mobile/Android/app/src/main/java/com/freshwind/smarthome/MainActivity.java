@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -16,6 +17,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.CompoundButton;
+import android.widget.NumberPicker;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -28,9 +30,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "bluetooth1";
 
-    Button launchBtn;
-//    Switch onOffSwitch;
-//    TextView inData;
+    private Button launchBtn;
+    private CircleProgressBar progressBar;
+    private Handler handler;
 
     private BluetoothLeService BLEService;
     private boolean mConnected = false;
@@ -97,30 +99,29 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.main);
 
         launchBtn = findViewById(R.id.launchBtn);
-//        onOffSwitch = findViewById(R.id.onOff);
-//        inData = findViewById(R.id.incomingData);
-//
-//
         launchBtn.setOnClickListener(heatOnClickListener);
 
+        progressBar = findViewById(R.id.custom_progressBar);
+        progressBar.setOnValueChangeListener(new NumberPicker.OnValueChangeListener() {
+            @Override
+            public void onValueChange(NumberPicker picker, int oldVal, int newVal)
+            {
+                progressBar.mainText = String.valueOf(newVal) + '°';
+            }
+        });
 
+        handler = new Handler();
+        final int delayMillis = 1000;
+        Runnable getTemperature = new Runnable() {
+            @Override
+            public void run()
+            {
+                sendData(new byte[] {0x52 , 4});
+                handler.postDelayed(this, delayMillis);
+            }
+        };
 
-//        onOffSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
-//            @Override
-//            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {
-//                if(isChecked)
-//                {
-//                    sendData("H");
-//                    Log.i(TAG ,"turned on");
-//                }
-//                else
-//                {
-//                    sendData("K");
-//                    Log.i(TAG ,"turned off");
-//                }
-//            }
-//        });
-
+        handler.postDelayed(getTemperature, delayMillis);
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
@@ -141,12 +142,18 @@ public class MainActivity extends AppCompatActivity {
 
     private void sendData(byte[] data)
     {
-
-        if(mConnected)
+        try
         {
-            charTX.setValue(data);
-            BLEService.writeCharacteristic(charTX);
-            BLEService.setCharacteristicNotification(charRX, true);
+            if(mConnected)
+            {
+                charTX.setValue(data);
+                BLEService.writeCharacteristic(charTX);
+                BLEService.setCharacteristicNotification(charRX, true);
+            }
+        }
+        catch (Exception exc)
+        {
+            Log.d(TAG, exc.getMessage());
         }
     }
 
@@ -233,6 +240,20 @@ public class MainActivity extends AppCompatActivity {
             sb.append(data[i]);
         }
 
-        //inData.setText(sb.toString());
+        switch (command)
+        {
+            case 'T':
+                if(data[2] != 0)
+                {
+                    throw new AssertionError();
+                }
+
+                if (4 == data[1])
+                {
+                    byte temperature = data[3];
+                    progressBar.setProgress(temperature);
+                }
+                break;
+        }
     }
 }

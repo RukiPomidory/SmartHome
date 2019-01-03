@@ -25,10 +25,8 @@
         app:frontColor="@color/primary_500"
         app:backColor="@color/neutral_500"
         app:innerColor="@color/neutral_300"
-        app:mainText="80"
-        app:topText="top"
-        app:bottomText="bottom"
-        app:textSize="20sp"/>
+        app:mainText="100°"
+        app:textSize="72sp"/>
 
     <Button
         android:id="@+id/launchBtn"
