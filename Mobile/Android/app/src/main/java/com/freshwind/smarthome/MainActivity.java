@@ -28,7 +28,7 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TAG = "bluetooth1";
 
-//    Button connectBtn;
+    Button launchBtn;
 //    Switch onOffSwitch;
 //    TextView inData;
 
@@ -66,24 +66,45 @@ public class MainActivity extends AppCompatActivity {
         }
     };
 
+    private final OnClickListener heatOnClickListener = new OnClickListener() {
+        public void onClick(View view)
+        {
+            // heating
+            sendData("H");
+
+            assert launchBtn != null;
+            launchBtn.setOnClickListener(coldOnClickListener);
+            launchBtn.setText(R.string.turn_off);
+        }
+    };
+
+    private final OnClickListener coldOnClickListener = new OnClickListener() {
+        public void onClick(View view)
+        {
+            // kill
+            sendData("K");
+
+            assert launchBtn != null;
+            launchBtn.setOnClickListener(heatOnClickListener);
+            launchBtn.setText(R.string.launch);
+        }
+    };
+
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.main);
 
-//        connectBtn = findViewById(R.id.connectBtn);
+        launchBtn = findViewById(R.id.launchBtn);
 //        onOffSwitch = findViewById(R.id.onOff);
 //        inData = findViewById(R.id.incomingData);
 //
 //
-//        connectBtn.setOnClickListener(new OnClickListener() {
-//            public void onClick(View view)
-//            {
-//                BLEService.connect(deviceMAC);
-//            }
-//        });
-//
+        launchBtn.setOnClickListener(heatOnClickListener);
+
+
+
 //        onOffSwitch.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
 //            @Override
 //            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked) {

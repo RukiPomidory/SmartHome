@@ -118,12 +118,12 @@ public class CircleProgressBar extends View
 
         if (topText != null)
         {
-            canvas.drawText(topText, centerX, centerY - 30, paint);
+            canvas.drawText(topText, centerX, centerY - 70, paint);
         }
 
         if (bottomText != null)
         {
-            canvas.drawText(bottomText, centerX, centerY + 30, paint);
+            canvas.drawText(bottomText, centerX, centerY + 70, paint);
         }
     }
 }

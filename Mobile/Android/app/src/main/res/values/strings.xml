@@ -16,4 +16,5 @@
     <string name="exampleMAC">40:A8:46:00:9E:C6</string>
     <string name="exampleName">Device Name</string>
     <string name="timemanager">TimeManager</string>
+    <string name="turn_off">Остановить</string>
 </resources>
