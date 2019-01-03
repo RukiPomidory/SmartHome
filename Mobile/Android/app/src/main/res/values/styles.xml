@@ -22,6 +22,9 @@
         <item name="android:background">@drawable/launch_button</item>
     </style>
 
-    <style name="Theme" parent="AppTheme" />
+
+    <style name="TimeManagerButton">
+        <item name="android:background">@drawable/time_manager_button</item>
+    </style>
 
 </resources>

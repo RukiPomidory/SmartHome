@@ -17,7 +17,7 @@
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
         app:progressbarColor="@color/neutral_700"
-        app:layout_constraintBottom_toTopOf="@+id/button"
+        app:layout_constraintBottom_toTopOf="@+id/launchBtn"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
@@ -25,7 +25,7 @@
         app:progressBarThickness="10dp" />
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/launchBtn"
         style="@style/LaunchButton"
         android:layout_width="198dp"
         android:layout_height="80dp"
@@ -33,8 +33,24 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:text="@string/launch"
-        android:textColor="@color/primary_900"
+        android:textColor="@color/neutral_100"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent" />
+
+    <ImageButton
+        android:id="@+id/timeManagerBtn"
+        style="@style/TimeManagerButton"
+        android:layout_width="60dp"
+        android:layout_height="60dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="8dp"
+        android:src="@drawable/ic_alarm"
+        app:layout_constraintBottom_toBottomOf="@+id/launchBtn"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toEndOf="@+id/launchBtn"
+        app:layout_constraintTop_toTopOf="@+id/launchBtn"
+        android:contentDescription="@string/timemanager" />
 </android.support.constraint.ConstraintLayout>

@@ -89,6 +89,6 @@ public class CircleProgressBar extends View
         canvas.drawOval(rectF, backgroundPaint);
         float angle = 360 * progress / max;
         canvas.drawArc(rectF, startAngle, angle, false, foregroundPaint);
-
+        //canvas.drawLine(0, 0, rectF.width() / 2,rectF.height() / 2,foregroundPaint);
     }
 }
