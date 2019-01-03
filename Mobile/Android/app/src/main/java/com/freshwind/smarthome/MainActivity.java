@@ -120,7 +120,7 @@ public class MainActivity extends AppCompatActivity {
         });
 
         handler = new Handler();
-        final int delayMillis = 1000;
+        final int delayMillis = 500;
         Runnable getTemperature = new Runnable() {
             @Override
             public void run()
@@ -140,7 +140,7 @@ public class MainActivity extends AppCompatActivity {
         };
 
         handler.postDelayed(getTemperature, delayMillis);
-        handler.postDelayed(getWaterLevel, delayMillis);
+        handler.postDelayed(getWaterLevel, delayMillis / 2);
 
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
