@@ -26,6 +26,10 @@ public class CircleProgressBar extends View
     private int foregroundColor = Color.DKGRAY;
     private int backgroundColor = Color.GRAY;
     private int innerColor = Color.LTGRAY;
+    private float textSize = 20;
+    private String mainText;
+    private String topText;
+    private String bottomText;
     private RectF rectF;
     private Paint paint;
 
@@ -47,11 +51,15 @@ public class CircleProgressBar extends View
         try {
             strokeWidth = typedArray.getDimension(R.styleable.CircleProgressBar_progressBarThickness, strokeWidth);
             progress = typedArray.getFloat(R.styleable.CircleProgressBar_progress, progress);
+            textSize = typedArray.getDimension(R.styleable.CircleProgressBar_textSize, textSize);
             foregroundColor = typedArray.getInt(R.styleable.CircleProgressBar_frontColor, foregroundColor);
             backgroundColor = typedArray.getInt(R.styleable.CircleProgressBar_backColor, backgroundColor);
             innerColor = typedArray.getInt(R.styleable.CircleProgressBar_innerColor, innerColor);
             min = typedArray.getInt(R.styleable.CircleProgressBar_min, min);
             max = typedArray.getInt(R.styleable.CircleProgressBar_max, max);
+            mainText = typedArray.getString(R.styleable.CircleProgressBar_mainText);
+            topText = typedArray.getString(R.styleable.CircleProgressBar_topText);
+            bottomText = typedArray.getString(R.styleable.CircleProgressBar_bottomText);
         } finally {
             typedArray.recycle();
         }
@@ -81,6 +89,9 @@ public class CircleProgressBar extends View
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
 
+        float centerX = rectF.centerX();
+        float centerY = rectF.centerY();
+
         paint.setStyle(Paint.Style.FILL);
         paint.setColor(innerColor);
         canvas.drawOval(rectF, paint);
@@ -97,5 +108,22 @@ public class CircleProgressBar extends View
         float dx = (float) Math.cos(Math.toRadians(angle - 90)) * (rectF.right + strokeWidth / 2) / 2;
         float dy = (float) Math.sin(Math.toRadians(angle - 90)) * (rectF.bottom + strokeWidth / 2) / 2;
         canvas.drawLine(rectF.centerX() + dx/2, rectF.centerY() + dy/2, rectF.centerX() + dx, rectF.centerY() + dy, paint);
+
+        paint.setTextAlign(Paint.Align.CENTER);
+        paint.setTextSize(textSize);
+        if (mainText != null)
+        {
+            canvas.drawText(mainText, centerX, centerY, paint);
+        }
+
+        if (topText != null)
+        {
+            canvas.drawText(topText, centerX, centerY - 30, paint);
+        }
+
+        if (bottomText != null)
+        {
+            canvas.drawText(bottomText, centerX, centerY + 30, paint);
+        }
     }
 }
