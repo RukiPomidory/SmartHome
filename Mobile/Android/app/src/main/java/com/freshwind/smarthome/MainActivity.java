@@ -76,16 +76,6 @@ public class MainActivity extends AppCompatActivity {
             assert launchBtn != null;
             launchBtn.setOnClickListener(coldOnClickListener);
             launchBtn.setText(R.string.turn_off);
-
-            Snackbar
-                    .make(view, "Нагреватель запущен, мой фюрер!", Snackbar.LENGTH_SHORT)
-                    .setAction("Согласовать", new OnClickListener() {
-                        @Override
-                        public void onClick(View v) {
-                            Toast.makeText(getBaseContext(), "Согласовано!", Toast.LENGTH_SHORT).show();
-                        }
-                    })
-                    .show();
         }
     };
 
@@ -296,6 +286,25 @@ public class MainActivity extends AppCompatActivity {
                 }
                 break;
 
+            case 'E':
+                String message;
+
+                if (1 == data[1])
+                {
+                    message = "Мало воды!";
+                }
+                else if(2 == data[1])
+                {
+                    message = "Слишком много воды!";
+                }
+                else
+                {
+                    break;
+                }
+                Snackbar
+                        .make(launchBtn, message, Snackbar.LENGTH_LONG)
+                        .show();
+                break;
         }
     }
 }
