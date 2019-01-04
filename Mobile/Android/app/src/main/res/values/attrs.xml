@@ -18,4 +18,9 @@
         <attr name="bottomOffset" format="float" />
 
     </declare-styleable>
+    <declare-styleable name="FancyDialog">
+        <attr name="backgroundColor" format="color" />
+        <attr name="strokeColor" format="color" />
+        <attr name="strokeWidth" format="dimension" />
+    </declare-styleable>
 </resources>

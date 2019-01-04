@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+
+    <com.freshwind.smarthome.FancyDialogBackground
+        android:id="@+id/fancyDialogBackground"
+        android:layout_width="300dp"
+        android:layout_height="150dp"
+        app:backgroundColor="@color/yellowAccent_300"
+        app:strokeColor="@color/yellowAccent_500"
+        app:strokeWidth="4dp" />
+
+    <TextView
+        android:id="@+id/title"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginEnd="8dp"
+        android:layout_marginStart="8dp"
+        android:layout_marginTop="16dp"
+        android:text="@string/elephant_title"
+        android:textColor="@color/yellowAccent_900"
+        android:textSize="30sp"
+        app:layout_constraintEnd_toEndOf="@+id/fancyDialogBackground"
+        app:layout_constraintStart_toStartOf="@+id/fancyDialogBackground"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <ImageView
+        android:id="@+id/elephantShadow"
+        android:layout_width="84dp"
+        android:layout_height="84dp"
+        android:layout_marginBottom="4dp"
+        android:layout_marginStart="13dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/fancyDialogBackground"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/fancyDialogBackground"
+        app:srcCompat="@drawable/ic_elephant_shadow" />
+
+    <ImageView
+        android:id="@+id/elephant"
+        android:layout_width="84dp"
+        android:layout_height="84dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="16dp"
+        android:layout_marginTop="8dp"
+        app:layout_constraintBottom_toBottomOf="@+id/fancyDialogBackground"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/fancyDialogBackground"
+        app:srcCompat="@drawable/ic_elephant" />
+
+
+
+</android.support.constraint.ConstraintLayout>

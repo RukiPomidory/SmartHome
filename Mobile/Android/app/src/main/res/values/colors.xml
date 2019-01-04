@@ -20,8 +20,10 @@
     <color name="redAccent_300">#e98282</color>
     <color name="redAccent_100">#f5d6d6</color>
 
+
     <color name="yellowAccent_900">#5c4813</color>
     <color name="yellowAccent_700">#b38e2e</color>
+    <color name="yellowAccent_600">#cca649</color>
     <color name="yellowAccent_500">#f3c964</color>
     <color name="yellowAccent_300">#edda9e</color>
     <color name="yellowAccent_100">#fdfbf3</color>
