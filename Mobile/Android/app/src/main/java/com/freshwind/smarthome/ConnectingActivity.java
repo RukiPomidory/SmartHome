@@ -20,14 +20,10 @@ import java.util.List;
 public class ConnectingActivity extends AppCompatActivity
 {
     public static final String EXTRAS_DEVICE = "KETTLE";
-    public static final String EXTRAS_CHAR_TX = "CHARACTERISTIC_TX";
-    public static final String EXTRAS_CHAR_RX = "CHARACTERISTIC_RX";
     private static final String TAG = "CONNECT";
 
     private Kettle kettle;
     private BluetoothLeService BLEService;
-    private BluetoothGattCharacteristic charTX;
-    private BluetoothGattCharacteristic charRX;
 
     private final ServiceConnection mServiceConnection = new ServiceConnection()
     {
@@ -70,12 +66,9 @@ public class ConnectingActivity extends AppCompatActivity
     private void startMain()
     {
         final Intent intent = new Intent(this, MainActivity.class);
-
         intent.putExtra(EXTRAS_DEVICE, kettle);
-        intent.putExtra(EXTRAS_CHAR_TX, charTX);
-        intent.putExtra(EXTRAS_CHAR_RX, charRX);
-
         startActivity(intent);
+        finish();
     }
 
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
@@ -99,11 +92,12 @@ public class ConnectingActivity extends AppCompatActivity
 
                 for (BluetoothGattService gattService : gattServices) {
                     // get characteristic when UUID matches RX/TX UUID
-                    charTX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
-                    charRX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
+                    BluetoothGattCharacteristic charTX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
+                    BluetoothGattCharacteristic charRX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
 
                     if(charTX != null && charRX != null)
                     {
+                        // Посылаем букву A
                         charTX.setValue(new byte[] {0x41});
                         BLEService.writeCharacteristic(charTX);
                         BLEService.setCharacteristicNotification(charRX, true);
@@ -154,7 +148,9 @@ public class ConnectingActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        //unbindService(mServiceConnection);
-        //BLEService = null;
+        unbindService(mServiceConnection);
+//        BLEService.disconnect();
+
+        BLEService = null;
     }
 }
