@@ -93,6 +93,7 @@ public class ScanActivity extends AppCompatActivity
         bluetoothAdapter = manager.getAdapter();
         bleScanner = bluetoothAdapter.getBluetoothLeScanner();
 
+
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
