@@ -6,13 +6,7 @@
     android:layout_height="match_parent"
     tools:context=".MainActivity"
     android:background="@color/neutral_100">
-    <android.support.v7.widget.Toolbar
-        android:id="@+id/toolbar"
-        android:layout_height="wrap_content"
-        android:layout_width="match_parent"
-        android:minHeight="?android:attr/actionBarSize"
-        android:background="@color/primary_500"
-        app:theme="@style/ActionBarTheme"/>
+
 
     <com.freshwind.smarthome.CircleProgressBar
         android:id="@+id/temperatureProgressBar"

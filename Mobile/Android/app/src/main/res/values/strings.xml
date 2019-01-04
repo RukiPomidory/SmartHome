@@ -17,4 +17,5 @@
     <string name="exampleName">Device Name</string>
     <string name="timemanager">TimeManager</string>
     <string name="turn_off">Остановить</string>
+    <string name="back">back</string>
 </resources>
