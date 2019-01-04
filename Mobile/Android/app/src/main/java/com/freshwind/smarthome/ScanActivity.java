@@ -14,6 +14,7 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -24,8 +25,10 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.util.ArrayList;
 
@@ -150,6 +153,10 @@ public class ScanActivity extends AppCompatActivity
             case R.id.menu_stop:
                 scan(false);
                 break;
+
+            case android.R.id.home:
+                finish();
+                break;
         }
 
         return true;
@@ -178,6 +185,23 @@ public class ScanActivity extends AppCompatActivity
 
         if(enable)
         {
+            if (BluetoothAdapter.STATE_OFF == bluetoothAdapter.getState())
+            {
+                // TODO create warning "enable bluetooth" view
+                Snackbar
+                        .make(recyclerView, "Bluetooth выключен", Snackbar.LENGTH_LONG)
+                        .setAction("включить", new OnClickListener() {
+                            @Override
+                            public void onClick(View v)
+                            {
+                                bluetoothAdapter.enable();
+                            }
+                        })
+                        .show();
+
+                return;
+            }
+
             handler.postDelayed(cancelSearching, SCAN_PERIOD);
 
             isScanning = true;

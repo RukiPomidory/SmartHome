@@ -79,10 +79,6 @@ public class MainActivity extends AppCompatActivity
         {
             // heating
             sendData("H");
-
-            assert launchBtn != null;
-            launchBtn.setOnClickListener(coldOnClickListener);
-            launchBtn.setText(R.string.turn_off);
         }
     };
 
@@ -91,10 +87,6 @@ public class MainActivity extends AppCompatActivity
         {
             // kill
             sendData("K");
-
-            assert launchBtn != null;
-            launchBtn.setOnClickListener(heatOnClickListener);
-            launchBtn.setText(R.string.launch);
         }
     };
 
@@ -111,7 +103,6 @@ public class MainActivity extends AppCompatActivity
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
         actionBar.setDisplayHomeAsUpEnabled(true);
-        actionBar.setDisplayShowHomeEnabled(true);
         actionBar.setTitle(kettle.name);
 
         launchBtn = findViewById(R.id.launchBtn);
@@ -165,9 +156,11 @@ public class MainActivity extends AppCompatActivity
     }
 
     @Override
-    public boolean onOptionsItemSelected(MenuItem item) {
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
         // handle arrow click here
-        if (item.getItemId() == android.R.id.home) {
+        if (item.getItemId() == android.R.id.home)
+        {
             finish(); // close this activity and return to preview activity (if there is any)
         }
 
@@ -321,6 +314,18 @@ public class MainActivity extends AppCompatActivity
                 Snackbar
                         .make(launchBtn, message, Snackbar.LENGTH_LONG)
                         .show();
+                break;
+
+            case 'H':
+                assert launchBtn != null;
+                launchBtn.setOnClickListener(coldOnClickListener);
+                launchBtn.setText(R.string.turn_off);
+                break;
+
+            case 'K':
+                assert launchBtn != null;
+                launchBtn.setOnClickListener(heatOnClickListener);
+                launchBtn.setText(R.string.launch);
                 break;
         }
     }

@@ -12,8 +12,10 @@ import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
+import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.MenuItem;
 
 import java.util.List;
 
@@ -57,10 +59,27 @@ public class ConnectingActivity extends AppCompatActivity
         final Intent intent = getIntent();
         kettle = intent.getParcelableExtra(EXTRAS_DEVICE);
 
+        ActionBar actionBar = getSupportActionBar();
+        assert actionBar != null;
+        actionBar.setDisplayHomeAsUpEnabled(true);
+        actionBar.setTitle(kettle.name);
+
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
 
         startService(gattServiceIntent);
         bindService(gattServiceIntent, mServiceConnection, 0);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item)
+    {
+        // handle arrow click here
+        if (item.getItemId() == android.R.id.home)
+        {
+            finish(); // close this activity and return to preview activity (if there is any)
+        }
+
+        return super.onOptionsItemSelected(item);
     }
 
     private void startMain()

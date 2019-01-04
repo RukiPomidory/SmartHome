@@ -135,6 +135,9 @@ void on(bool force = false)
     
     // Нагрев пошел
     heating = true;
+
+    // Отправляем подтверждение включения
+    Serial.print("H");
 }
 
 void off()
@@ -144,6 +147,9 @@ void off()
     
     // Нагрев прекращен
     heating = false;
+
+    // Отправляем подтверждение выключения
+    Serial.print("K");
 }
 
 double getTemperature()
