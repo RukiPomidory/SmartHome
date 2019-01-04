@@ -19,4 +19,5 @@
     <string name="turn_off">Остановить</string>
     <string name="back">back</string>
     <string name="elephant_title">Слон</string>
+    <string name="elephantDescription">Вероятно, на ваш чайник наступил слон. Чтобы избежать поломки датчиков, уберите чайник из-под слона.</string>
 </resources>

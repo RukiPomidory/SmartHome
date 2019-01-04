@@ -50,6 +50,8 @@ public class FancyDialogBackground extends View
         path = new Path();
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setStrokeWidth(strokeWidth);
+        paint.setShadowLayer(50.0f, 5.0f, 5.0f, 0xFF0ff000);
+        setLayerType(LAYER_TYPE_SOFTWARE, paint);
     }
 
     @Override
@@ -80,6 +82,7 @@ public class FancyDialogBackground extends View
         path.lineTo(rectf.left, rectf.bottom - delta);
         path.close();
         canvas.drawPath(path, paint);
+
 
         paint.setColor(strokeColor);
         paint.setStyle(Paint.Style.STROKE);

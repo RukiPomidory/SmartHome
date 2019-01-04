@@ -22,10 +22,12 @@
 
 
     <color name="yellowAccent_900">#5c4813</color>
+    <color name="yellowAccent_800">#8b6d20</color>
     <color name="yellowAccent_700">#b38e2e</color>
     <color name="yellowAccent_600">#cca649</color>
     <color name="yellowAccent_500">#f3c964</color>
     <color name="yellowAccent_300">#edda9e</color>
+    <color name="yellowAccent_200">#f1e1b4</color>
     <color name="yellowAccent_100">#fdfbf3</color>
 
     <color name="cyanAccent_900">#124544</color>
