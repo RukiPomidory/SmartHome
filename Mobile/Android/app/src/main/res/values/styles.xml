@@ -1,7 +1,7 @@
 <resources>
 
     <!-- Base application theme. -->
-    <style name="AppTheme" parent="Theme.AppCompat.Light.DarkActionBar">
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
         <!-- Customize your theme here. -->
 
         <item name="colorPrimary">@color/primary_500</item>
@@ -25,6 +25,10 @@
 
     <style name="TimeManagerButton">
         <item name="android:background">@drawable/time_manager_button</item>
+    </style>
+
+    <style name="ActionBarTheme">
+        <item name="android:background">@color/primary_500</item>
     </style>
 
 </resources>
