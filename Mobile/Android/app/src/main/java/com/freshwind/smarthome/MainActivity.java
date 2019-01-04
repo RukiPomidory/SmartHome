@@ -126,6 +126,9 @@ public class MainActivity extends AppCompatActivity
             }
         });
 
+        waterProgressBar.setProgress(kettle.waterLevel);
+        tempProgressBar.setProgress(kettle.temperature);
+
         handler = new Handler();
         final int delayMillis = 500;
         getTemperature = new Runnable() {
@@ -151,7 +154,6 @@ public class MainActivity extends AppCompatActivity
 
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
-//        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
         bindService(gattServiceIntent, mServiceConnection, 0);
     }
 

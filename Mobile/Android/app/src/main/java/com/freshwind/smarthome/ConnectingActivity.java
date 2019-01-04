@@ -10,6 +10,7 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Bundle;
+import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
@@ -26,6 +27,8 @@ public class ConnectingActivity extends AppCompatActivity
 
     private Kettle kettle;
     private BluetoothLeService BLEService;
+    private BluetoothGattCharacteristic charTX;
+    private BluetoothGattCharacteristic charRX;
 
     private final ServiceConnection mServiceConnection = new ServiceConnection()
     {
@@ -111,15 +114,36 @@ public class ConnectingActivity extends AppCompatActivity
 
                 for (BluetoothGattService gattService : gattServices) {
                     // get characteristic when UUID matches RX/TX UUID
-                    BluetoothGattCharacteristic charTX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
-                    BluetoothGattCharacteristic charRX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
+                    charTX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
+                    charRX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
 
                     if(charTX != null && charRX != null)
                     {
-                        // Посылаем букву A
-                        charTX.setValue(new byte[] {0x41});
-                        BLEService.writeCharacteristic(charTX);
-                        BLEService.setCharacteristicNotification(charRX, true);
+                        Handler handler = new Handler();
+                        int oneDelay = 100;
+
+                        sendData(new byte[] {'R', 5});
+
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                sendData(new byte[] {'R', 6});
+                            }
+                        }, oneDelay);
+
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                sendData(new byte[] {'R', 0});
+                            }
+                        }, oneDelay * 2);
+
+                        handler.postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                sendData(new byte[] {'A'});
+                            }
+                        }, oneDelay * 3);
 
                         return;
                     }
@@ -133,9 +157,47 @@ public class ConnectingActivity extends AppCompatActivity
                 {
                     startMain();
                 }
+                else if('T' == data[0])
+                {
+                    if(data[2] != 0)
+                    {
+                        //TODO remove
+                        throw new AssertionError();
+                    }
+
+                    switch(data[1])
+                    {
+                        case 5:
+                            kettle.waterLevel = data[3];
+                            break;
+
+                        case 6:
+                            kettle.temperature = data[3];
+                            break;
+
+                        case 0:
+                            kettle.state = data[3];
+                            break;
+                    }
+
+                }
             }
         }
     };
+
+    private void sendData(byte[] data)
+    {
+        try
+        {
+            charTX.setValue(data);
+            BLEService.writeCharacteristic(charTX);
+            BLEService.setCharacteristicNotification(charRX, true);
+        }
+        catch (Exception exc)
+        {
+            Log.d(TAG, "dataSend failed");
+        }
+    }
 
     @Override
     protected void onResume()

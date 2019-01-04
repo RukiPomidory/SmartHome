@@ -8,11 +8,17 @@ public class Kettle implements Parcelable
 {
     public String MAC;
     public String name;
+    public int temperature;
+    public int waterLevel;
+    public byte state;
 
     protected Kettle(Parcel in)
     {
         MAC = in.readString();
         name = in.readString();
+        temperature = in.readInt();
+        waterLevel = in.readInt();
+        state = in.readByte();
     }
 
     public Kettle(String name, String MAC)
@@ -53,5 +59,8 @@ public class Kettle implements Parcelable
     {
         dest.writeString(MAC);
         dest.writeString(name);
+        dest.writeInt(temperature);
+        dest.writeInt(waterLevel);
+        dest.writeByte(state);
     }
 }
