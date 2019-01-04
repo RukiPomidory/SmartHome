@@ -180,8 +180,10 @@ public class BluetoothLeService extends Service {
      *         {@code BluetoothGattCallback#onConnectionStateChange(android.bluetooth.BluetoothGatt, int, int)}
      *         callback.
      */
-    public boolean connect(final String address) {
-        if (mBluetoothAdapter == null || address == null) {
+    public boolean connect(final String address)
+    {
+        if (mBluetoothAdapter == null || address == null)
+        {
             Log.w(TAG, "BluetoothAdapter not initialized or unspecified address.");
             return false;
         }

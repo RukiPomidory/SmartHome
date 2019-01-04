@@ -27,6 +27,8 @@ import android.widget.TextView;
 
 import java.util.ArrayList;
 
+import static com.freshwind.smarthome.ConnectingActivity.EXTRAS_DEVICE;
+
 public class ScanActivity extends AppCompatActivity
 {
     private BluetoothAdapter bluetoothAdapter;
@@ -66,7 +68,6 @@ public class ScanActivity extends AppCompatActivity
         }
     };
 
-
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState)
     {
@@ -94,11 +95,13 @@ public class ScanActivity extends AppCompatActivity
             @Override
             public void onItemClick(RecyclerView recyclerView, View itemView, int position)
             {
-                final Intent intent = new Intent(ScanActivity.this, MainActivity.class);
+                final Intent intent = new Intent(ScanActivity.this, ConnectingActivity.class);
                 TextView textName = itemView.findViewById(R.id.device_name);
                 TextView textAddress = itemView.findViewById(R.id.device_address);
-                intent.putExtra(MainActivity.EXTRAS_DEVICE_NAME, textName.getText());
-                intent.putExtra(MainActivity.EXTRAS_DEVICE_ADDRESS, textAddress.getText());
+
+                Kettle kettle = new Kettle(textName.getText(), textAddress.getText());
+                intent.putExtra(EXTRAS_DEVICE, kettle);
+
                 if (isScanning) {
                     bleScanner.stopScan(scanCallback);
                     isScanning = false;
@@ -224,9 +227,8 @@ public class ScanActivity extends AppCompatActivity
         public BleDeviceViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
         {
             View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.listitem_device, parent, false);
-            BleDeviceViewHolder holder = new BleDeviceViewHolder(view);
 
-            return holder;
+            return new BleDeviceViewHolder(view);
         }
 
         @Override

@@ -18,13 +18,14 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.NumberPicker;
-import android.widget.Toast;
 
 import java.util.List;
 
-public class MainActivity extends AppCompatActivity {
+import static com.freshwind.smarthome.ConnectingActivity.EXTRAS_DEVICE;
 
-    private static final String TAG = "bluetooth1";
+public class MainActivity extends AppCompatActivity
+{
+    private static final String TAG = "Main";
 
     private Button launchBtn;
     private CircleProgressBar tempProgressBar;
@@ -32,32 +33,35 @@ public class MainActivity extends AppCompatActivity {
     private Handler handler;
     private Runnable getTemperature;
     private Runnable getWaterLevel;
+    private Kettle kettle;
 
     private BluetoothLeService BLEService;
     private boolean mConnected = false;
     private BluetoothGattCharacteristic charTX;
     private BluetoothGattCharacteristic charRX;
-    private String deviceName;
-    private String deviceMAC;
     //private String deviceMAC = "A8:1B:6A:75:9E:17";
 
-    public static final String EXTRAS_DEVICE_NAME = "DEVICE_NAME";
-    public static final String EXTRAS_DEVICE_ADDRESS = "DEVICE_ADDRESS";
 
-
-    private final ServiceConnection mServiceConnection = new ServiceConnection()
-    {
+    private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service)
         {
             BLEService = ((BluetoothLeService.LocalBinder) service).getService();
-            if (!BLEService.initialize())
-            {
-                Log.e(TAG, "Unable to initialize Bluetooth");
-                finish();
-            }
 
-            BLEService.connect(deviceMAC);
+            mConnected = true;
+
+            List<BluetoothGattService> gattServices = BLEService.getSupportedGattServices();
+
+            for (BluetoothGattService gattService : gattServices) {
+                // get characteristic when UUID matches RX/TX UUID
+                charTX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
+                charRX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
+
+                if(charTX != null && charRX != null)
+                {
+                    return;
+                }
+            }
         }
 
         @Override
@@ -99,8 +103,7 @@ public class MainActivity extends AppCompatActivity {
         setContentView(R.layout.main);
 
         final Intent intent = getIntent();
-        deviceName = intent.getStringExtra(EXTRAS_DEVICE_NAME);
-        deviceMAC = intent.getStringExtra(EXTRAS_DEVICE_ADDRESS);
+        kettle = intent.getParcelableExtra(EXTRAS_DEVICE);
 
         launchBtn = findViewById(R.id.launchBtn);
         launchBtn.setOnClickListener(heatOnClickListener);
@@ -148,13 +151,16 @@ public class MainActivity extends AppCompatActivity {
 
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
-        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+//        bindService(gattServiceIntent, mServiceConnection, BIND_AUTO_CREATE);
+        bindService(gattServiceIntent, mServiceConnection, 0);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
         unbindService(mServiceConnection);
+        BLEService.disconnect();
+        BLEService.stopSelf();
         BLEService = null;
         handler.removeCallbacks(getTemperature);
         handler.removeCallbacks(getWaterLevel);
@@ -211,22 +217,15 @@ public class MainActivity extends AppCompatActivity {
     };
 
     @Override
-    protected void onResume() {
+    protected void onResume()
+    {
         super.onResume();
-        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
-        if (BLEService != null) {
-            final boolean result = BLEService.connect(deviceMAC);
+        registerReceiver(mGattUpdateReceiver, ConnectingActivity.makeGattUpdateIntentFilter());
+        if (BLEService != null)
+        {
+            final boolean result = BLEService.connect(kettle.MAC);
             Log.d(TAG, "Connect request result=" + result);
         }
-    }
-
-    private static IntentFilter makeGattUpdateIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
-        return intentFilter;
     }
 
     @Override
@@ -241,13 +240,17 @@ public class MainActivity extends AppCompatActivity {
     private void displayGattServices(List<BluetoothGattService> gattServices) {
         if (gattServices == null) return;
 
-
         // Loops through available GATT Services.
         for (BluetoothGattService gattService : gattServices) {
             // get characteristic when UUID matches RX/TX UUID
-            Log.d(TAG, "in displayGattServices");
+            //Log.d("in displayGattServices", gattService.getUuid().toString());
             charTX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
             charRX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
+
+            if(charTX != null && charRX != null)
+            {
+                return;
+            }
         }
 
     }
@@ -259,12 +262,6 @@ public class MainActivity extends AppCompatActivity {
     private void processInputData(byte[] data)
     {
         char command = (char) data[0];
-        StringBuilder sb = new StringBuilder();
-        sb.append(command);
-        for (int i = 1; i < data.length; i++)
-        {
-            sb.append(data[i]);
-        }
 
         switch (command)
         {
