@@ -173,10 +173,13 @@ public class MainActivity extends AppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
         unbindService(mServiceConnection);
-        BLEService.disconnect();
-        //BLEService.stopSelf();
+        if (BLEService != null)
+        {
+            BLEService.disconnect();
+            BLEService = null;
+        }
         stopService(new Intent(this, BluetoothLeService.class));
-        BLEService = null;
+
         handler.removeCallbacks(getTemperature);
         handler.removeCallbacks(getWaterLevel);
     }

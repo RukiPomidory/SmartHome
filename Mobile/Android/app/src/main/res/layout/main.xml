@@ -29,7 +29,8 @@
         app:mainText="100°"
         app:mainTextSize="72sp"
         app:progress="43"
-        app:progressBarThickness="5dp" />
+        app:progressBarThickness="5dp"
+        app:bottomTextSize="15sp"/>
 
     <com.freshwind.smarthome.CircleProgressBar
         android:id="@+id/waterProgressBar"
@@ -55,7 +56,8 @@
         app:bottomTextSize="15sp"
         app:max="20"
         app:progress="15"
-        app:progressBarThickness="5dp" />
+        app:progressBarThickness="5dp"
+        app:bottomOffset="1.63"/>
 
     <Button
         android:id="@+id/launchBtn"

@@ -69,6 +69,9 @@ public class CircleProgressBar extends View
             mainText = typedArray.getString(R.styleable.CircleProgressBar_mainText);
             topText = typedArray.getString(R.styleable.CircleProgressBar_topText);
             bottomText = typedArray.getString(R.styleable.CircleProgressBar_bottomText);
+            topVerticalOffset = typedArray.getFloat(R.styleable.CircleProgressBar_topOffset, topVerticalOffset);
+            bottomVerticalOffset = typedArray.getFloat(R.styleable.CircleProgressBar_bottomOffset, bottomVerticalOffset);
+
         } finally {
             typedArray.recycle();
         }
@@ -132,13 +135,13 @@ public class CircleProgressBar extends View
         if (topText != null)
         {
             paint.setTextSize(topTextSize);
-            canvas.drawText(topText, centerX, centerY * 0.5f, paint);
+            canvas.drawText(topText, centerX, centerY * (topVerticalOffset - 1), paint);
         }
 
         if (bottomText != null)
         {
             paint.setTextSize(bottomTextSize);
-            canvas.drawText(bottomText, centerX, centerY * 1.5f, paint);
+            canvas.drawText(bottomText, centerX, centerY * bottomVerticalOffset, paint);
         }
     }
 
