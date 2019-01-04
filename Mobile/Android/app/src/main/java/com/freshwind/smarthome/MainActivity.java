@@ -45,7 +45,6 @@ public class MainActivity extends AppCompatActivity
     private BluetoothGattCharacteristic charRX;
     //private String deviceMAC = "A8:1B:6A:75:9E:17";
 
-
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
         public void onServiceConnected(ComponentName name, IBinder service)
@@ -174,6 +173,11 @@ public class MainActivity extends AppCompatActivity
         {
             finish(); // close this activity and return to preview activity (if there is any)
         }
+        else if (item.getItemId() == R.id.options)
+        {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+        }
 
         return super.onOptionsItemSelected(item);
     }
@@ -226,16 +230,32 @@ public class MainActivity extends AppCompatActivity
         @Override
         public void onReceive(Context context, Intent intent) {
             final String action = intent.getAction();
-            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action)) {
+            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action))
+            {
                 mConnected = true;
                 invalidateOptionsMenu();
-            } else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action)) {
+            }
+            else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action))
+            {
                 mConnected = false;
-                invalidateOptionsMenu();
-            } else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action)) {
+                Snackbar
+                        .make(launchBtn, "Связь потеряна", Snackbar.LENGTH_LONG)
+                        .setAction("Подключить", new OnClickListener() {
+                            @Override
+                            public void onClick(View v)
+                            {
+                                BLEService.connect(kettle.MAC);
+                            }
+                        })
+                        .show();
+            }
+            else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action))
+            {
                 // Show all the supported services and characteristics on the user interface.
                 displayGattServices(BLEService.getSupportedGattServices());
-            } else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action)) {
+            }
+            else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action))
+            {
                 //displayData(intent.getStringExtra(mBluetoothLeService.EXTRA_DATA));
                 final byte[] data = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
                 processInputData(data);
