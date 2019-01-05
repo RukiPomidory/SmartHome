@@ -63,7 +63,7 @@ void loop()
     if(round(temperature) >= maxTemperature && heating)
     {
         off();
-        Serial.print("D");
+        sendData('D');
     }
 
     // Обработка входящих сообщений
@@ -82,7 +82,7 @@ void loop()
 
             // Проверка связи
             case 'A':
-                Serial.write(0x41);
+                sendData('A');
                 break;
             
             // Выключение
@@ -137,7 +137,7 @@ void on(bool force = false)
     heating = true;
 
     // Отправляем подтверждение включения
-    Serial.print("H");
+    sendData("H");
 }
 
 void off()
@@ -149,7 +149,7 @@ void off()
     heating = false;
 
     // Отправляем подтверждение выключения
-    Serial.print("K");
+    sendData('K');
 }
 
 double getTemperature()
@@ -241,22 +241,20 @@ void sendSensorData()
             return;
     }
 
-    byte buf[5];
+    byte buf[4];
     buf[0] = 'T';
     buf[1] = id;
     
     if (data > 256)
     {
-        buf[2] = 1;
-        buf[3] = data / 256;
-        buf[4] = data % 256;
-        Serial.write(buf, 5);
+        buf[2] = data / 256;
+        buf[3] = data % 256;
+        sendData(buf, 4);
     }
     else
     {
-        buf[2] = 0;
-        buf[3] = data;
-        Serial.write(buf, 4);
+        buf[2] = data;
+        sendData(buf, 3);
     }
 }
 
@@ -285,10 +283,21 @@ void flowHandler()
     }
 }
 
+void sendData(byte* data)
+{
+    sendData(data, sizeof(data) / (sizeof(data[0])));
+}
+
+void sendData(byte* data, int length)
+{
+    Serial.write(data, length);
+    Serial.write(';');
+}
+
 void Error(byte id)
 {
-    Serial.write('E');
-    Serial.write(id);
+    byte data[] = {'E', id};
+    sendData(data);
     delay(20);
 }
 
