@@ -8,15 +8,14 @@ import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.design.widget.Snackbar;
+import android.support.v4.content.res.TypedArrayUtils;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import android.support.v7.widget.Toolbar;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -25,6 +24,7 @@ import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.NumberPicker;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import static com.freshwind.smarthome.ConnectingActivity.EXTRAS_DEVICE;
@@ -33,6 +33,8 @@ public class MainActivity extends AppCompatActivity
 {
     private static final String TAG = "Main";
     private boolean mConnected = false;
+    private int reconnectTimeout = 2000;
+    private ArrayList<Byte> receivedData;
 
     private Button launchBtn;
     private CircleProgressBar tempProgressBar;
@@ -58,18 +60,7 @@ public class MainActivity extends AppCompatActivity
 
             mConnected = true;
 
-            List<BluetoothGattService> gattServices = BLEService.getSupportedGattServices();
-
-            for (BluetoothGattService gattService : gattServices) {
-                // get characteristic when UUID matches RX/TX UUID
-                charTX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
-                charRX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
-
-                if(charTX != null && charRX != null)
-                {
-                    return;
-                }
-            }
+            displayGattServices(BLEService.getSupportedGattServices());
         }
 
         @Override
@@ -173,7 +164,11 @@ public class MainActivity extends AppCompatActivity
             @Override
             public void run()
             {
-
+                BLEService.connect(kettle.MAC);
+                if(!mConnected)
+                {
+                    handler.postDelayed(this, reconnectTimeout);
+                }
             }
         };
 
@@ -182,6 +177,8 @@ public class MainActivity extends AppCompatActivity
 
         elephantFragment = new ElephantFragment();
         connectionErrorFragment = new ConnectionErrorFragment();
+
+        receivedData = new ArrayList<>();
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, 0);
@@ -279,7 +276,20 @@ public class MainActivity extends AppCompatActivity
             {
                 //displayData(intent.getStringExtra(mBluetoothLeService.EXTRA_DATA));
                 final byte[] data = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
-                processInputData(data);
+
+
+                for (byte _byte : data)
+                {
+                    if (';' == _byte)
+                    {
+                        processInputData(receivedData);
+                        receivedData.clear();
+                    }
+                    else
+                    {
+                        receivedData.add(_byte);
+                    }
+                }
             }
         }
     };
@@ -315,7 +325,7 @@ public class MainActivity extends AppCompatActivity
             charTX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
             charRX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
 
-            if(charTX != null && charRX != null)
+            if(charTX != null)
             {
                 return;
             }
@@ -327,48 +337,50 @@ public class MainActivity extends AppCompatActivity
      * Обрабатывает полученные по bluetooth данные
      * @param data данные
      */
-    private void processInputData(byte[] data)
+    private void processInputData(List<Byte> data)
     {
-        char command = (char) data[0];
+        char command = (char) (byte) data.get(0);
 
         switch (command)
         {
             case 'T':
-                if(data[2] != 0)
-                {
-                    throw new AssertionError();
-                }
 
-                if (6 == data[1])
+                switch (data.get(1))
                 {
-                    byte temperature = data[3];
-                    tempProgressBar.setProgress(temperature);
-                }
-                else if (5 == data[1])
-                {
-                    byte waterLevel = data[3];
-                    waterProgressBar.setProgress(waterLevel);
+                    case 5:
+                        byte waterLevel = data.get(3);
+                        waterProgressBar.setProgress(waterLevel);
+                        break;
+
+                    case 6:
+                        byte temperature = data.get(3);
+                        tempProgressBar.setProgress(temperature);
+
+                        break;
                 }
                 break;
 
             case 'E':
-                String message;
+                String message = null;
 
-                if (1 == data[1])
+                switch (data.get(1))
                 {
-                    message = "Мало воды!";
+                    case 1:
+                        message = "Мало воды!";
+                        break;
+
+                    case 2:
+                        message = "Слишком много воды!";
+                        break;
                 }
-                else if(2 == data[1])
+
+                if (message != null)
                 {
-                    message = "Слишком много воды!";
+                    Snackbar
+                            .make(launchBtn, message, Snackbar.LENGTH_LONG)
+                            .show();
                 }
-                else
-                {
-                    break;
-                }
-                Snackbar
-                        .make(launchBtn, message, Snackbar.LENGTH_LONG)
-                        .show();
+
                 break;
 
             case 'H':
@@ -390,6 +402,7 @@ public class MainActivity extends AppCompatActivity
         transaction = getFragmentManager().beginTransaction();
         transaction.add(R.id.fragmentLayout, connectionErrorFragment);
         transaction.commit();
+        reconnect.run();
     }
 
     private void connectionReturned()
@@ -397,5 +410,6 @@ public class MainActivity extends AppCompatActivity
         transaction = getFragmentManager().beginTransaction();
         transaction.remove(connectionErrorFragment);
         transaction.commit();
+        displayGattServices(BLEService.getSupportedGattServices());
     }
 }

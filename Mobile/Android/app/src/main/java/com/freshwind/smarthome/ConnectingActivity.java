@@ -159,24 +159,18 @@ public class ConnectingActivity extends AppCompatActivity
                 }
                 else if('T' == data[0])
                 {
-                    if(data[2] != 0)
-                    {
-                        //TODO remove
-                        throw new AssertionError();
-                    }
-
                     switch(data[1])
                     {
                         case 5:
-                            kettle.waterLevel = data[3];
+                            kettle.waterLevel = data[2];
                             break;
 
                         case 6:
-                            kettle.temperature = data[3];
+                            kettle.temperature = data[2];
                             break;
 
                         case 0:
-                            kettle.state = data[3];
+                            kettle.state = data[2];
                             break;
                     }
 
