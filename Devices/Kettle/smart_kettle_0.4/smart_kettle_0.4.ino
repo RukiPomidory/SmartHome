@@ -241,22 +241,20 @@ void sendSensorData()
             return;
     }
 
-    byte buf[5];
+    byte buf[4];
     buf[0] = 'T';
     buf[1] = id;
     
     if (data > 256)
     {
-        buf[2] = 1;
-        buf[3] = data / 256;
-        buf[4] = data % 256;
-        sendData(buf, 5);
+        buf[2] = data / 256;
+        buf[3] = data % 256;
+        sendData(buf, 4);
     }
     else
     {
-        buf[2] = 0;
-        buf[3] = data;
-        sendData(buf, 4);
+        buf[2] = data;
+        sendData(buf, 3);
     }
 }
 
