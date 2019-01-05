@@ -54,8 +54,10 @@ public class CircleProgressBar extends View
                 attrs,
                 R.styleable.CircleProgressBar,
                 0, 0);
+
         //Reading values from the XML layout
-        try {
+        try
+        {
             strokeWidth = typedArray.getDimension(R.styleable.CircleProgressBar_progressBarThickness, strokeWidth);
             progress = typedArray.getInt(R.styleable.CircleProgressBar_progress, progress);
             mainTextSize = typedArray.getDimension(R.styleable.CircleProgressBar_mainTextSize, mainTextSize);
@@ -72,12 +74,16 @@ public class CircleProgressBar extends View
             topVerticalOffset = typedArray.getFloat(R.styleable.CircleProgressBar_topOffset, topVerticalOffset);
             bottomVerticalOffset = typedArray.getFloat(R.styleable.CircleProgressBar_bottomOffset, bottomVerticalOffset);
 
-        } finally {
+        }
+        finally
+        {
             typedArray.recycle();
         }
 
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
         paint.setStrokeWidth(strokeWidth);
+//        paint.setShadowLayer(50.0f, 5.0f, 5.0f, getResources().getColor(R.color.neutral_900));
+//        setLayerType(LAYER_TYPE_SOFTWARE, paint);
     }
 
     private int adjustAlpha(int color, float factor) {
@@ -115,7 +121,6 @@ public class CircleProgressBar extends View
         paint.setColor(foregroundColor);
         float angle = 360 * progress / max;
         canvas.drawArc(rectF, startAngle, angle, false, paint);
-
 
         //float dx = (float) Math.cos(Math.toRadians(angle - 90)) * (rectF.right + strokeWidth / 2) / 2;
         //float dy = (float) Math.sin(Math.toRadians(angle - 90)) * (rectF.bottom + strokeWidth / 2) / 2;

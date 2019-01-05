@@ -125,16 +125,10 @@ public class BluetoothLeService extends Service {
 
         // For all other profiles, writes the data formatted in HEX.
         final byte[] data = characteristic.getValue();
-        Log.i(TAG, " [in broadcastUpdate] \nchar data: " + Arrays.toString(characteristic.getValue()));
+        Log.i(TAG, "char data: " + Arrays.toString(characteristic.getValue()));
 
         if (data != null && data.length > 0)
         {
-//            final StringBuilder stringBuilder = new StringBuilder(data.length);
-//            for (byte byteChar : data)
-//            {
-//                stringBuilder.append(String.format("%02X ", byteChar));
-//            }
-
             Log.d(TAG, String.format("%s", new String(data)));
             // getting cut off when longer, need to push on new line, 0A
             intent.putExtra(EXTRA_DATA, data);

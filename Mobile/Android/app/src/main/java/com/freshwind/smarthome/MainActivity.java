@@ -1,5 +1,7 @@
 package com.freshwind.smarthome;
 
+import android.app.Fragment;
+import android.app.FragmentTransaction;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 import android.content.BroadcastReceiver;
@@ -30,6 +32,7 @@ import static com.freshwind.smarthome.ConnectingActivity.EXTRAS_DEVICE;
 public class MainActivity extends AppCompatActivity
 {
     private static final String TAG = "Main";
+    private boolean mConnected = false;
 
     private Button launchBtn;
     private CircleProgressBar tempProgressBar;
@@ -37,13 +40,15 @@ public class MainActivity extends AppCompatActivity
     private Handler handler;
     private Runnable getTemperature;
     private Runnable getWaterLevel;
+    private Runnable reconnect;
     private Kettle kettle;
+    private Fragment elephantFragment;
+    private Fragment connectionErrorFragment;
+    private FragmentTransaction transaction;
 
     private BluetoothLeService BLEService;
-    private boolean mConnected = false;
     private BluetoothGattCharacteristic charTX;
     private BluetoothGattCharacteristic charRX;
-    //private String deviceMAC = "A8:1B:6A:75:9E:17";
 
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
@@ -77,6 +82,21 @@ public class MainActivity extends AppCompatActivity
     private final OnClickListener heatOnClickListener = new OnClickListener() {
         public void onClick(View view)
         {
+
+            transaction = getFragmentManager().beginTransaction();
+            transaction.add(R.id.fragmentLayout, elephantFragment);
+            transaction.commit();
+
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run()
+                {
+                    transaction = getFragmentManager().beginTransaction();
+                    transaction.remove(elephantFragment);
+                    transaction.commit();
+                }
+            }, 6000);
+
             // heating
             sendData("H");
         }
@@ -149,9 +169,19 @@ public class MainActivity extends AppCompatActivity
             }
         };
 
+        reconnect = new Runnable() {
+            @Override
+            public void run()
+            {
+
+            }
+        };
+
         handler.postDelayed(getTemperature, delayMillis);
         handler.postDelayed(getWaterLevel, delayMillis / 2);
 
+        elephantFragment = new ElephantFragment();
+        connectionErrorFragment = new ConnectionErrorFragment();
 
         Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         bindService(gattServiceIntent, mServiceConnection, 0);
@@ -233,21 +263,12 @@ public class MainActivity extends AppCompatActivity
             if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action))
             {
                 mConnected = true;
-                invalidateOptionsMenu();
+                connectionReturned();
             }
             else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action))
             {
                 mConnected = false;
-                Snackbar
-                        .make(launchBtn, "Связь потеряна", Snackbar.LENGTH_LONG)
-                        .setAction("Подключить", new OnClickListener() {
-                            @Override
-                            public void onClick(View v)
-                            {
-                                BLEService.connect(kettle.MAC);
-                            }
-                        })
-                        .show();
+                connectionLost();
             }
             else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action))
             {
@@ -362,5 +383,19 @@ public class MainActivity extends AppCompatActivity
                 launchBtn.setText(R.string.launch);
                 break;
         }
+    }
+
+    private void connectionLost()
+    {
+        transaction = getFragmentManager().beginTransaction();
+        transaction.add(R.id.fragmentLayout, connectionErrorFragment);
+        transaction.commit();
+    }
+
+    private void connectionReturned()
+    {
+        transaction = getFragmentManager().beginTransaction();
+        transaction.remove(connectionErrorFragment);
+        transaction.commit();
     }
 }
