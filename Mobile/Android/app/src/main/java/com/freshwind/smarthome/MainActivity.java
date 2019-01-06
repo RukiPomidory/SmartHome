@@ -18,7 +18,7 @@ import java.util.zip.Inflater;
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = "CHOOSING";
-    private final static String savedDevicesDir = "devices";
+    public final static String savedDevicesDir = "devices";
 
     private TableLayout table;
     private LayoutInflater inflater;

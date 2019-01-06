@@ -18,6 +18,12 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.util.List;
 
 public class ConnectingActivity extends AppCompatActivity
@@ -89,13 +95,27 @@ public class ConnectingActivity extends AppCompatActivity
     {
         final Intent intent = new Intent(this, DeviceControlActivity.class);
         intent.putExtra(EXTRAS_DEVICE, kettle);
+        saveDevice(kettle);
         startActivity(intent);
         finish();
     }
 
     private void saveDevice(Kettle device)
     {
+        try
+        {
+            String fileName = getFilesDir().getName() + '/' + MainActivity.savedDevicesDir + '/' + device.MAC;
 
+            BufferedWriter writer = new BufferedWriter((new OutputStreamWriter(openFileOutput(fileName, MODE_PRIVATE))));
+
+            writer.write(device.name);
+            writer.write(device.MAC);
+            writer.write("in developing");
+        }
+        catch (IOException | NullPointerException exc)
+        {
+            exc.printStackTrace();
+        }
     }
 
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
