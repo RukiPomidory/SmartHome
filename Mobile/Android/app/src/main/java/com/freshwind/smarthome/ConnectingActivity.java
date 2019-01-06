@@ -87,10 +87,15 @@ public class ConnectingActivity extends AppCompatActivity
 
     private void startMain()
     {
-        final Intent intent = new Intent(this, MainActivity.class);
+        final Intent intent = new Intent(this, DeviceControlActivity.class);
         intent.putExtra(EXTRAS_DEVICE, kettle);
         startActivity(intent);
         finish();
+    }
+
+    private void saveDevice(Kettle device)
+    {
+
     }
 
     private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {

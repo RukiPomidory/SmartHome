@@ -1,6 +1,5 @@
 package com.freshwind.smarthome;
 
-import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -8,6 +7,7 @@ public class Kettle implements Parcelable
 {
     public String MAC;
     public String name;
+    public String model;
     public int temperature;
     public int waterLevel;
     public byte state;
@@ -16,9 +16,15 @@ public class Kettle implements Parcelable
     {
         MAC = in.readString();
         name = in.readString();
+        model = in.readString();
         temperature = in.readInt();
         waterLevel = in.readInt();
         state = in.readByte();
+    }
+
+    public Kettle()
+    {
+
     }
 
     public Kettle(String name, String MAC)
@@ -30,11 +36,6 @@ public class Kettle implements Parcelable
     public Kettle(CharSequence name, CharSequence MAC)
     {
         this(name.toString(), MAC.toString());
-    }
-
-    public Kettle(String MAC)
-    {
-        this("Unnamed", MAC);
     }
 
     public static final Creator<Kettle> CREATOR = new Creator<Kettle>() {
@@ -59,6 +60,7 @@ public class Kettle implements Parcelable
     {
         dest.writeString(MAC);
         dest.writeString(name);
+        dest.writeString(model);
         dest.writeInt(temperature);
         dest.writeInt(waterLevel);
         dest.writeByte(state);
