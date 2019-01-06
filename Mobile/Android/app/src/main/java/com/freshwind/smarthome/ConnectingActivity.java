@@ -138,13 +138,6 @@ public class ConnectingActivity extends AppCompatActivity
                             }
                         }, oneDelay * 2);
 
-                        handler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                sendData(new byte[] {'A'});
-                            }
-                        }, oneDelay * 3);
-
                         return;
                     }
                 }
@@ -153,11 +146,7 @@ public class ConnectingActivity extends AppCompatActivity
             {
                 final byte[] data = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
 
-                if ('A' == data[0])
-                {
-                    startMain();
-                }
-                else if('T' == data[0])
+                if('T' == data[0])
                 {
                     switch(data[1])
                     {
@@ -171,6 +160,7 @@ public class ConnectingActivity extends AppCompatActivity
 
                         case 0:
                             kettle.state = data[2];
+                            startMain();
                             break;
                     }
 

@@ -281,7 +281,7 @@ void flowHandler()
 void sendData(char character)
 {
     byte data[] = {character, ';'};
-    sendData(data, 2);
+    Serial.write(data, 2);
 }
 
 void sendData(byte* data)

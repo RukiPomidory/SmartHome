@@ -33,9 +33,11 @@ public class MainActivity extends AppCompatActivity
 {
     private static final String TAG = "Main";
     private boolean mConnected = false;
+    private boolean elephantShown;
     private int reconnectTimeout = 2000;
-    private ArrayList<Byte> receivedData;
+    private float waterLimit = 2.1f;
 
+    private ArrayList<Byte> receivedData;
     private Button launchBtn;
     private CircleProgressBar tempProgressBar;
     private CircleProgressBar waterProgressBar;
@@ -73,21 +75,6 @@ public class MainActivity extends AppCompatActivity
     private final OnClickListener heatOnClickListener = new OnClickListener() {
         public void onClick(View view)
         {
-
-            transaction = getFragmentManager().beginTransaction();
-            transaction.add(R.id.fragmentLayout, elephantFragment);
-            transaction.commit();
-
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run()
-                {
-                    transaction = getFragmentManager().beginTransaction();
-                    transaction.remove(elephantFragment);
-                    transaction.commit();
-                }
-            }, 6000);
-
             // heating
             sendData("H");
         }
@@ -280,7 +267,7 @@ public class MainActivity extends AppCompatActivity
 
                 for (byte _byte : data)
                 {
-                    if (';' == _byte)
+                    if (';' == _byte && receivedData.size() > 0)
                     {
                         processInputData(receivedData);
                         receivedData.clear();
@@ -348,12 +335,34 @@ public class MainActivity extends AppCompatActivity
                 switch (data.get(1))
                 {
                     case 5:
-                        byte waterLevel = data.get(3);
+                        byte waterLevel = data.get(2);
                         waterProgressBar.setProgress(waterLevel);
+
+                        if (waterLevel / 10.0 > waterLimit)
+                        {
+                            if (!elephantShown)
+                            {
+                                transaction = getFragmentManager().beginTransaction();
+                                transaction.add(R.id.fragmentLayout, elephantFragment);
+                                transaction.commit();
+                                elephantShown = true;
+                            }
+                        }
+                        else
+                        {
+                            if (elephantShown)
+                            {
+                                transaction = getFragmentManager().beginTransaction();
+                                transaction.remove(elephantFragment);
+                                transaction.commit();
+                                elephantShown = false;
+                            }
+                        }
+
                         break;
 
                     case 6:
-                        byte temperature = data.get(3);
+                        byte temperature = data.get(2);
                         tempProgressBar.setProgress(temperature);
 
                         break;
@@ -410,6 +419,7 @@ public class MainActivity extends AppCompatActivity
         transaction = getFragmentManager().beginTransaction();
         transaction.remove(connectionErrorFragment);
         transaction.commit();
+
         displayGattServices(BLEService.getSupportedGattServices());
     }
 }
