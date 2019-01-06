@@ -79,11 +79,6 @@ void loop()
             case 'H':
                 on();
                 break;
-
-            // Проверка связи
-            case 'A':
-                sendData('A');
-                break;
             
             // Выключение
             case 'K':
@@ -137,7 +132,7 @@ void on(bool force = false)
     heating = true;
 
     // Отправляем подтверждение включения
-    sendData("H");
+    sendData('H');
 }
 
 void off()
@@ -254,7 +249,7 @@ void sendSensorData()
     else
     {
         buf[2] = data;
-        sendData(buf, 3);
+        sendData(buf, 3);  
     }
 }
 
@@ -281,6 +276,12 @@ void flowHandler()
     {
         Error(10);
     }
+}
+
+void sendData(char character)
+{
+    byte data[] = {character, ';'};
+    sendData(data, 2);
 }
 
 void sendData(byte* data)
