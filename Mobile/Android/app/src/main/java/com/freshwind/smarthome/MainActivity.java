@@ -71,8 +71,11 @@ public class MainActivity extends AppCompatActivity {
             File dir = new File(dirName);
 
             File[] files = dir.listFiles();
+            Log.d(TAG, "item list in app directory:");
             for (File file : files)
             {
+                Log.d(TAG, file.getName());
+
                 if (file.isDirectory())
                 {
                     continue;
@@ -109,28 +112,21 @@ public class MainActivity extends AppCompatActivity {
     {
         int count = table.getChildCount();
         TableRow row = (TableRow) table.getChildAt(count - 1);
-        if (row != null && row.getChildCount() == 1)
+        if (row == null || row.getChildCount() != 1)
         {
-            View deviceView = inflater.inflate(R.layout.device, null);
-
-            TextView name = deviceView.findViewById(R.id.device_title);
-            name.setText(device.name);
-
-            row.addView(deviceView);
-        }
-        else
-        {
-            TableRow newRow = (TableRow) inflater.inflate(R.layout.devices_table_row, null);
-            View deviceView = inflater.inflate(R.layout.device, null);
-
-            TextView name = deviceView.findViewById(R.id.device_title);
-            name.setText(device.name);
-
-            newRow.addView(deviceView);
-
-            table.addView(newRow);
+            row = (TableRow) inflater.inflate(R.layout.devices_table_row, null);
+            table.addView(row);
         }
 
+        View deviceView = inflater.inflate(R.layout.device, null);
+
+        TextView name = deviceView.findViewById(R.id.device_title);
+        TextView MAC = deviceView.findViewById(R.id.device_mac);
+
+        name.setText(device.name);
+        MAC.setText(device.MAC);
+
+        row.addView(deviceView);
     }
 
 }

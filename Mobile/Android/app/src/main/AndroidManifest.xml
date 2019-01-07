@@ -26,7 +26,9 @@
                 <action android:name="android.intent.action.VIEW" />
             </intent-filter>
         </activity>
-        <activity android:name=".ConnectingActivity" />
+        <activity
+            android:name=".ConnectingActivity"
+            android:screenOrientation="portrait" />
 
         <service
             android:name=".BluetoothLeService"
@@ -34,11 +36,16 @@
 
         <activity
             android:name=".SettingsActivity"
+            android:screenOrientation="portrait"
             android:label="@string/title_activity_settings" />
 
-        <activity android:name=".StartActivity" />
+        <activity
+            android:name=".StartActivity"
+            android:screenOrientation="portrait" />
 
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:screenOrientation="portrait" >
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
