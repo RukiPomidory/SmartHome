@@ -6,6 +6,7 @@ import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TableLayout;
@@ -44,17 +45,17 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v)
             {
-                add(new Kettle("name", "MAC"));
-                add(new Kettle("another name", "MAC"));
-                add(new Kettle("user name", "MAC"));
-                add(new Kettle("Letov alive", "MAC"));
-                add(new Kettle("what it is?", "MAC"));
-                add(new Kettle("extra", "MAC"));
-                add(new Kettle("seventh", "MAC"));
-//                Intent scan = new Intent(MainActivity.this, ScanActivity.class);
-//
-//                table.removeAllViews();
-//                startActivity(scan);
+                // for DEBUG
+//                add(new Kettle("name", "MAC"));
+//                add(new Kettle("another name", "MAC"));
+//                add(new Kettle("user name", "MAC"));
+//                add(new Kettle("Letov alive", "MAC"));
+//                add(new Kettle("what it is?", "MAC"));
+//                add(new Kettle("extra", "MAC"));
+//                add(new Kettle("seventh", "MAC"));
+
+                Intent scan = new Intent(MainActivity.this, ScanActivity.class);
+                startActivity(scan);
             }
         });
     }
@@ -89,8 +90,6 @@ public class MainActivity extends AppCompatActivity {
 
                 add(device);
             }
-
-
         }
         catch (IOException | NullPointerException exc)
         {
@@ -98,36 +97,12 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    private void display(List<Kettle> devices)
+    @Override
+    protected void onPause()
     {
-        for (int i = 0; i + 1 < devices.size(); i += 2)
-        {
-            TableRow row = (TableRow) inflater.inflate(R.layout.devices_table_row, null);
-            View leftDevice = inflater.inflate(R.layout.device, null);
-            View rightDevice = inflater.inflate(R.layout.device, null);
+        super.onPause();
 
-            TextView leftName = leftDevice.findViewById(R.id.device_title);
-            leftName.setText(devices.get(i).name);
-
-            TextView rightName = rightDevice.findViewById(R.id.device_title);
-            rightName.setText(devices.get(i + 1).name);
-
-            row.addView(leftDevice);
-            row.addView(rightDevice);
-
-            table.addView(row);
-        }
-
-        if (devices.size() % 2 != 0)
-        {
-            TableRow row = (TableRow) inflater.inflate(R.layout.devices_table_row, null);
-            View device = inflater.inflate(R.layout.device, row);
-
-            TextView name = device.findViewById(R.id.device_title);
-            name.setText(devices.get(devices.size() - 1).name);
-
-            table.addView(row);
-        }
+        table.removeAllViews();
     }
 
     private void add(Kettle device)

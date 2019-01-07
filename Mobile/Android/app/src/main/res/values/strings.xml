@@ -98,6 +98,7 @@
     <string name="kettle">kettle</string>
     <string name="tableItemImageDescription">kettle image</string>
     <string name="unnamed">Безымянный</string>
+    <string name="null_mac">00:00:00:00:00</string>
 
 
 </resources>
