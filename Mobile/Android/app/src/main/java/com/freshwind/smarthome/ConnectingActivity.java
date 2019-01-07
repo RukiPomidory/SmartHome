@@ -220,7 +220,7 @@ public class ConnectingActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-//        unbindService(mServiceConnection);
+        unbindService(mServiceConnection);
 //        if (BLEService != null)
 //        {
 //            BLEService.disconnect();

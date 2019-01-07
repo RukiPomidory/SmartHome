@@ -226,8 +226,12 @@ public class DeviceControlActivity extends AppCompatActivity
             if(mConnected)
             {
                 character.setValue(data);
-                BLEService.writeCharacteristic(character);
-
+                boolean result = BLEService.writeCharacteristic(character);
+                Log.d(TAG, "char written: " + result);
+//                if (!result)
+//                {
+//                    BLEService.disconnect();
+//                }
             }
         }
         catch (Exception exc)
@@ -317,7 +321,7 @@ public class DeviceControlActivity extends AppCompatActivity
 
             if(character != null)
             {
-                //BLEService.setCharacteristicNotification(character, true);
+                BLEService.setCharacteristicNotification(character, true);
                 return;
             }
         }
@@ -424,6 +428,6 @@ public class DeviceControlActivity extends AppCompatActivity
         transaction.remove(connectionErrorFragment);
         transaction.commit();
 
-        //displayGattServices(BLEService.getSupportedGattServices());
+        displayGattServices(BLEService.getSupportedGattServices());
     }
 }

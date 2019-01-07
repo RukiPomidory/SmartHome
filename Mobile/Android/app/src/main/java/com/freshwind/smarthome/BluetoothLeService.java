@@ -182,6 +182,11 @@ public class BluetoothLeService extends Service {
             return false;
         }
 
+        if (STATE_CONNECTED == mConnectionState)
+        {
+            return true;
+        }
+
         // Previously connected device.  Try to reconnect.
         if (mBluetoothDeviceAddress != null && address.equals(mBluetoothDeviceAddress)
                 && mBluetoothGatt != null)
@@ -234,13 +239,13 @@ public class BluetoothLeService extends Service {
      * Write to a given char
      * @param characteristic The characteristic to write to
      */
-    public void writeCharacteristic(BluetoothGattCharacteristic characteristic) {
+    public boolean writeCharacteristic(BluetoothGattCharacteristic characteristic) {
         if (mBluetoothAdapter == null || mBluetoothGatt == null) {
             Log.w(TAG, "BluetoothAdapter not initialized");
-            return;
+            return false;
         }
 
-        mBluetoothGatt.writeCharacteristic(characteristic);
+        return mBluetoothGatt.writeCharacteristic(characteristic);
     }
 
     /**
