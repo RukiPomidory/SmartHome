@@ -18,12 +18,10 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.util.ArrayList;
 import java.util.List;
 
 public class ConnectingActivity extends AppCompatActivity
@@ -35,6 +33,9 @@ public class ConnectingActivity extends AppCompatActivity
     private BluetoothLeService BLEService;
     private BluetoothGattCharacteristic charTX;
     private BluetoothGattCharacteristic charRX;
+    private ArrayList<Byte> receivedData;
+
+    private final static int delay = 100;  // Задержка между посылками сообщений
 
     private final ServiceConnection mServiceConnection = new ServiceConnection()
     {
@@ -73,8 +74,9 @@ public class ConnectingActivity extends AppCompatActivity
         actionBar.setDisplayHomeAsUpEnabled(true);
         actionBar.setTitle(kettle.name);
 
-        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
+        receivedData = new ArrayList<>();
 
+        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
         startService(gattServiceIntent);
         bindService(gattServiceIntent, mServiceConnection, 0);
     }
@@ -97,6 +99,7 @@ public class ConnectingActivity extends AppCompatActivity
         intent.putExtra(EXTRAS_DEVICE, kettle);
         saveDevice(kettle);
         startActivity(intent);
+        Log.d(TAG, "LAUNCH DeviceControlActivity");
         finish();
     }
 
@@ -146,24 +149,7 @@ public class ConnectingActivity extends AppCompatActivity
 
                     if(charTX != null && charRX != null)
                     {
-                        Handler handler = new Handler();
-                        int oneDelay = 100;
-
-                        sendData(new byte[] {'R', 5});
-
-                        handler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                sendData(new byte[] {'R', 6});
-                            }
-                        }, oneDelay);
-
-                        handler.postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                sendData(new byte[] {'R', 0});
-                            }
-                        }, oneDelay * 2);
+                        request();
 
                         return;
                     }
@@ -173,24 +159,17 @@ public class ConnectingActivity extends AppCompatActivity
             {
                 final byte[] data = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
 
-                if('T' == data[0])
+                for (byte _byte : data)
                 {
-                    switch(data[1])
+                    if (';' == _byte && receivedData.size() > 0)
                     {
-                        case 5:
-                            kettle.waterLevel = data[2];
-                            break;
-
-                        case 6:
-                            kettle.temperature = data[2];
-                            break;
-
-                        case 0:
-                            kettle.state = data[2];
-                            startMain();
-                            break;
+                        receiveData(receivedData);
+                        receivedData.clear();
                     }
-
+                    else
+                    {
+                        receivedData.add(_byte);
+                    }
                 }
             }
         }
@@ -241,8 +220,85 @@ public class ConnectingActivity extends AppCompatActivity
     protected void onDestroy() {
         super.onDestroy();
         unbindService(mServiceConnection);
-//        BLEService.disconnect();
+        if (BLEService != null)
+        {
+            BLEService.disconnect();
+        }
 
         BLEService = null;
+    }
+
+    private void request()
+    {
+        Handler handler = new Handler();
+
+        sendData(new byte[] {'R', 5});
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run()
+            {
+                sendData(new byte[] {'R', 6});
+            }
+        }, delay);
+
+        handler.postDelayed(new Runnable() {
+            @Override
+            public void run()
+            {
+                sendData(new byte[] {'R', 0});
+            }
+        }, delay * 2);
+    }
+
+    private void receiveData(List<Byte> data)
+    {
+        try
+        {
+            if ('T' == data.get(0))
+            {
+                switch (data.get(1))
+                {
+                    case 5:
+                        kettle.waterLevel = data.get(2);
+                        break;
+
+                    case 6:
+                        kettle.temperature = data.get(2);
+                        break;
+
+                    case 0:
+                        kettle.state = data.get(2);
+                        startMain();
+                        break;
+                }
+            }
+            else if ('E' == data.get(0))
+            {
+                Error(data.get(1));
+            }
+        }
+        catch (IndexOutOfBoundsException exc)
+        {
+            exc.printStackTrace();
+        }
+    }
+
+    private void Error(byte code)
+    {
+        switch(code)
+        {
+            case 10:
+                Log.w(TAG, "ОШИБКА распознавания id датчика");
+                break;
+
+            case 11:
+                Log.w(TAG, "ОШИБКА распознавания команды");
+                break;
+
+            default:
+                Log.w(TAG, new IllegalStateException());
+                break;
+        }
     }
 }

@@ -150,7 +150,11 @@ public class DeviceControlActivity extends AppCompatActivity
             @Override
             public void run()
             {
-                BLEService.connect(kettle.MAC);
+                if (BLEService != null)
+                {
+                    BLEService.connect(kettle.MAC);
+                }
+
                 if(!mConnected)
                 {
                     handler.postDelayed(this, reconnectTimeout);
@@ -263,7 +267,6 @@ public class DeviceControlActivity extends AppCompatActivity
                 //displayData(intent.getStringExtra(mBluetoothLeService.EXTRA_DATA));
                 final byte[] data = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
 
-
                 for (byte _byte : data)
                 {
                     if (';' == _byte && receivedData.size() > 0)
@@ -302,7 +305,10 @@ public class DeviceControlActivity extends AppCompatActivity
     // In this sample, we populate the data structure that is bound to the ExpandableListView
     // on the UI.
     private void displayGattServices(List<BluetoothGattService> gattServices) {
-        if (gattServices == null) return;
+        if (gattServices == null)
+        {
+            return;
+        }
 
         // Loops through available GATT Services.
         for (BluetoothGattService gattService : gattServices) {
@@ -419,6 +425,6 @@ public class DeviceControlActivity extends AppCompatActivity
         transaction.remove(connectionErrorFragment);
         transaction.commit();
 
-        displayGattServices(BLEService.getSupportedGattServices());
+        //displayGattServices(BLEService.getSupportedGattServices());
     }
 }
