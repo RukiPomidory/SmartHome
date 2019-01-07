@@ -5,10 +5,12 @@ import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TableLayout;
 import android.widget.TableRow;
+import android.widget.TextView;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -38,20 +40,33 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v)
             {
-                Intent scan = new Intent(MainActivity.this, ScanActivity.class);
-
-                startActivity(scan);
+                add(new Kettle("MYAWESOMEKETTLE", "8E:57:12:34:5F:ED"));
+//                Intent scan = new Intent(MainActivity.this, ScanActivity.class);
+//
+//                table.removeAllViews();
+//                startActivity(scan);
             }
         });
+    }
+
+    @Override
+    protected void onResume()
+    {
+        super.onResume();
 
         try
         {
-            String dirName = getFilesDir().getName() + '/' + savedDevicesDir;
+            String dirName = getFilesDir().getAbsolutePath();
             File dir = new File(dirName);
 
             File[] files = dir.listFiles();
             for (File file : files)
             {
+                if (file.isDirectory())
+                {
+                    continue;
+                }
+
                 BufferedReader reader = new BufferedReader(new InputStreamReader(openFileInput(file.getName())));
 
                 Kettle device = new Kettle();
@@ -69,13 +84,12 @@ public class MainActivity extends AppCompatActivity {
         {
             exc.printStackTrace();
         }
-
     }
 
     private void add(Kettle device)
     {
         TableRow row = (TableRow) inflater.inflate(R.layout.devices_table_row, null);
-        View deviceView = inflater.inflate(R.layout.devices_table_row, null);
+        View deviceView = inflater.inflate(R.layout.device, null);
 
         row.addView(deviceView);
 

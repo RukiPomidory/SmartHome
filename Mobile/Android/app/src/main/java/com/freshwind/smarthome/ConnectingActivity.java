@@ -104,13 +104,15 @@ public class ConnectingActivity extends AppCompatActivity
     {
         try
         {
-            String fileName = getFilesDir().getName() + '/' + MainActivity.savedDevicesDir + '/' + device.MAC;
-
+            String fileName = device.MAC;
+//getFilesDir().getName() + '/' + MainActivity.savedDevicesDir + '/' +
             BufferedWriter writer = new BufferedWriter((new OutputStreamWriter(openFileOutput(fileName, MODE_PRIVATE))));
 
             writer.write(device.name);
             writer.write(device.MAC);
             writer.write("in developing");
+
+            writer.close();
         }
         catch (IOException | NullPointerException exc)
         {
