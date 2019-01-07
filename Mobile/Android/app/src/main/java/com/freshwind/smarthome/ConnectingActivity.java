@@ -149,6 +149,7 @@ public class ConnectingActivity extends AppCompatActivity
 
                     if(charTX != null && charRX != null)
                     {
+                        BLEService.setCharacteristicNotification(charTX, true);
                         request();
 
                         return;
@@ -181,7 +182,7 @@ public class ConnectingActivity extends AppCompatActivity
         {
             charTX.setValue(data);
             BLEService.writeCharacteristic(charTX);
-            BLEService.setCharacteristicNotification(charRX, true);
+
         }
         catch (Exception exc)
         {
@@ -219,13 +220,13 @@ public class ConnectingActivity extends AppCompatActivity
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(mServiceConnection);
-        if (BLEService != null)
-        {
-            BLEService.disconnect();
-        }
-
-        BLEService = null;
+//        unbindService(mServiceConnection);
+//        if (BLEService != null)
+//        {
+//            BLEService.disconnect();
+//        }
+//
+//        BLEService = null;
     }
 
     private void request()

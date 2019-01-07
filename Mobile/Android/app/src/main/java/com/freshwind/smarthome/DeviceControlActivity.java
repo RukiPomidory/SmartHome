@@ -50,8 +50,7 @@ public class DeviceControlActivity extends AppCompatActivity
     private FragmentTransaction transaction;
 
     private BluetoothLeService BLEService;
-    private BluetoothGattCharacteristic charTX;
-    private BluetoothGattCharacteristic charRX;
+    private BluetoothGattCharacteristic character;
 
     private final ServiceConnection mServiceConnection = new ServiceConnection() {
         @Override
@@ -226,9 +225,9 @@ public class DeviceControlActivity extends AppCompatActivity
         {
             if(mConnected)
             {
-                charTX.setValue(data);
-                BLEService.writeCharacteristic(charTX);
-                BLEService.setCharacteristicNotification(charRX, true);
+                character.setValue(data);
+                BLEService.writeCharacteristic(character);
+
             }
         }
         catch (Exception exc)
@@ -314,11 +313,11 @@ public class DeviceControlActivity extends AppCompatActivity
         for (BluetoothGattService gattService : gattServices) {
             // get characteristic when UUID matches RX/TX UUID
             //Log.d("in displayGattServices", gattService.getUuid().toString());
-            charTX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
-            charRX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
+            character = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
 
-            if(charTX != null)
+            if(character != null)
             {
+                //BLEService.setCharacteristicNotification(character, true);
                 return;
             }
         }
