@@ -12,10 +12,14 @@ import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
+import org.w3c.dom.Text;
+
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.zip.Inflater;
 
 public class MainActivity extends AppCompatActivity {
@@ -40,7 +44,13 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View v)
             {
-                add(new Kettle("MYAWESOMEKETTLE", "8E:57:12:34:5F:ED"));
+                add(new Kettle("name", "MAC"));
+                add(new Kettle("another name", "MAC"));
+                add(new Kettle("user name", "MAC"));
+                add(new Kettle("Letov alive", "MAC"));
+                add(new Kettle("what it is?", "MAC"));
+                add(new Kettle("extra", "MAC"));
+                add(new Kettle("seventh", "MAC"));
 //                Intent scan = new Intent(MainActivity.this, ScanActivity.class);
 //
 //                table.removeAllViews();
@@ -79,6 +89,8 @@ public class MainActivity extends AppCompatActivity {
 
                 add(device);
             }
+
+
         }
         catch (IOException | NullPointerException exc)
         {
@@ -86,13 +98,64 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void display(List<Kettle> devices)
+    {
+        for (int i = 0; i + 1 < devices.size(); i += 2)
+        {
+            TableRow row = (TableRow) inflater.inflate(R.layout.devices_table_row, null);
+            View leftDevice = inflater.inflate(R.layout.device, null);
+            View rightDevice = inflater.inflate(R.layout.device, null);
+
+            TextView leftName = leftDevice.findViewById(R.id.device_title);
+            leftName.setText(devices.get(i).name);
+
+            TextView rightName = rightDevice.findViewById(R.id.device_title);
+            rightName.setText(devices.get(i + 1).name);
+
+            row.addView(leftDevice);
+            row.addView(rightDevice);
+
+            table.addView(row);
+        }
+
+        if (devices.size() % 2 != 0)
+        {
+            TableRow row = (TableRow) inflater.inflate(R.layout.devices_table_row, null);
+            View device = inflater.inflate(R.layout.device, row);
+
+            TextView name = device.findViewById(R.id.device_title);
+            name.setText(devices.get(devices.size() - 1).name);
+
+            table.addView(row);
+        }
+    }
+
     private void add(Kettle device)
     {
-        TableRow row = (TableRow) inflater.inflate(R.layout.devices_table_row, null);
-        View deviceView = inflater.inflate(R.layout.device, null);
+        int count = table.getChildCount();
+        TableRow row = (TableRow) table.getChildAt(count - 1);
+        if (row != null && row.getChildCount() == 1)
+        {
+            View deviceView = inflater.inflate(R.layout.device, null);
 
-        row.addView(deviceView);
+            TextView name = deviceView.findViewById(R.id.device_title);
+            name.setText(device.name);
 
-        table.addView(row);
+            row.addView(deviceView);
+        }
+        else
+        {
+            TableRow newRow = (TableRow) inflater.inflate(R.layout.devices_table_row, null);
+            View deviceView = inflater.inflate(R.layout.device, null);
+
+            TextView name = deviceView.findViewById(R.id.device_title);
+            name.setText(device.name);
+
+            newRow.addView(deviceView);
+
+            table.addView(newRow);
+        }
+
     }
+
 }
