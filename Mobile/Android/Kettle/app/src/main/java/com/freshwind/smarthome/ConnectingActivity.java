@@ -89,6 +89,10 @@ public class ConnectingActivity extends AppCompatActivity
     {
         if (item.getItemId() == android.R.id.home)
         {
+            if(tcpClient != null)
+            {
+                tcpClient.stopClient();
+            }
             finish();
         }
 
@@ -214,19 +218,39 @@ public class ConnectingActivity extends AppCompatActivity
     }
 
 
-    public class ConnectTask extends AsyncTask<Void, Integer, Void>
+    public class ConnectTask extends AsyncTask<Void, String, Void>
     {
         @Override
         protected Void doInBackground(Void... empty)
         {
+            // Подключение к точке доступа
+            int networkId = wifiManager.addNetwork(kettle.configuration);
+            wifiManager.disconnect();
+            wifiManager.enableNetwork(networkId, true);
+            wifiManager.reconnect();
+            WifiInfo info = wifiManager.getConnectionInfo();
+
+            int i = 0;
+            while(info.getNetworkId() == -1)
+            {
+                if (i < 20)
+                {
+                    Log.d(TAG, String.valueOf(i));
+                }
+                i++;
+                info = wifiManager.getConnectionInfo();
+            }
+            publishProgress(getResources().getString(R.string.ap_connected));
+
+            // Соединение с сервером и получение данных
             tcpClient = new TcpClient(
                 kettle.selfIP,
                 kettle.port,
                 new TcpClient.OnMessageReceived() {
                     @Override
-                    public void byteReceived(int message)
+                    public void messageReceived(String message)
                     {
-                        publishProgress(message);
+                        publishProgress("", message);
                     }
             });
             tcpClient.run();
@@ -235,22 +259,32 @@ public class ConnectingActivity extends AppCompatActivity
         }
 
         @Override
-        protected void onProgressUpdate(Integer... values)
+        protected void onProgressUpdate(String... values)
         {
             super.onProgressUpdate(values);
             //response received from server
-            Log.d("test", "response " + values[0]);
+            Log.d(TAG, "response " + values[0]);
 
-            byte _byte = values[0].byteValue();
-
-            if (';' == _byte && receivedData.size() > 0)
+            if(values.length > 1)
             {
-                receiveData(receivedData);
-                receivedData.clear();
+                char[] data = values[1].toCharArray();
+                for (char _byte : data)
+                {
+                    if (';' == _byte && receivedData.size() > 0)
+                    {
+                        receiveData(receivedData);
+                        receivedData.clear();
+                    }
+                    else
+                    {
+                        receivedData.add((byte) _byte);
+                    }
+                }
             }
-            else
+
+            if (values[0] != null && !values[0].equals(""))
             {
-                receivedData.add(_byte);
+                description.setText(values[0]);
             }
         }
     }

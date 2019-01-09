@@ -100,13 +100,11 @@ public class TcpClient
                     Log.d(TAG, String.valueOf(mBufferIn.ready()));
                     //message = mBufferIn.readLine();
 
-                    int _byte = mBufferIn.read();
-
-                    if (mMessageListener != null)
+                    //int _byte = mBufferIn.read();
+                    message = mBufferIn.readLine();
+                    if (message != null && mMessageListener != null)
                     {
-                        //call the method messageReceived from MyActivity class
-                        //mMessageListener.messageReceived(message);
-                        mMessageListener.byteReceived(_byte);
+                        mMessageListener.messageReceived(message);
                     }
                 }
 
@@ -136,7 +134,7 @@ public class TcpClient
     //class at on AsyncTask doInBackground
     public interface OnMessageReceived
     {
-        public void byteReceived(int data);
+        public void messageReceived(String data);
     }
 }
 
