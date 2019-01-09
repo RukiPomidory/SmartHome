@@ -290,7 +290,7 @@ public class DeviceControlActivity extends AppCompatActivity
     protected void onResume()
     {
         super.onResume();
-        registerReceiver(mGattUpdateReceiver, ConnectingActivity.makeGattUpdateIntentFilter());
+        //registerReceiver(mGattUpdateReceiver, ConnectingActivity.makeGattUpdateIntentFilter());
         if (BLEService != null)
         {
             final boolean result = BLEService.connect(kettle.MAC);

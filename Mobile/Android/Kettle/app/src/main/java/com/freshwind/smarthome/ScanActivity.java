@@ -1,15 +1,13 @@
 package com.freshwind.smarthome;
 
 import android.Manifest;
-import android.bluetooth.BluetoothAdapter;
-import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothManager;
-import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
-import android.bluetooth.le.ScanResult;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.net.wifi.ScanResult;
+import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
@@ -20,7 +18,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
-import android.support.v7.widget.Toolbar;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -28,50 +26,56 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.TextView;
-import android.widget.Toast;
 
 import java.util.ArrayList;
+import java.util.List;
 
 import static com.freshwind.smarthome.ConnectingActivity.EXTRAS_DEVICE;
 
 public class ScanActivity extends AppCompatActivity
 {
-    private BluetoothAdapter bluetoothAdapter;
+    private static final String TAG = "ScanActivity";
+
+    private ScanActivity.devicesAdapter devicesAdapter;
     private Handler handler;
-    private BluetoothLeScanner bleScanner;
     private RecyclerView recyclerView;
-    private BleDevicesAdapter bleDevicesAdapter;
     private LinearLayoutManager layoutManager;
+    private WifiManager wifiManager;
 
     private boolean isScanning = false;
-    private final int SCAN_PERIOD = 10000;
 
-    private ScanCallback scanCallback = new ScanCallback() {
+    BroadcastReceiver wifiScanReceiver = new BroadcastReceiver() {
         @Override
-        public void onScanResult(int callbackType, ScanResult result)
-        {
-            final BluetoothDevice device = result.getDevice();
-            runOnUiThread(new Runnable() {
-                @Override
-                public void run()
-                {
-                    bleDevicesAdapter.addDevice(device);
-                    bleDevicesAdapter.notifyDataSetChanged();
-                }
-            });
-            super.onScanResult(callbackType, result);
+        public void onReceive(Context c, Intent intent) {
+            boolean success = true;
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
+            {
+                success = intent.getBooleanExtra(
+                        WifiManager.EXTRA_RESULTS_UPDATED, false);
+            }
+
+            if (success)
+            {
+                scanSuccess();
+            }
+            else
+            {
+                scanFailure();
+            }
         }
     };
 
-    private Runnable cancelSearching = new Runnable() {
-        @Override
-        public void run()
-        {
-            isScanning = false;
-            bleScanner.stopScan(scanCallback);
-            invalidateOptionsMenu();
-        }
-    };
+    private void scanSuccess()
+    {
+        List<ScanResult> results = wifiManager.getScanResults();
+        devicesAdapter.updateDevices(results);
+        devicesAdapter.notifyDataSetChanged();
+    }
+//adb install-multiple -r -t E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_4.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\dep\dependencies.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_9.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_9.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_6.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_4.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\dep\dependencies.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_2.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_7.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_2.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_8.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_6.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_0.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_0.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_3.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_5.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_7.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_1.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_8.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_1.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_3.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_5.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\instant-run-apk\debug\app-debug.apk
+    private void scanFailure()
+    {
+        Log.w(TAG, "scan FAILED");
+    }
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState)
@@ -86,20 +90,19 @@ public class ScanActivity extends AppCompatActivity
         assert actionBar != null;
         actionBar.setDisplayHomeAsUpEnabled(true);
 
-        final BluetoothManager manager =
-                (BluetoothManager) getSystemService(Context.BLUETOOTH_SERVICE);
 
-        assert manager != null;
-        bluetoothAdapter = manager.getAdapter();
-        bleScanner = bluetoothAdapter.getBluetoothLeScanner();
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
+        getApplicationContext().registerReceiver(wifiScanReceiver, intentFilter);
 
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
 
-        ArrayList<BluetoothDevice> list = new ArrayList<>();
-        bleDevicesAdapter = new BleDevicesAdapter(list);
-        recyclerView.setAdapter(bleDevicesAdapter);
+        ArrayList<ScanResult> list = new ArrayList<>();
+        devicesAdapter = new devicesAdapter(list);
+        recyclerView.setAdapter(devicesAdapter);
 
         recyclerView.addOnItemTouchListener(new RecyclerClickListener(this) {
             @Override
@@ -112,10 +115,6 @@ public class ScanActivity extends AppCompatActivity
                 Kettle kettle = new Kettle(textName.getText(), textAddress.getText());
                 intent.putExtra(EXTRAS_DEVICE, kettle);
 
-                if (isScanning) {
-                    bleScanner.stopScan(scanCallback);
-                    isScanning = false;
-                }
                 startActivity(intent);
             }
         });
@@ -147,12 +146,11 @@ public class ScanActivity extends AppCompatActivity
         switch (item.getItemId())
         {
             case R.id.menu_scan:
-                bleDevicesAdapter.clear();
-                bleDevicesAdapter.notifyDataSetChanged();
-                scan(true);
+                devicesAdapter.clear();
+                devicesAdapter.notifyDataSetChanged();
+                scan();
                 break;
             case R.id.menu_stop:
-                scan(false);
                 break;
 
             case android.R.id.home:
@@ -165,14 +163,14 @@ public class ScanActivity extends AppCompatActivity
 
     private boolean checkPermissions()
     {
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.CHANGE_WIFI_STATE)
                 != PackageManager.PERMISSION_GRANTED)
         {
 
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
             {
                 //Toast.makeText(this, "Не удалось выполнить поиск устройств", Toast.LENGTH_SHORT).show();
-                requestPermissions(new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, 0);
+                requestPermissions(new String[] {Manifest.permission.CHANGE_WIFI_STATE}, 0);
 
             }
             return false;
@@ -180,97 +178,87 @@ public class ScanActivity extends AppCompatActivity
         return true;
     }
 
-    private void scan(final boolean enable)
+    private void scan()
     {
-        checkPermissions();
-
-        if(enable)
+        if(!checkPermissions())
         {
-            if (BluetoothAdapter.STATE_OFF == bluetoothAdapter.getState())
-            {
-                // TODO create warning "enable bluetooth" view
-                Snackbar
-                        .make(recyclerView, "Bluetooth выключен", Snackbar.LENGTH_LONG)
-                        .setAction("включить", new OnClickListener() {
-                            @Override
-                            public void onClick(View v)
-                            {
-                                bluetoothAdapter.enable();
-                            }
-                        })
-                        .show();
-
-                return;
-            }
-
-            handler.postDelayed(cancelSearching, SCAN_PERIOD);
-
-            isScanning = true;
-            bleScanner.startScan(scanCallback);
-        }
-        else
-        {
-            handler.removeCallbacks(cancelSearching);
-
-            isScanning = false;
-            bleScanner.stopScan(scanCallback);
+            return;
         }
 
-        invalidateOptionsMenu();
+        if (!wifiManager.isWifiEnabled())
+        {
+            // TODO create warning "enable bluetooth" view
+            Snackbar
+                    .make(recyclerView, "Bluetooth выключен", Snackbar.LENGTH_LONG)
+                    .setAction("включить", new OnClickListener() {
+                        @Override
+                        public void onClick(View v)
+                        {
+                            wifiManager.setWifiEnabled(true);
+                        }
+                    })
+                    .show();
+
+            return;
+        }
+
+        isScanning = true;
+        wifiManager.startScan();
+
     }
 
-    private class BleDevicesAdapter extends RecyclerView.Adapter<BleDevicesAdapter.BleDeviceViewHolder>{
-        private ArrayList<BluetoothDevice> bleDevices;
+    private class devicesAdapter extends RecyclerView.Adapter<ScanActivity.devicesAdapter.DeviceViewHolder>{
+        private ArrayList<ScanResult> scanResults;
         private LayoutInflater inflater;
 
-        public class BleDeviceViewHolder extends RecyclerView.ViewHolder
+        public class DeviceViewHolder extends RecyclerView.ViewHolder
         {
             View device;
 
-            public BleDeviceViewHolder(View device) {
+            public DeviceViewHolder(View device) {
                 super(device);
                 this.device = device;
             }
         }
 
-        public void addDevice(BluetoothDevice device)
+        public void updateDevices(List<ScanResult> results)
         {
-            if(!bleDevices.contains(device))
-            {
-                bleDevices.add(device);
-            }
+            scanResults.clear();
+            scanResults.addAll(results);
         }
 
         public void clear()
         {
-            bleDevices.clear();
+            scanResults.clear();
         }
 
-        public BleDevicesAdapter(ArrayList<BluetoothDevice> devices)
+        public devicesAdapter(ArrayList<ScanResult> devices)
         {
-            bleDevices = devices;
+            scanResults = devices;
             inflater = ScanActivity.this.getLayoutInflater();
         }
 
 
 
         @Override
-        public BleDeviceViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
+        public DeviceViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
         {
-            View view = LayoutInflater.from(parent.getContext()).inflate(R.layout.listitem_device, parent, false);
+            View view = LayoutInflater
+                    .from(parent.getContext())
+                    .inflate(R.layout.listitem_device, parent, false);
 
-            return new BleDeviceViewHolder(view);
+            return new DeviceViewHolder(view);
         }
 
         @Override
-        public void onBindViewHolder(BleDeviceViewHolder holder, int position)
+        public void onBindViewHolder(DeviceViewHolder holder, int position)
         {
             View view = holder.device;
 
             TextView nameTextView = view.findViewById(R.id.device_name);
             TextView addressTextView = view.findViewById(R.id.device_address);
 
-            String name = bleDevices.get(position).getName();
+            String name = scanResults.get(position).SSID;
             if (null != name && name.length() > 0)
             {
                 nameTextView.setText(name);
@@ -280,7 +268,7 @@ public class ScanActivity extends AppCompatActivity
                 nameTextView.setText(R.string.unknown_device);
             }
 
-            addressTextView.setText(bleDevices.get(position).getAddress());
+            addressTextView.setText(scanResults.get(position).BSSID);
         }
 
         @Override
@@ -290,7 +278,7 @@ public class ScanActivity extends AppCompatActivity
 
         @Override
         public int getItemCount() {
-            return bleDevices.size();
+            return scanResults.size();
         }
     }
 }
