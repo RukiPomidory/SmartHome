@@ -13,8 +13,8 @@ import java.net.Socket;
 public class TcpClient
 {
     public static final String TAG = TcpClient.class.getSimpleName();
-    public String IP = "192.168.4.1";
-    public int port = 333;
+    private String IP;
+    private int port;
 
     private String message;
     private OnMessageReceived mMessageListener = null;
@@ -25,8 +25,10 @@ public class TcpClient
     // used to read messages from the server
     private BufferedReader mBufferIn;
 
-    public TcpClient(OnMessageReceived listener)
+    public TcpClient(String IP, int port, OnMessageReceived listener)
     {
+        this.IP = IP;
+        this.port = port;
         mMessageListener = listener;
     }
 
@@ -134,7 +136,6 @@ public class TcpClient
     //class at on AsyncTask doInBackground
     public interface OnMessageReceived
     {
-        public void messageReceived(String message);
         public void byteReceived(int data);
     }
 }

@@ -1,21 +1,13 @@
 package com.freshwind.smarthome;
 
 
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.ServiceConnection;
-import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
@@ -66,14 +58,16 @@ public class ConnectingActivity extends AppCompatActivity
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         assert wifiManager != null;
 
-        handler = new Handler();
-        handler.post(new Runnable() {
-            @Override
-            public void run()
-            {
-                connect();
-            }
-        });
+        new ConnectTask().execute();
+
+//        handler = new Handler();
+//        handler.post(new Runnable() {
+//            @Override
+//            public void run()
+//            {
+//                connect();
+//            }
+//        });
 
     }
 
@@ -219,50 +213,45 @@ public class ConnectingActivity extends AppCompatActivity
         }
     }
 
-    
-    public class ConnectTask extends AsyncTask<String, String, TcpClient>
+
+    public class ConnectTask extends AsyncTask<Void, Integer, Void>
     {
         @Override
-        protected TcpClient doInBackground(String... message)
+        protected Void doInBackground(Void... empty)
         {
-
-            // Создаем объект TCP клиента и заодно вешаем обработчики
-            client = new TcpClient(new TcpClient.OnMessageReceived()
-            {
-                @Override
-                public void byteReceived(int message)
-                {
-                    final String uiText = String.valueOf(message);
-                    Log.d(TAG, String.valueOf(message));
-
-                    runOnUiThread(new Runnable() {
-                        @Override
-                        public void run()
-                        {
-                            text.setText(uiText);
-                        }
-                    });
-                }
-
-                @Override
-                public void messageReceived(String message)
-                {
-
-                }
+            tcpClient = new TcpClient(
+                kettle.selfIP,
+                kettle.port,
+                new TcpClient.OnMessageReceived() {
+                    @Override
+                    public void byteReceived(int message)
+                    {
+                        publishProgress(message);
+                    }
             });
-            client.run();
+            tcpClient.run();
 
             return null;
         }
 
         @Override
-        protected void onProgressUpdate(String... values)
+        protected void onProgressUpdate(Integer... values)
         {
             super.onProgressUpdate(values);
             //response received from server
             Log.d("test", "response " + values[0]);
-            //process server response here....
 
+            byte _byte = values[0].byteValue();
+
+            if (';' == _byte && receivedData.size() > 0)
+            {
+                receiveData(receivedData);
+                receivedData.clear();
+            }
+            else
+            {
+                receivedData.add(_byte);
+            }
         }
     }
 }
