@@ -1,5 +1,6 @@
 package com.freshwind.smarthome;
 
+import android.net.wifi.WifiConfiguration;
 import android.os.Parcel;
 import android.os.Parcelable;
 
@@ -30,6 +31,9 @@ public class Kettle implements Parcelable
     // Состояние - вкл/выкл
     public byte state;
 
+    // Конфигурация Wi-Fi
+    public WifiConfiguration configuration;
+
     protected Kettle(Parcel in)
     {
         name = in.readString();
@@ -43,6 +47,8 @@ public class Kettle implements Parcelable
         temperature = in.readInt();
         waterLevel = in.readInt();
         state = in.readByte();
+
+        configuration = in.readParcelable(WifiConfiguration.class.getClassLoader());
     }
 
     public Kettle() { }
@@ -78,11 +84,18 @@ public class Kettle implements Parcelable
     @Override
     public void writeToParcel(Parcel dest, int flags)
     {
-        dest.writeString(MAC);
         dest.writeString(name);
+        dest.writeString(MAC);
         dest.writeString(model);
+
+        dest.writeString(selfIP);
+        dest.writeString(localNetIP);
+        dest.writeInt(port);
+
         dest.writeInt(temperature);
         dest.writeInt(waterLevel);
         dest.writeByte(state);
+
+        dest.writeParcelable(configuration, flags);
     }
 }

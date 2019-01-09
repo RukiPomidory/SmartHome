@@ -6,7 +6,9 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.pm.PackageManager;
+import android.location.LocationManager;
 import android.net.wifi.ScanResult;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
@@ -36,8 +38,9 @@ import static com.freshwind.smarthome.ConnectingActivity.EXTRAS_DEVICE;
 public class ScanActivity extends AppCompatActivity
 {
     private static final String TAG = "ScanActivity";
+    private static final String ssidRegex = "SMART_.+";
 
-    private ScanActivity.devicesAdapter devicesAdapter;
+    private DevicesAdapter devicesAdapter;
     private Handler handler;
     private RecyclerView recyclerView;
     private LinearLayoutManager layoutManager;
@@ -69,7 +72,14 @@ public class ScanActivity extends AppCompatActivity
     private void scanSuccess()
     {
         List<ScanResult> results = wifiManager.getScanResults();
-        devicesAdapter.updateDevices(results);
+        for (ScanResult result : results)
+        {
+            if (result.SSID.matches(ssidRegex))
+            {
+                devicesAdapter.addDevice(result);
+            }
+        }
+
         devicesAdapter.notifyDataSetChanged();
     }
 
@@ -103,7 +113,7 @@ public class ScanActivity extends AppCompatActivity
         recyclerView.setLayoutManager(layoutManager);
 
         ArrayList<ScanResult> list = new ArrayList<>();
-        devicesAdapter = new devicesAdapter(list);
+        devicesAdapter = new DevicesAdapter(list);
         recyclerView.setAdapter(devicesAdapter);
 
         recyclerView.addOnItemTouchListener(new RecyclerClickListener(this) {
@@ -114,7 +124,15 @@ public class ScanActivity extends AppCompatActivity
                 TextView textName = itemView.findViewById(R.id.device_name);
                 TextView textAddress = itemView.findViewById(R.id.device_address);
 
+                WifiConfiguration config = new WifiConfiguration();
+                ScanResult result = devicesAdapter.scanResults.get(position);
+
+                config.SSID = "\"" + result.SSID + "\"";
+                config.BSSID = "\"" + result.BSSID + "\"";
+                config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+
                 Kettle kettle = new Kettle(textName.getText(), textAddress.getText());
+                kettle.configuration = config;
                 intent.putExtra(EXTRAS_DEVICE, kettle);
 
                 startActivity(intent);
@@ -202,11 +220,12 @@ public class ScanActivity extends AppCompatActivity
             return;
         }
 
+
         if (!wifiManager.isWifiEnabled())
         {
-            // TODO create warning "enable bluetooth" view
+            // TODO create warning "enable WIFI" view
             Snackbar
-                    .make(recyclerView, "Bluetooth выключен", Snackbar.LENGTH_LONG)
+                    .make(recyclerView, "Wi-Fi выключен", Snackbar.LENGTH_LONG)
                     .setAction("включить", new OnClickListener() {
                         @Override
                         public void onClick(View v)
@@ -219,13 +238,37 @@ public class ScanActivity extends AppCompatActivity
             return;
         }
 
+        if(!isGeoEnabled() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        {
+            // TODO create warning "enable Location" view
+            Snackbar
+                    .make(recyclerView, "Не удалось выполнить поиск сетей: GPS выключен", Snackbar.LENGTH_LONG)
+                    .setAction("включить", new OnClickListener() {
+                        @Override
+                        public void onClick(View v)
+                        {
+                            startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                        }
+                    })
+                    .show();
+        }
+
+
         isScanning = true;
         wifiManager.startScan();
 
     }
 
-    private class devicesAdapter extends RecyclerView.Adapter<ScanActivity.devicesAdapter.DeviceViewHolder>{
-        private ArrayList<ScanResult> scanResults;
+    public boolean isGeoEnabled()
+    {
+        LocationManager mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
+        boolean mIsGPSEnabled = mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
+        boolean mIsNetworkEnabled = mLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
+        return mIsGPSEnabled || mIsNetworkEnabled;
+    }
+
+    private class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.DeviceViewHolder>{
+        public ArrayList<ScanResult> scanResults;
         private LayoutInflater inflater;
 
         public class DeviceViewHolder extends RecyclerView.ViewHolder
@@ -236,6 +279,11 @@ public class ScanActivity extends AppCompatActivity
                 super(device);
                 this.device = device;
             }
+        }
+
+        public void addDevice(ScanResult result)
+        {
+            scanResults.add(result);
         }
 
         public void updateDevices(List<ScanResult> results)
@@ -249,13 +297,11 @@ public class ScanActivity extends AppCompatActivity
             scanResults.clear();
         }
 
-        public devicesAdapter(ArrayList<ScanResult> devices)
+        public DevicesAdapter(ArrayList<ScanResult> devices)
         {
             scanResults = devices;
             inflater = ScanActivity.this.getLayoutInflater();
         }
-
-
 
         @Override
         public DeviceViewHolder onCreateViewHolder(ViewGroup parent, int viewType)

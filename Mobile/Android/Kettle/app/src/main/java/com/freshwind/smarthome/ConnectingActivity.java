@@ -9,6 +9,8 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
+import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -32,6 +34,7 @@ public class ConnectingActivity extends AppCompatActivity
     private Kettle kettle;
     private TcpClient tcpClient;
     private ArrayList<Byte> receivedData;
+    private WifiManager wifiManager;
 
     private final static int delay = 100;  // Задержка между посылками сообщений
 
@@ -51,6 +54,28 @@ public class ConnectingActivity extends AppCompatActivity
         actionBar.setTitle(kettle.name);
 
         receivedData = new ArrayList<>();
+
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        assert wifiManager != null;
+        wifiManager.addNetwork(kettle.configuration);
+
+        List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
+        for( WifiConfiguration config : list ) {
+            if(config.SSID != null && config.SSID.equals(kettle.configuration.SSID)) {
+                wifiManager.disconnect();
+                wifiManager.enableNetwork(config.networkId, true);
+                wifiManager.reconnect();
+                
+
+                break;
+            }
+        }
+    }
+
+    @Override
+    public void finish()
+    {
+        super.finish();
     }
 
     @Override
