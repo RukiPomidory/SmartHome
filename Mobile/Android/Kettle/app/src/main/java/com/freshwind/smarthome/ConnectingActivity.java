@@ -242,6 +242,14 @@ public class ConnectingActivity extends AppCompatActivity
             }
             publishProgress(getResources().getString(R.string.ap_connected));
 
+            try
+            {
+                Thread.sleep(1000);
+            } catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+
             // Соединение с сервером и получение данных
             tcpClient = new TcpClient(
                 kettle.selfIP,
