@@ -66,6 +66,9 @@ public class ScanActivity extends AppCompatActivity
             {
                 scanFailure();
             }
+
+            isScanning = false;
+            invalidateOptionsMenu();
         }
     };
 
@@ -107,7 +110,6 @@ public class ScanActivity extends AppCompatActivity
         getApplicationContext().registerReceiver(wifiScanReceiver, intentFilter);
 
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
-        wifiManager.startScan();
 
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
@@ -138,6 +140,8 @@ public class ScanActivity extends AppCompatActivity
                 startActivity(intent);
             }
         });
+
+        scan();
     }
 
     @Override
@@ -146,13 +150,11 @@ public class ScanActivity extends AppCompatActivity
         getMenuInflater().inflate(R.menu.scan_menu, menu);
         if (!isScanning)
         {
-            menu.findItem(R.id.menu_stop).setVisible(false);
             menu.findItem(R.id.menu_scan).setVisible(true);
             menu.findItem(R.id.menu_refresh).setActionView(null);
         }
         else
         {
-            menu.findItem(R.id.menu_stop).setVisible(true);
             menu.findItem(R.id.menu_scan).setVisible(false);
             menu.findItem(R.id.menu_refresh).setActionView(
                     R.layout.actionbar_indeterminate_progress);
@@ -169,8 +171,6 @@ public class ScanActivity extends AppCompatActivity
                 devicesAdapter.clear();
                 devicesAdapter.notifyDataSetChanged();
                 scan();
-                break;
-            case R.id.menu_stop:
                 break;
 
             case android.R.id.home:
@@ -253,10 +253,9 @@ public class ScanActivity extends AppCompatActivity
                     .show();
         }
 
-
         isScanning = true;
         wifiManager.startScan();
-
+        invalidateOptionsMenu();
     }
 
     public boolean isGeoEnabled()
@@ -283,7 +282,10 @@ public class ScanActivity extends AppCompatActivity
 
         public void addDevice(ScanResult result)
         {
-            scanResults.add(result);
+            if (!scanResults.contains(result))
+            {
+                scanResults.add(result);
+            }
         }
 
         public void updateDevices(List<ScanResult> results)

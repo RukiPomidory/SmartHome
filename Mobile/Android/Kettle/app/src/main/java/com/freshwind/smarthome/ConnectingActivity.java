@@ -10,7 +10,9 @@ import android.content.Intent;
 import android.content.IntentFilter;
 import android.content.ServiceConnection;
 import android.net.wifi.WifiConfiguration;
+import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
@@ -19,6 +21,7 @@ import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
+import android.widget.TextView;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -29,12 +32,15 @@ import java.util.List;
 public class ConnectingActivity extends AppCompatActivity
 {
     public static final String EXTRAS_DEVICE = "KETTLE";
+
     private static final String TAG = "CONNECT";
 
     private Kettle kettle;
     private TcpClient tcpClient;
     private ArrayList<Byte> receivedData;
     private WifiManager wifiManager;
+    private Handler handler;
+    private TextView description;
 
     private final static int delay = 100;  // Задержка между посылками сообщений
 
@@ -44,6 +50,8 @@ public class ConnectingActivity extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.connect);
+
+        description = findViewById(R.id.processDescription);
 
         final Intent intent = getIntent();
         kettle = intent.getParcelableExtra(EXTRAS_DEVICE);
@@ -57,25 +65,29 @@ public class ConnectingActivity extends AppCompatActivity
 
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         assert wifiManager != null;
-        wifiManager.addNetwork(kettle.configuration);
 
-        List<WifiConfiguration> list = wifiManager.getConfiguredNetworks();
-        for( WifiConfiguration config : list ) {
-            if(config.SSID != null && config.SSID.equals(kettle.configuration.SSID)) {
-                wifiManager.disconnect();
-                wifiManager.enableNetwork(config.networkId, true);
-                wifiManager.reconnect();
-                
-
-                break;
+        handler = new Handler();
+        handler.post(new Runnable() {
+            @Override
+            public void run()
+            {
+                connect();
             }
-        }
+        });
+
     }
 
-    @Override
-    public void finish()
+    private void connect()
     {
-        super.finish();
+        int networkId = wifiManager.addNetwork(kettle.configuration);
+
+        wifiManager.disconnect();
+        wifiManager.enableNetwork(networkId, true);
+        wifiManager.reconnect();
+
+        WifiInfo info = wifiManager.getConnectionInfo();
+
+        description.setText(R.string.ap_connected);
     }
 
     @Override
@@ -131,22 +143,6 @@ public class ConnectingActivity extends AppCompatActivity
         {
             Log.d(TAG, "dataSend failed");
         }
-    }
-
-    @Override
-    protected void onResume()
-    {
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause() {
-        super.onPause();
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
     }
 
     private void request()
@@ -220,6 +216,53 @@ public class ConnectingActivity extends AppCompatActivity
             default:
                 Log.w(TAG, new IllegalStateException());
                 break;
+        }
+    }
+
+    
+    public class ConnectTask extends AsyncTask<String, String, TcpClient>
+    {
+        @Override
+        protected TcpClient doInBackground(String... message)
+        {
+
+            // Создаем объект TCP клиента и заодно вешаем обработчики
+            client = new TcpClient(new TcpClient.OnMessageReceived()
+            {
+                @Override
+                public void byteReceived(int message)
+                {
+                    final String uiText = String.valueOf(message);
+                    Log.d(TAG, String.valueOf(message));
+
+                    runOnUiThread(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                            text.setText(uiText);
+                        }
+                    });
+                }
+
+                @Override
+                public void messageReceived(String message)
+                {
+
+                }
+            });
+            client.run();
+
+            return null;
+        }
+
+        @Override
+        protected void onProgressUpdate(String... values)
+        {
+            super.onProgressUpdate(values);
+            //response received from server
+            Log.d("test", "response " + values[0]);
+            //process server response here....
+
         }
     }
 }
