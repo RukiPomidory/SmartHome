@@ -30,35 +30,11 @@ public class ConnectingActivity extends AppCompatActivity
     private static final String TAG = "CONNECT";
 
     private Kettle kettle;
-    private BluetoothLeService BLEService;
-    private BluetoothGattCharacteristic charTX;
-    private BluetoothGattCharacteristic charRX;
+    private TcpClient tcpClient;
     private ArrayList<Byte> receivedData;
 
     private final static int delay = 100;  // Задержка между посылками сообщений
 
-    private final ServiceConnection mServiceConnection = new ServiceConnection()
-    {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service)
-        {
-            BLEService = ((BluetoothLeService.LocalBinder) service).getService();
-            if (!BLEService.initialize())
-            {
-                Log.e(TAG, "Unable to initialize Bluetooth");
-                finish();
-            }
-
-            BLEService.connect(kettle.MAC);
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name)
-        {
-            BLEService.disconnect();
-            BLEService = null;
-        }
-    };
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState)
@@ -75,19 +51,14 @@ public class ConnectingActivity extends AppCompatActivity
         actionBar.setTitle(kettle.name);
 
         receivedData = new ArrayList<>();
-
-        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
-        startService(gattServiceIntent);
-        bindService(gattServiceIntent, mServiceConnection, 0);
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        // handle arrow click here
         if (item.getItemId() == android.R.id.home)
         {
-            finish(); // close this activity and return to preview activity (if there is any)
+            finish();
         }
 
         return super.onOptionsItemSelected(item);
@@ -97,7 +68,8 @@ public class ConnectingActivity extends AppCompatActivity
     {
         final Intent intent = new Intent(this, DeviceControlActivity.class);
         intent.putExtra(EXTRAS_DEVICE, kettle);
-        saveDevice(kettle);
+        // сохранять будем потом
+        //saveDevice(kettle);
         startActivity(intent);
         Log.d(TAG, "LAUNCH DeviceControlActivity");
         finish();
@@ -108,7 +80,6 @@ public class ConnectingActivity extends AppCompatActivity
         try
         {
             String fileName = device.MAC;
-//getFilesDir().getName() + '/' + MainActivity.savedDevicesDir + '/' +
             BufferedWriter writer = new BufferedWriter((new OutputStreamWriter(openFileOutput(fileName, MODE_PRIVATE))));
 
             writer.write(device.name + '\n');
@@ -123,65 +94,12 @@ public class ConnectingActivity extends AppCompatActivity
         }
     }
 
-    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-
-            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action))
-            {
-                //isConnected = true;
-                invalidateOptionsMenu();
-            }
-            else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action))
-            {
-                //isConnected = false;
-                invalidateOptionsMenu();
-            }
-            else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action))
-            {
-                List<BluetoothGattService> gattServices = BLEService.getSupportedGattServices();
-
-                for (BluetoothGattService gattService : gattServices) {
-                    // get characteristic when UUID matches RX/TX UUID
-                    charTX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
-                    charRX = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
-
-                    if(charTX != null && charRX != null)
-                    {
-                        BLEService.setCharacteristicNotification(charTX, true);
-                        request();
-
-                        return;
-                    }
-                }
-            }
-            else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action))
-            {
-                final byte[] data = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
-
-                for (byte _byte : data)
-                {
-                    if (';' == _byte && receivedData.size() > 0)
-                    {
-                        receiveData(receivedData);
-                        receivedData.clear();
-                    }
-                    else
-                    {
-                        receivedData.add(_byte);
-                    }
-                }
-            }
-        }
-    };
-
     private void sendData(byte[] data)
     {
         try
         {
-            charTX.setValue(data);
-            BLEService.writeCharacteristic(charTX);
+            //charTX.setValue(data);
+            //BLEService.writeCharacteristic(charTX);
 
         }
         catch (Exception exc)
@@ -194,39 +112,16 @@ public class ConnectingActivity extends AppCompatActivity
     protected void onResume()
     {
         super.onResume();
-        registerReceiver(mGattUpdateReceiver, makeGattUpdateIntentFilter());
-        if (BLEService != null)
-        {
-            final boolean result = BLEService.connect(kettle.MAC);
-            Log.d(TAG, "Connect request result=" + result);
-        }
-    }
-
-    public static IntentFilter makeGattUpdateIntentFilter() {
-        final IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_CONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_DISCONNECTED);
-        intentFilter.addAction(BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED);
-        intentFilter.addAction(BluetoothLeService.ACTION_DATA_AVAILABLE);
-        return intentFilter;
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        unregisterReceiver(mGattUpdateReceiver);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
-        unbindService(mServiceConnection);
-//        if (BLEService != null)
-//        {
-//            BLEService.disconnect();
-//        }
-//
-//        BLEService = null;
     }
 
     private void request()

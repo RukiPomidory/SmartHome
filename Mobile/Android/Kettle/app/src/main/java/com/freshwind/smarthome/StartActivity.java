@@ -2,6 +2,7 @@ package com.freshwind.smarthome;
 
 import android.content.Intent;
 import android.os.Bundle;
+import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -18,8 +19,15 @@ public class StartActivity extends AppCompatActivity
             getSupportActionBar().hide();
             Log.w(TAG, "getSupportActionBar() OK");
 
-        Intent main = new Intent(this, MainActivity.class);
-        startActivity(main);
-        finish();
+        final Intent main = new Intent(this, MainActivity.class);
+
+        new Handler().postDelayed(new Runnable() {
+            @Override
+            public void run()
+            {
+                startActivity(main);
+                finish();
+            }
+        }, 500);
     }
 }
