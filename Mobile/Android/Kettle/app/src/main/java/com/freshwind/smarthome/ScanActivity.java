@@ -28,6 +28,7 @@ import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static com.freshwind.smarthome.ConnectingActivity.EXTRAS_DEVICE;
@@ -71,7 +72,7 @@ public class ScanActivity extends AppCompatActivity
         devicesAdapter.updateDevices(results);
         devicesAdapter.notifyDataSetChanged();
     }
-//adb install-multiple -r -t E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_4.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\dep\dependencies.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_9.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_9.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_6.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_4.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\dep\dependencies.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_2.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_7.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_2.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_8.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_6.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_0.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_0.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_3.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_5.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_7.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_1.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_8.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_1.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_3.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\split-apk\debug\slices\slice_5.apk E:\Smart_home\Mobile\Android\Kettle\app\build\intermediates\instant-run-apk\debug\app-debug.apk
+
     private void scanFailure()
     {
         Log.w(TAG, "scan FAILED");
@@ -96,6 +97,7 @@ public class ScanActivity extends AppCompatActivity
         getApplicationContext().registerReceiver(wifiScanReceiver, intentFilter);
 
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+        wifiManager.startScan();
 
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);
@@ -175,11 +177,26 @@ public class ScanActivity extends AppCompatActivity
             }
             return false;
         }
+
+        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
+                != PackageManager.PERMISSION_GRANTED)
+        {
+
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            {
+                //Toast.makeText(this, "Не удалось выполнить поиск устройств", Toast.LENGTH_SHORT).show();
+                requestPermissions(new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, 0);
+
+            }
+            return false;
+        }
         return true;
     }
 
     private void scan()
     {
+        Log.d(TAG, Arrays.toString(wifiManager.getScanResults().toArray()));
+
         if(!checkPermissions())
         {
             return;
