@@ -64,12 +64,19 @@ public class AsyncTcpClient extends AsyncTask<Void, String, Void>
 
     public void sendMessage(final String message)
     {
-        if (bufferOut != null)
-        {
-            Log.d(TAG, "Sending: \"" + message + "\"");
-            bufferOut.println(message);
-            bufferOut.flush();
-        }
+        Runnable sending = new Runnable() {
+            @Override
+            public void run() {
+                if (bufferOut != null)
+                {
+                    Log.d(TAG, "Sending: \"" + message + "\"");
+                    bufferOut.println(message);
+                    bufferOut.flush();
+                }
+            }
+        };
+        Thread thread = new Thread(sending);
+        thread.start();
     }
 
     @Override
@@ -89,18 +96,18 @@ public class AsyncTcpClient extends AsyncTask<Void, String, Void>
 
             try (Socket socket = new Socket(serverIP, port))
             {
+                // Используется для отправки данных на сервер
+                bufferOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+
+                // С помощью него получаем данные от сервера
+                bufferIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
                 Log.d(TAG, "connected!");
                 if (stateListener != null)
                 {
                     stateListener.stateChanged(CONNECTED);
                 }
                 state = CONNECTED;
-
-                // Используется для отправки данных на сервер
-                bufferOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-
-                // С помощью него получаем данные от сервера
-                bufferIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
                 // Пока клиент работает, прослушиваем сервер
                 while (running)

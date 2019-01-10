@@ -139,24 +139,13 @@ public class ConnectingActivity extends AppCompatActivity
                                 description.setText("Успешное соединение с сервером!");
                             }
                         });
+
+                        request();
                         break;
                 }
             }
         });
         tcpClient.execute();
-    }
-
-    private void connect()
-    {
-        int networkId = wifiManager.addNetwork(kettle.configuration);
-
-        wifiManager.disconnect();
-        wifiManager.enableNetwork(networkId, true);
-        wifiManager.reconnect();
-
-        WifiInfo info = wifiManager.getConnectionInfo();
-
-        description.setText(R.string.ap_connected);
     }
 
     @Override
@@ -220,25 +209,11 @@ public class ConnectingActivity extends AppCompatActivity
 
     private void request()
     {
-        Handler handler = new Handler();
-
         sendData(new byte[] {'R', 5});
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run()
-            {
-                sendData(new byte[] {'R', 6});
-            }
-        }, delay);
+        sendData(new byte[] {'R', 6});
 
-        handler.postDelayed(new Runnable() {
-            @Override
-            public void run()
-            {
-                sendData(new byte[] {'R', 0});
-            }
-        }, delay * 2);
+        sendData(new byte[] {'R', 0});
     }
 
     private void receiveData(List<Byte> data)
