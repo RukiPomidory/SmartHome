@@ -15,6 +15,12 @@ bool heating = false;
 // Контроль нескончаемого потока данных с датчиков
 bool flow = false;
 
+// Массив для обработки входящих данных
+char buff[4];
+
+// ID клиента сервера. Обычно это 0
+int id = 0;
+
 // -------------- Функции --------------
 // Включение и выключение нагревателя
 void on(bool force = false); // Проверяет уровень воды и если все ок, включает нагрев. 
@@ -48,8 +54,26 @@ void setup()
     digitalWrite(RELAY, HIGH);
 
     // Запускаем последовательный порт (debug)
-    Serial.begin(9600);
+    Serial.begin(115200);
     delay(50);
+
+    // Запуск сервера на только что запущенном ESP8266
+    Serial.println("AT+CWMODE=3");  // включаем оба режима AP и STA
+    delay(5);
+    Serial.println("AT+CIPMUX=1");  // разрешаем множественное подключение
+    delay(5);
+    Serial.println("AT+CIPSERVER=1,3333");  // запускаем сервер
+    delay(10);
+
+    // TODO:
+    //  здесь еще можно прочитать входные данные и определить
+    //  успешность запуска, но это в следующей версии
+
+    // TODO:
+    //  сделать debug как SoftwareSerial на пару пинов
+    //  а также метод read() в котором вызывается
+    //  и возвращается обычный Serial.read(), 
+    //  который дублируется по UART в debug порт  
 }
 
 void loop() 
@@ -69,41 +93,114 @@ void loop()
     // Обработка входящих сообщений
     if(Serial.available())
     {
-        // Читаем символ
-        char c = Serial.read();
-
-        // Выбираем команду
-        switch(c)
+        // Проверяем на наличие данных
+        if(detectInputData())
         {
-            // Включение
-            case 'H':
-                on();
-                break;
+            // Здесь мы читаем запятую, которая
+            // разделяет команду и следующую цифру
+            char c = Serial.read();
+
+            // А здесь можно будет найти длину сообщения
+            int length = 0;
+
+            // Читаем первую цифру id подключенного клиента.
+            // Почти наверняка эта цифра единственная, но 
+            // нужно перестраховаться - читаем до тех пор, 
+            // пока не дойдем до запятой
+            c = Serial.read();
+            while(c != ',')
+            {
+                // Напоминаю, что id глобальный и пока что это одна переменная,
+                // в будущем будет запоминаться весь список активных клиентов
+                id *= 10;
+                id += c - '0';
+                
+                c = Serial.read();
+            }
+
+            // А здесь мы принимаем первую цифру длины данных.
+            // Вот тут уже спокойно может оказаться число
+            // больше 9, так что однозначно делаем цикл
+            c = Serial.read();
+            while(c != ':')
+            {
+                length *= 10;
+                length += c - '0';
+                
+                c = Serial.read();
+            }
+
             
-            // Выключение
-            case 'K':
-                off();
-                break;
-
-            // Запрос значения с датчика
-            case 'R':
-                sendSensorData();
-                break;
-
-            // Калибровка датчиков
-            case 'C':
-                calibrate();
-                break;
-
-            // Вкл/Выкл потока информации с датчиков
-            case 'F':
-                flowHandler();
-                break;
             
-            default:
-                Error(11);
-                break;
         }
+        
+    }
+}
+
+bool detectInputData()
+{
+    // Нам нужно обнаружить команду "+IPD", которая 
+    // в ESP8266 обозначает наличие входных даных
+    char c = Serial.read();
+    if ('+' != c)
+    {
+        return false;
+    }
+    
+    c = Serial.read();
+    if ('I' != c)
+    {
+        return false;
+    }
+    
+    c = Serial.read();
+    if ('P' != c)
+    {
+        return false;
+    }
+    
+    c = Serial.read();
+    if ('D' != c)
+    {
+        return false;
+    }
+
+    return true;
+}
+
+void processCommand(char cmd)
+{
+    // Выбираем команду
+    switch(cmd)
+    {
+        // Включение
+        case 'H':
+            on();
+            break;
+        
+        // Выключение
+        case 'K':
+            off();
+            break;
+
+        // Запрос значения с датчика
+        case 'R':
+            sendSensorData();
+            break;
+
+        // Калибровка датчиков
+        case 'C':
+            calibrate();
+            break;
+
+        // Вкл/Выкл потока информации с датчиков
+        case 'F':
+            flowHandler();
+            break;
+        
+        default:
+            Error(11);
+            break;
     }
 }
 
@@ -280,8 +377,11 @@ void flowHandler()
 
 void sendData(char character)
 {
-    byte data[] = {character, ';'};
-    Serial.write(data, 2);
+    byte data[] = {character, ';', '\n'};
+    Serial.println("AT+CIPSEND=" + String(id) + ",3");
+    Serial.write(data, 3);
+    Serial.flush();
+    delay(5);
 }
 
 void sendData(byte* data)
@@ -291,8 +391,12 @@ void sendData(byte* data)
 
 void sendData(byte* data, int length)
 {
+    Serial.println("AT+CIPSEND=" + String(id) + ',' + String(length + 2));
     Serial.write(data, length);
     Serial.write(';');
+    Serial.write('\n');
+    Serial.flush();
+    delay(10);
 }
 
 void Error(byte id)
