@@ -1,6 +1,7 @@
 package com.freshwind.smarthome;
 
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiInfo;
@@ -28,15 +29,55 @@ public class ConnectingActivity extends AppCompatActivity
     private static final String TAG = "CONNECT";
 
     private Kettle kettle;
-    private TcpClient tcpClient;
+    private AsyncTcpClient tcpClient;
     private ArrayList<Byte> receivedData;
     private WifiManager wifiManager;
-    private Handler handler;
     private TextView description;
+    private Runnable preTask = new Runnable() {
+        @Override
+        public void run()
+        {
+            // Подключение к точке доступа
+            int networkId = wifiManager.addNetwork(kettle.configuration);
+            wifiManager.disconnect();
+            wifiManager.enableNetwork(networkId, true);
+            wifiManager.reconnect();
+            WifiInfo info = wifiManager.getConnectionInfo();
+
+            int i = 0;
+            while(info.getNetworkId() == -1)
+            {
+                if (i < 20)
+                {
+                    Log.d(TAG, String.valueOf(i));
+                }
+                i++;
+                info = wifiManager.getConnectionInfo();
+            }
+
+            description.post(new Runnable() {
+                @Override
+                public void run()
+                {
+                    description.setText(R.string.ap_connected);
+                }
+            });
+
+            try
+            {
+                Thread.sleep(1000);
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+    };
 
     private final static int delay = 100;  // Задержка между посылками сообщений
 
 
+    @SuppressLint("StaticFieldLeak")
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState)
     {
@@ -58,17 +99,37 @@ public class ConnectingActivity extends AppCompatActivity
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         assert wifiManager != null;
 
-        new ConnectTask().execute();
+        tcpClient = new AsyncTcpClient(kettle.selfIP, kettle.port)
+        {
+            @Override
+            protected void onProgressUpdate(String... values)
+            {
+                super.onProgressUpdate(values);
+                //response received from server
+                Log.d(TAG, "response " + values[0]);
 
-//        handler = new Handler();
-//        handler.post(new Runnable() {
-//            @Override
-//            public void run()
-//            {
-//                connect();
-//            }
-//        });
+                char[] data = values[0].toCharArray();
+                for (char _byte : data)
+                {
+                    if (';' == _byte && receivedData.size() > 0)
+                    {
+                        receiveData(receivedData);
+                        receivedData.clear();
+                    }
+                    else
+                    {
+                        receivedData.add((byte) _byte);
+                    }
+                }
 
+//                if (values[0] != null && !values[0].equals(""))
+//                {
+//                    description.setText(values[0]);
+//                }
+            }
+        };
+        tcpClient.setPreTask(preTask);
+        tcpClient.execute();
     }
 
     private void connect()
@@ -214,86 +275,6 @@ public class ConnectingActivity extends AppCompatActivity
             default:
                 Log.w(TAG, new IllegalStateException());
                 break;
-        }
-    }
-
-
-    class ConnectTask extends AsyncTask<Void, String, Void>
-    {
-        @Override
-        protected Void doInBackground(Void... empty)
-        {
-            // Подключение к точке доступа
-            int networkId = wifiManager.addNetwork(kettle.configuration);
-            wifiManager.disconnect();
-            wifiManager.enableNetwork(networkId, true);
-            wifiManager.reconnect();
-            WifiInfo info = wifiManager.getConnectionInfo();
-
-            int i = 0;
-            while(info.getNetworkId() == -1)
-            {
-                if (i < 20)
-                {
-                    Log.d(TAG, String.valueOf(i));
-                }
-                i++;
-                info = wifiManager.getConnectionInfo();
-            }
-            publishProgress(getResources().getString(R.string.ap_connected));
-
-            try
-            {
-                Thread.sleep(1000);
-            } catch (InterruptedException e)
-            {
-                e.printStackTrace();
-            }
-
-            // Соединение с сервером и получение данных
-            tcpClient = new TcpClient(
-                kettle.selfIP,
-                kettle.port,
-                new TcpClient.OnMessageReceived() {
-                    @Override
-                    public void messageReceived(String message)
-                    {
-                        publishProgress("", message);
-                    }
-            });
-            tcpClient.run();
-
-            return null;
-        }
-
-        @Override
-        protected void onProgressUpdate(String... values)
-        {
-            super.onProgressUpdate(values);
-            //response received from server
-            Log.d(TAG, "response " + values[0]);
-
-            if(values.length > 1)
-            {
-                char[] data = values[1].toCharArray();
-                for (char _byte : data)
-                {
-                    if (';' == _byte && receivedData.size() > 0)
-                    {
-                        receiveData(receivedData);
-                        receivedData.clear();
-                    }
-                    else
-                    {
-                        receivedData.add((byte) _byte);
-                    }
-                }
-            }
-
-            if (values[0] != null && !values[0].equals(""))
-            {
-                description.setText(values[0]);
-            }
         }
     }
 }
