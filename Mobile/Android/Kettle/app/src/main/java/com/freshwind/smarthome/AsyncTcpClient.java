@@ -5,11 +5,15 @@ import android.util.Log;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStream;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.util.Arrays;
+import java.util.stream.Stream;
 
 public class AsyncTcpClient extends AsyncTask<Void, String, Void>
 {
@@ -24,6 +28,7 @@ public class AsyncTcpClient extends AsyncTask<Void, String, Void>
 
     private Runnable task;
     private PrintWriter bufferOut;
+    private OutputStream rawOutputStream;
     private BufferedReader bufferIn;
     private OnStateChanged stateListener = null;
 
@@ -79,6 +84,29 @@ public class AsyncTcpClient extends AsyncTask<Void, String, Void>
         thread.start();
     }
 
+    public void sendBytes(final byte[] data)
+    {
+        Runnable sending = new Runnable() {
+            @Override
+            public void run() {
+                if (rawOutputStream != null)
+                {
+                    Log.d(TAG, "Sending: \"" + Arrays.toString(data) + "\"");
+                    try
+                    {
+                        rawOutputStream.write(data);
+                        rawOutputStream.flush();
+                    } catch (IOException e)
+                    {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        };
+        Thread thread = new Thread(sending);
+        thread.start();
+    }
+
     @Override
     protected Void doInBackground(Void... none)
     {
@@ -98,6 +126,8 @@ public class AsyncTcpClient extends AsyncTask<Void, String, Void>
             {
                 // Используется для отправки данных на сервер
                 bufferOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+
+                rawOutputStream = socket.getOutputStream();
 
                 // С помощью него получаем данные от сервера
                 bufferIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
