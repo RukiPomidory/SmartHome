@@ -13,20 +13,31 @@ import java.net.Socket;
 
 public class AsyncTcpClient extends AsyncTask<Void, String, Void>
 {
-    private static final String TAG = TcpClient.class.getSimpleName();
+    private static final String TAG = AsyncTcpClient.class.getSimpleName();
 
     private String message;
     private String IP;
     private int port;
+    private int tryCount = 5;
+    private int state;
     private boolean running = false;
 
     private Runnable task;
     private PrintWriter bufferOut;
     private BufferedReader bufferIn;
+    private OnStateChanged stateListener = null;
+
+    public static final int DISCONNECTED = 0;
+    public static final int CONNECTED = 1;
 
     public void setPreTask(Runnable task)
     {
         this.task = task;
+    }
+
+    public void setOnStateChangedListener(OnStateChanged listener)
+    {
+        stateListener = listener;
     }
 
     public AsyncTcpClient(String IP, int port)
@@ -48,6 +59,7 @@ public class AsyncTcpClient extends AsyncTask<Void, String, Void>
 
         bufferIn = null;
         message = null;
+        stateListener = null;
     }
 
     public void sendMessage(final String message)
@@ -74,21 +86,26 @@ public class AsyncTcpClient extends AsyncTask<Void, String, Void>
 
             InetAddress serverIP = InetAddress.getByName(IP);
 
+
             try (Socket socket = new Socket(serverIP, port))
             {
-                //sends the message to the server
+                Log.d(TAG, "connected!");
+                if (stateListener != null)
+                {
+                    stateListener.stateChanged(CONNECTED);
+                }
+                state = CONNECTED;
+
+                // Используется для отправки данных на сервер
                 bufferOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
 
-                //receives the message which the server sends back
+                // С помощью него получаем данные от сервера
                 bufferIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-
-                //in this while the client listens for the messages sent by the server
+                // Пока клиент работает, прослушиваем сервер
                 while (running)
                 {
-                    //message = mBufferIn.readLine();
-
-                    //int _byte = mBufferIn.read();
+                    // Читаем строку и публикуем ее, чтобы она появилась в onProgressUpdate(...);
                     message = bufferIn.readLine();
                     if (message != null)
                     {
@@ -111,5 +128,10 @@ public class AsyncTcpClient extends AsyncTask<Void, String, Void>
         }
 
         return null;
+    }
+
+    public interface OnStateChanged
+    {
+        public void stateChanged(int state);
     }
 }

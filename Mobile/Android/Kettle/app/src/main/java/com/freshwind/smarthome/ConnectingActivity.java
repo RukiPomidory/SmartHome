@@ -20,6 +20,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ConnectingActivity extends AppCompatActivity
@@ -121,14 +122,27 @@ public class ConnectingActivity extends AppCompatActivity
                         receivedData.add((byte) _byte);
                     }
                 }
-
-//                if (values[0] != null && !values[0].equals(""))
-//                {
-//                    description.setText(values[0]);
-//                }
             }
         };
         tcpClient.setPreTask(preTask);
+        tcpClient.setOnStateChangedListener(new AsyncTcpClient.OnStateChanged() {
+            @Override
+            public void stateChanged(int state)
+            {
+                switch(state)
+                {
+                    case AsyncTcpClient.CONNECTED:
+                        description.post(new Runnable() {
+                            @Override
+                            public void run()
+                            {
+                                description.setText("Успешное соединение с сервером!");
+                            }
+                        });
+                        break;
+                }
+            }
+        });
         tcpClient.execute();
     }
 
@@ -194,9 +208,9 @@ public class ConnectingActivity extends AppCompatActivity
     {
         try
         {
-            //charTX.setValue(data);
-            //BLEService.writeCharacteristic(charTX);
-
+            String message = Arrays.toString(data);
+            Log.d(TAG, message);
+            tcpClient.sendMessage(message);
         }
         catch (Exception exc)
         {
