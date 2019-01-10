@@ -218,7 +218,7 @@ public class ConnectingActivity extends AppCompatActivity
     }
 
 
-    public class ConnectTask extends AsyncTask<Void, String, Void>
+    class ConnectTask extends AsyncTask<Void, String, Void>
     {
         @Override
         protected Void doInBackground(Void... empty)

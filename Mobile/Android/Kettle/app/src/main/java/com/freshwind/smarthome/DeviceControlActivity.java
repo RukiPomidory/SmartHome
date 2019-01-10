@@ -49,26 +49,6 @@ public class DeviceControlActivity extends AppCompatActivity
     private Fragment connectionErrorFragment;
     private FragmentTransaction transaction;
 
-    private BluetoothLeService BLEService;
-    private BluetoothGattCharacteristic character;
-
-    private final ServiceConnection mServiceConnection = new ServiceConnection() {
-        @Override
-        public void onServiceConnected(ComponentName name, IBinder service)
-        {
-            BLEService = ((BluetoothLeService.LocalBinder) service).getService();
-
-            mConnected = true;
-
-            displayGattServices(BLEService.getSupportedGattServices());
-        }
-
-        @Override
-        public void onServiceDisconnected(ComponentName name)
-        {
-            BLEService = null;
-        }
-    };
 
     private final OnClickListener heatOnClickListener = new OnClickListener() {
         public void onClick(View view)
@@ -149,15 +129,7 @@ public class DeviceControlActivity extends AppCompatActivity
             @Override
             public void run()
             {
-                if (BLEService != null)
-                {
-                    BLEService.connect(kettle.MAC);
-                }
-
-                if(!mConnected)
-                {
-                    handler.postDelayed(this, reconnectTimeout);
-                }
+                // TODO сделать реконнект
             }
         };
 
@@ -168,9 +140,6 @@ public class DeviceControlActivity extends AppCompatActivity
         connectionErrorFragment = new ConnectionErrorFragment();
 
         receivedData = new ArrayList<>();
-
-        Intent gattServiceIntent = new Intent(this, BluetoothLeService.class);
-        bindService(gattServiceIntent, mServiceConnection, 0);
     }
 
     @Override
@@ -199,15 +168,9 @@ public class DeviceControlActivity extends AppCompatActivity
     }
 
     @Override
-    protected void onDestroy() {
+    protected void onDestroy()
+    {
         super.onDestroy();
-        unbindService(mServiceConnection);
-        if (BLEService != null)
-        {
-            BLEService.disconnect();
-            BLEService = null;
-        }
-        stopService(new Intent(this, BluetoothLeService.class));
 
         handler.removeCallbacks(getTemperature);
         handler.removeCallbacks(getWaterLevel);
@@ -225,13 +188,7 @@ public class DeviceControlActivity extends AppCompatActivity
         {
             if(mConnected)
             {
-                character.setValue(data);
-                boolean result = BLEService.writeCharacteristic(character);
-                Log.d(TAG, "char written: " + result);
-//                if (!result)
-//                {
-//                    BLEService.disconnect();
-//                }
+                // TODO сделать логику отправки сообщений
             }
         }
         catch (Exception exc)
@@ -240,93 +197,18 @@ public class DeviceControlActivity extends AppCompatActivity
         }
     }
 
-
-    // Обрабатывает различные события bluetooth сервиса
-    // ACTION_GATT_CONNECTED: подключение к GATT серверу.
-    // ACTION_GATT_DISCONNECTED: отключение от GATT сервера.
-    // ACTION_GATT_SERVICES_DISCOVERED: найдены GATT службы.
-    // ACTION_DATA_AVAILABLE: Получены данные с устройства.
-    private final BroadcastReceiver mGattUpdateReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context context, Intent intent) {
-            final String action = intent.getAction();
-            if (BluetoothLeService.ACTION_GATT_CONNECTED.equals(action))
-            {
-                mConnected = true;
-                connectionReturned();
-            }
-            else if (BluetoothLeService.ACTION_GATT_DISCONNECTED.equals(action))
-            {
-                mConnected = false;
-                connectionLost();
-            }
-            else if (BluetoothLeService.ACTION_GATT_SERVICES_DISCOVERED.equals(action))
-            {
-                // Show all the supported services and characteristics on the user interface.
-                displayGattServices(BLEService.getSupportedGattServices());
-            }
-            else if (BluetoothLeService.ACTION_DATA_AVAILABLE.equals(action))
-            {
-                //displayData(intent.getStringExtra(mBluetoothLeService.EXTRA_DATA));
-                final byte[] data = intent.getByteArrayExtra(BluetoothLeService.EXTRA_DATA);
-
-                for (byte _byte : data)
-                {
-                    if (';' == _byte && receivedData.size() > 0)
-                    {
-                        processInputData(receivedData);
-                        receivedData.clear();
-                    }
-                    else
-                    {
-                        receivedData.add(_byte);
-                    }
-                }
-            }
-        }
-    };
-
     @Override
     protected void onResume()
     {
         super.onResume();
-        //registerReceiver(mGattUpdateReceiver, ConnectingActivity.makeGattUpdateIntentFilter());
-        if (BLEService != null)
-        {
-            final boolean result = BLEService.connect(kettle.MAC);
-            Log.d(TAG, "Connect request result=" + result);
-        }
     }
 
     @Override
-    protected void onPause() {
+    protected void onPause()
+    {
         super.onPause();
-        unregisterReceiver(mGattUpdateReceiver);
     }
 
-    // Demonstrates how to iterate through the supported GATT Services/Characteristics.
-    // In this sample, we populate the data structure that is bound to the ExpandableListView
-    // on the UI.
-    private void displayGattServices(List<BluetoothGattService> gattServices) {
-        if (gattServices == null)
-        {
-            return;
-        }
-
-        // Loops through available GATT Services.
-        for (BluetoothGattService gattService : gattServices) {
-            // get characteristic when UUID matches RX/TX UUID
-            //Log.d("in displayGattServices", gattService.getUuid().toString());
-            character = gattService.getCharacteristic(BluetoothLeService.UUID_HM_RX_TX);
-
-            if(character != null)
-            {
-                BLEService.setCharacteristicNotification(character, true);
-                return;
-            }
-        }
-
-    }
 
     /**
      * Обрабатывает полученные по bluetooth данные
@@ -427,7 +309,5 @@ public class DeviceControlActivity extends AppCompatActivity
         transaction = getFragmentManager().beginTransaction();
         transaction.remove(connectionErrorFragment);
         transaction.commit();
-
-        displayGattServices(BLEService.getSupportedGattServices());
     }
 }
