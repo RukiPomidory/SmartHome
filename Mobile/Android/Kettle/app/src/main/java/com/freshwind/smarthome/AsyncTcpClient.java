@@ -15,7 +15,7 @@ import java.net.Socket;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-public class AsyncTcpClient extends AsyncTask<Void, String, Void>
+public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
 {
     private static final String TAG = AsyncTcpClient.class.getSimpleName();
 
@@ -124,8 +124,10 @@ public class AsyncTcpClient extends AsyncTask<Void, String, Void>
 
             try (Socket socket = new Socket(serverIP, port))
             {
+                // TODO buffer здесь излишен. Упростить.
                 // Используется для отправки данных на сервер
                 bufferOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
+
 
                 rawOutputStream = socket.getOutputStream();
 
@@ -142,12 +144,9 @@ public class AsyncTcpClient extends AsyncTask<Void, String, Void>
                 // Пока клиент работает, прослушиваем сервер
                 while (running)
                 {
-                    // Читаем строку и публикуем ее, чтобы она появилась в onProgressUpdate(...);
-                    message = bufferIn.readLine();
-                    if (message != null)
-                    {
-                        publishProgress(message);
-                    }
+                    // Читаем байт и публикуем его, чтобы он появился в onProgressUpdate(...);
+                    int data = bufferIn.read();
+                    publishProgress(data);
                 }
 
                 Log.d(TAG, "Received Message: \"" + message + "\"");

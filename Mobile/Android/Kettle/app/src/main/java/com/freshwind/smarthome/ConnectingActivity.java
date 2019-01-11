@@ -103,25 +103,21 @@ public class ConnectingActivity extends AppCompatActivity
         tcpClient = new AsyncTcpClient(kettle.selfIP, kettle.port)
         {
             @Override
-            protected void onProgressUpdate(String... values)
+            protected void onProgressUpdate(Integer... values)
             {
                 super.onProgressUpdate(values);
                 //response received from server
                 Log.d(TAG, "response " + values[0]);
-
-                char[] data = values[0].toCharArray();
-                for (char _byte : data)
+                char _byte = (char) (int) values[0];
+                if (';' == _byte && receivedData.size() > 0)
                 {
-                    if (';' == _byte && receivedData.size() > 0)
-                    {
-                        receiveData(receivedData);
-                        Log.d(TAG, "received: " + receivedData);
-                        receivedData.clear();
-                    }
-                    else
-                    {
-                        receivedData.add((byte) _byte);
-                    }
+                    receiveData(receivedData);
+                    Log.d(TAG, "received: " + receivedData);
+                    receivedData.clear();
+                }
+                else
+                {
+                    receivedData.add((byte) _byte);
                 }
             }
         };
@@ -150,14 +146,20 @@ public class ConnectingActivity extends AppCompatActivity
     }
 
     @Override
+    protected void onDestroy()
+    {
+        super.onDestroy();
+        if(tcpClient != null)
+        {
+            tcpClient.stopClient();
+        }
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
         if (item.getItemId() == android.R.id.home)
         {
-            if(tcpClient != null)
-            {
-                tcpClient.stopClient();
-            }
             finish();
         }
 
