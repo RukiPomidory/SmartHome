@@ -115,6 +115,7 @@ public class ConnectingActivity extends AppCompatActivity
                     if (';' == _byte && receivedData.size() > 0)
                     {
                         receiveData(receivedData);
+                        Log.d(TAG, "received: " + receivedData);
                         receivedData.clear();
                     }
                     else

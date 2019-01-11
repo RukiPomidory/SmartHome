@@ -105,11 +105,7 @@ void loop()
     {
         // Проверяем на наличие данных
         if(detectInputData())
-        {
-            // DEBUG
-            digitalWrite(LED_BUILTIN, HIGH);
-
-            
+        {   
             // Здесь мы читаем запятую, которая
             // разделяет команду и следующую цифру
             char c = Serial.read();
@@ -143,6 +139,10 @@ void loop()
                 
                 c = Serial.read();
             }
+
+            // Вот мы и добрались до заветных байтов команды.
+            // Можно их прочитать и обработать
+            processCommand(Serial.read());
         }
         
     }
@@ -389,7 +389,7 @@ void flowHandler()
 void sendData(char character)
 {
     byte data[] = {character, ';', '\n'};
-    Serial.println("AT+CIPSEND=" + String(id) + ",3");
+    Serial.println("AT+CIPSEND=" + String(id) + ",2");
     Serial.write(data, 3);
     Serial.flush();
     delay(5);
@@ -402,7 +402,8 @@ void sendData(byte* data)
 
 void sendData(byte* data, int length)
 {
-    Serial.println("AT+CIPSEND=" + String(id) + ',' + String(length + 2));
+    Serial.println("AT+CIPSEND=" + String(id) + ',' + String(length + 1));
+    delay(100);
     Serial.write(data, length);
     Serial.write(';');
     Serial.write('\n');
