@@ -26,6 +26,12 @@ char buff[4];
 // ID клиента сервера. Обычно это 0
 int id = 0;
 
+// Для измерения временных промежутков
+unsigned long start;
+
+// Количество оставшихся байтов в сообщении
+int bytesLeft = 0;
+
 // -------------- Функции --------------
 // Включение и выключение нагревателя
 void on(bool force = false); // Проверяет уровень воды и если все ок, включает нагрев. 
@@ -56,8 +62,10 @@ Sensor pressureSensorL(pressureSensorAlphaL, PRESS_SENSOR_L);
 
 void setup() 
 {
+    // Светодиод для дебага
     pinMode(LED_BUILTIN, OUTPUT);
     digitalWrite(LED_BUILTIN, LOW);
+    
     // Выставляем режим OUTPUT на реле и сразу отключаем
     pinMode(RELAY, OUTPUT);
     digitalWrite(RELAY, HIGH);
@@ -75,23 +83,25 @@ void setup()
     Serial.println("AT+CIPSERVER=1,3333");  // запускаем сервер
     delay(10);
 
+    start = millis();
+
     // TODO:
     //  здесь еще можно прочитать входные данные и определить
     //  успешность запуска, но это в следующей версии
-
-    // TODO:
-    //  сделать debug как SoftwareSerial на пару пинов
-    //  а также метод read() в котором вызывается
-    //  и возвращается обычный Serial.read(), 
-    //  который дублируется по UART в debug порт  
 }
 
 void loop() 
 {
-    // Получаем значения температуры и уровня воды
-    double temperature = getTemperature();
-    double waterAmount = getWaterAmount();
-    delay(50);
+    double temperature;
+    double waterAmount;
+    
+    if (millis() - start > 50)
+    {
+        // Получаем значения температуры и уровня воды
+        temperature = getTemperature();
+        waterAmount = getWaterAmount();
+        start = millis();
+    }
 
     // Отключаемся при достижении максимальной температуры
     if(round(temperature) >= maxTemperature && heating)
@@ -103,22 +113,23 @@ void loop()
     // Обработка входящих сообщений
     if(Serial.available())
     {
+        digitalWrite(LED_BUILTIN, HIGH);
         // Проверяем на наличие данных
         if(detectInputData())
-        {   
+        {
             // Здесь мы читаем запятую, которая
             // разделяет команду и следующую цифру
             char c = Serial.read();
-
-            // А здесь можно будет найти длину сообщения
-            int length = 0;
-
+            
+            bytesLeft = 0;
+            id = 0;
+                
             // Читаем первую цифру id подключенного клиента.
             // Почти наверняка эта цифра единственная, но 
             // нужно перестраховаться - читаем до тех пор, 
             // пока не дойдем до запятой
             c = Serial.read();
-            while(c != ',')
+            while(c != ',')     // TODO: А здесь можно оптимизировать, не умножая каждый раз 0 на 10
             {
                 // Напоминаю, что id глобальный и пока что это одна переменная,
                 // в будущем будет запоминаться весь список активных клиентов
@@ -134,18 +145,25 @@ void loop()
             c = Serial.read();
             while(c != ':')
             {
-                length *= 10;
-                length += c - '0';
+                bytesLeft *= 10;
+                bytesLeft += c - '0';
                 
                 c = Serial.read();
             }
 
             // Вот мы и добрались до заветных байтов команды.
             // Можно их прочитать и обработать
-            processCommand(Serial.read());
+            char cmd = Serial.read();
+            bytesLeft--;
+            processCommand(cmd);
         }
         
     }
+    else
+    {
+        digitalWrite(LED_BUILTIN, LOW);
+    }
+    delay(5);
 }
 
 bool detectInputData()
@@ -180,38 +198,52 @@ bool detectInputData()
 }
 
 void processCommand(char cmd)
-{
-    // Выбираем команду
-    switch(cmd)
+{   
+    for (;;)
     {
-        // Включение
-        case 'H':
-            on();
-            break;
-        
-        // Выключение
-        case 'K':
-            off();
-            break;
+        // Выбираем команду
+        switch(cmd)
+        {
+            // Включение
+            case 'H':
+                on();
+                break;
+            
+            // Выключение
+            case 'K':
+                off();
+                break;
+    
+            // Запрос значения с датчика
+            case 'R':
+                sendSensorData();
+                break;
+    
+            // Калибровка датчиков
+            case 'C':
+                calibrate();
+                break;
+    
+            // Вкл/Выкл потока информации с датчиков
+            case 'F':
+                flowHandler();
+                break;
+            
+            default:
+                Error(11);
+                break;
+        }
 
-        // Запрос значения с датчика
-        case 'R':
-            sendSensorData();
-            break;
+        // Смотрим на оставшиеся биты и решаем, пора ли выходить
+        bytesLeft--;
+        if(bytesLeft < 0)
+        {
+            return;
+        }
 
-        // Калибровка датчиков
-        case 'C':
-            calibrate();
-            break;
-
-        // Вкл/Выкл потока информации с датчиков
-        case 'F':
-            flowHandler();
-            break;
-        
-        default:
-            Error(11);
-            break;
+        // Счетчик не выгоняет, еще можно поиграть.
+        // Читаем следующий бит
+        cmd = Serial.read();
     }
 }
 
@@ -304,6 +336,7 @@ double getWaterAmount()
 void sendSensorData()
 {
     byte id = Serial.read();
+    bytesLeft--;
     
     int data;
     switch (id)
@@ -369,9 +402,11 @@ void calibrate()
     
 }
 
-void flowHandler()
+void flowHandler() //Не знаю, зачем я его сделал, но пусть будет
 {
     byte mode = Serial.read();
+    bytesLeft--;
+    
     if (1 == mode)
     {
         flow = true;
@@ -390,6 +425,10 @@ void sendData(char character)
 {
     byte data[] = {character, ';', '\n'};
     Serial.println("AT+CIPSEND=" + String(id) + ",2");
+
+    // Ждем у моря погоды
+    delay(100);
+    
     Serial.write(data, 3);
     Serial.flush();
     delay(5);
@@ -403,7 +442,10 @@ void sendData(byte* data)
 void sendData(byte* data, int length)
 {
     Serial.println("AT+CIPSEND=" + String(id) + ',' + String(length + 1));
+    
+    // Ждем у моря погоды
     delay(100);
+    
     Serial.write(data, length);
     Serial.write(';');
     Serial.write('\n');
