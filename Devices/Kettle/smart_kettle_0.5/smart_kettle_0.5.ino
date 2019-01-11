@@ -1,5 +1,6 @@
 #include "Sensor.cpp"
 #include "Settings.h"
+#include <SoftwareSerial.h> // позволяет создать еще один UART-порт на любых пинах ардуино
 
 #define PRESS_SENSOR_F A0 // Передний   \|
 #define PRESS_SENSOR_L A3 // Левый      || Датчики давления
@@ -7,6 +8,10 @@
 
 #define TEMP_SENSOR A1  // Датчик температуры
 #define RELAY 4         // Реле
+
+// Порты SoftwareSerial порта
+#define swRX 6
+#define swTX 7
 
 
 // Идет ли сейчас нагрев
@@ -40,6 +45,8 @@ void sendSensorData();
 void Error(byte);
 //--^--^--^--^--^--^--^--^--^--^--^--^--
 
+// Создаем последовательный порт на выбранных пинах
+SoftwareSerial swSerial(swRX, swTX);
 
 // Создаем датчики
 Sensor temperatureSensor(temperatureSensorAlpha, TEMP_SENSOR);
@@ -49,12 +56,15 @@ Sensor pressureSensorL(pressureSensorAlphaL, PRESS_SENSOR_L);
 
 void setup() 
 {
+    pinMode(LED_BUILTIN, OUTPUT);
+    digitalWrite(LED_BUILTIN, LOW);
     // Выставляем режим OUTPUT на реле и сразу отключаем
     pinMode(RELAY, OUTPUT);
     digitalWrite(RELAY, HIGH);
 
-    // Запускаем последовательный порт (debug)
+    // Запускаем последовательный порт
     Serial.begin(115200);
+    swSerial.begin(19200);
     delay(50);
 
     // Запуск сервера на только что запущенном ESP8266
@@ -96,6 +106,10 @@ void loop()
         // Проверяем на наличие данных
         if(detectInputData())
         {
+            // DEBUG
+            digitalWrite(LED_BUILTIN, HIGH);
+
+            
             // Здесь мы читаем запятую, которая
             // разделяет команду и следующую цифру
             char c = Serial.read();
@@ -129,9 +143,6 @@ void loop()
                 
                 c = Serial.read();
             }
-
-            
-            
         }
         
     }
