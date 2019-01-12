@@ -81,6 +81,8 @@ void setup()
     Serial.println("AT+CIPMUX=1");  // разрешаем множественное подключение
     delay(5);
     Serial.println("AT+CIPSERVER=1,3333");  // запускаем сервер
+    delay(5);
+    Serial.println("ATE0"); // отрубаем echo
     delay(10);
 
     start = millis();
