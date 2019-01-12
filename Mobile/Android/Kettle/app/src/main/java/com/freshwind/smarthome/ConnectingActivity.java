@@ -28,6 +28,10 @@ public class ConnectingActivity extends AppCompatActivity
     public static final String EXTRAS_DEVICE = "KETTLE";
 
     private static final String TAG = "CONNECT";
+    private static final int delay = 100;
+    private static final int attemptCount = 5;
+
+    private int attempt;
 
     private Kettle kettle;
     private AsyncTcpClient tcpClient;
@@ -45,14 +49,28 @@ public class ConnectingActivity extends AppCompatActivity
             wifiManager.reconnect();
             WifiInfo info = wifiManager.getConnectionInfo();
 
-            int i = 0;
+            attempt = 0;
             while(info.getNetworkId() == -1)
             {
-                if (i < 20)
+                attempt++;
+                if (attempt > attemptCount)
                 {
-                    Log.d(TAG, String.valueOf(i));
+                    // TODO уведомление о неудаче и прекращение процесса подключения
+                    return;
                 }
-                i++;
+
+                description.post(new Runnable() {
+                    @Override
+                    public void run()
+                    {
+                        String text = getString(R.string.default_attempt_text) + String.valueOf(attempt);
+                        description.setText(text);
+                    }
+                });
+
+                try { Thread.sleep(1000); }
+                catch (InterruptedException ignored) { }
+
                 info = wifiManager.getConnectionInfo();
             }
 
@@ -75,7 +93,12 @@ public class ConnectingActivity extends AppCompatActivity
         }
     };
 
-    private final static int delay = 100;  // Задержка между посылками сообщений
+
+    // TODO реализация в классе Kettle!!!
+    private boolean[] checkList;
+    // P.S. любое упоминание этого объекта не имеет права
+    // расцениваться как адекватный, правильный или некривой код.
+    // ЭТО ВРЕМЕННОЕ РЕШЕНИЕ
 
 
     @SuppressLint("StaticFieldLeak")
@@ -143,6 +166,13 @@ public class ConnectingActivity extends AppCompatActivity
             }
         });
         tcpClient.execute();
+
+
+        // TODO: Инкапсулировать функционал в Kettle вместо этого дерьма
+        // Список того, что нужно запросить у чайника.
+        // Данные иногда теряются и нам не нужно запрашивать
+        // повторно то, что мы уже получили.
+        checkList = new boolean[] {false, false, false};
     }
 
     @Override
@@ -210,11 +240,57 @@ public class ConnectingActivity extends AppCompatActivity
 
     private void request()
     {
-        sendData(new byte[] {'R', 5});
+        Runnable checking = new Runnable() {
+            @Override
+            public void run()
+            {
+                int need = check();
+                while(need > 0)
+                {
+                    final int finalNeed = need;
+                    description.post(new Runnable() {
+                        @Override
+                        public void run()
+                        {
+                            String text = "Опрашиваю датчики...\nНе хватает: " + String.valueOf(finalNeed);
+                            description.setText(text);
+                        }
+                    });
 
-        sendData(new byte[] {'R', 6});
+                    try { Thread.sleep(delay); }
+                    catch (InterruptedException e) { e.printStackTrace(); }
+                    need = check();
+                }
 
-        sendData(new byte[] {'R', 0});
+                startMain();
+            }
+        };
+
+        Thread thread = new Thread(checking);
+        thread.start();
+    }
+
+    private int check()
+    {
+        int need = 0;
+
+        if (!checkList[0])
+        {
+            sendData(new byte[] {'R', 5});
+            need++;
+        }
+        if (!checkList[1])
+        {
+            sendData(new byte[] {'R', 6});
+            need++;
+        }
+        if (!checkList[2])
+        {
+            sendData(new byte[] {'R', 0});
+            need++;
+        }
+
+        return need;
     }
 
     private void receiveData(List<Byte> data)
@@ -227,15 +303,17 @@ public class ConnectingActivity extends AppCompatActivity
                 {
                     case 5:
                         kettle.waterLevel = data.get(2);
+                        checkList[0] = true;
                         break;
 
                     case 6:
                         kettle.temperature = data.get(2);
+                        checkList[1] = true;
                         break;
 
                     case 0:
                         kettle.state = data.get(2);
-                        startMain();
+                        checkList[2] = true;
                         break;
                 }
             }
@@ -255,11 +333,11 @@ public class ConnectingActivity extends AppCompatActivity
         switch(code)
         {
             case 10:
-                Log.w(TAG, "ОШИБКА распознавания id датчика");
+                Log.e(TAG, "ОШИБКА распознавания id датчика");
                 break;
 
             case 11:
-                Log.w(TAG, "ОШИБКА распознавания команды");
+                Log.e(TAG, "ОШИБКА распознавания команды");
                 break;
 
             default:

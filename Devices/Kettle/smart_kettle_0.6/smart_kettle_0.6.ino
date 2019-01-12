@@ -195,8 +195,7 @@ bool detectInputData()
 }
 
 void processCommand(char cmd)
-{   
-    swSerial.println("enter");
+{
     for (;;)
     {
         // Выбираем команду
@@ -229,7 +228,7 @@ void processCommand(char cmd)
             
             default:
                 Error(11);
-                swSerial.print("err");
+                swSerial.println("err " + cmd);
                 return;
         }
 
@@ -237,7 +236,7 @@ void processCommand(char cmd)
         bytesLeft--;
         if(bytesLeft < 0)
         {
-            swSerial.print("exit");
+            swSerial.println("ok ");
             return;
         }
         else

@@ -99,9 +99,10 @@
     <string name="tableItemImageDescription">kettle image</string>
     <string name="unnamed">Безымянный</string>
     <string name="null_mac">00:00:00:00:00</string>
-    <string name="connecting">Подключение...</string>
+    <string name="connecting">Подключение…</string>
     <string name="connecting_first_state">Попытка 1</string>
     <string name="ap_connected">Успешное подключение к точке доступа!\nПопытка соединения с сервером…</string>
+    <string name="default_attempt_text">Подключаюсь к чайнику… Попытка №</string>
 
 
 </resources>

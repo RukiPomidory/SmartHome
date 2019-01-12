@@ -12,6 +12,7 @@ import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
 import java.net.InetAddress;
 import java.net.Socket;
+import java.net.SocketException;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -19,7 +20,6 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
 {
     private static final String TAG = AsyncTcpClient.class.getSimpleName();
 
-    private String message;
     private String IP;
     private int port;
     private int tryCount = 5;
@@ -49,6 +49,7 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
     {
         this.IP = IP;
         this.port = port;
+        state = DISCONNECTED;
     }
 
     public void stopClient()
@@ -63,7 +64,6 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
         }
 
         bufferIn = null;
-        message = null;
         stateListener = null;
     }
 
@@ -121,8 +121,17 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
 
             InetAddress serverIP = InetAddress.getByName(IP);
 
+            Socket socket = null;
+            int i = 0;
+            while(null == socket)
+            {
+                Log.d(TAG, "Попытка " + String.valueOf(i));
+                socket = createSocket(serverIP, port);
+                i++;
+            }
+            Log.d(TAG, "Сеть найдена, сокет готов!");
 
-            try (Socket socket = new Socket(serverIP, port))
+            try
             {
                 // TODO buffer здесь излишен. Упростить.
                 // Используется для отправки данных на сервер
@@ -135,11 +144,11 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
                 bufferIn = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
                 Log.d(TAG, "connected!");
+                state = CONNECTED;
                 if (stateListener != null)
                 {
                     stateListener.stateChanged(CONNECTED);
                 }
-                state = CONNECTED;
 
                 // Пока клиент работает, прослушиваем сервер
                 while (running)
@@ -148,19 +157,16 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
                     int data = bufferIn.read();
                     publishProgress(data);
                 }
-
-                Log.d(TAG, "Received Message: \"" + message + "\"");
-
             }
             catch (Exception exc)
             {
-                Log.e(TAG, exc.getMessage());
+                exc.printStackTrace();
             }
 
         }
         catch(Exception exc)
         {
-            Log.e(TAG, exc.getMessage());
+            Log.e(TAG + " (out)", exc.getMessage());
         }
 
         return null;
@@ -169,5 +175,22 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
     public interface OnStateChanged
     {
         public void stateChanged(int state);
+    }
+
+    private Socket createSocket(InetAddress ip, int port) throws IOException
+    {
+        Socket socket;
+
+        try
+        {
+            socket = new Socket(ip, port);
+        }
+        catch(SocketException exc)
+        {
+            Log.e(TAG, "Неудачная попытка создать сокет");
+            socket = null;
+        }
+
+        return socket;
     }
 }
