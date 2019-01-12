@@ -72,7 +72,7 @@ void setup()
 
     // Запускаем последовательный порт
     Serial.begin(115200);
-    swSerial.begin(19200);
+    swSerial.begin(38400);
     delay(50);
 
     // Запуск сервера на только что запущенном ESP8266
@@ -124,19 +124,16 @@ void loop()
             bytesLeft = 0;
             id = 0;
                 
-            // Читаем первую цифру id подключенного клиента.
-            // Почти наверняка эта цифра единственная, но 
-            // нужно перестраховаться - читаем до тех пор, 
-            // пока не дойдем до запятой
+            // Читаем id подключенного клиента.
+            // Вряд ли в первых версиях к серверу будет подключаться
+            // больше 9 пользователей, так что пока
+            // работаем только с одной цифрой
             c = Serial.read();
-            while(c != ',')     // TODO: А здесь можно оптимизировать, не умножая каждый раз 0 на 10
+            id = c - '0';
+            c = Serial.read();
+            if (c != ',' || id < 0 || id > 9)
             {
-                // Напоминаю, что id глобальный и пока что это одна переменная,
-                // в будущем будет запоминаться весь список активных клиентов
-                id *= 10;
-                id += c - '0';
-                
-                c = Serial.read();
+                return;
             }
 
             // А здесь мы принимаем первую цифру длины данных.
@@ -199,6 +196,7 @@ bool detectInputData()
 
 void processCommand(char cmd)
 {   
+    swSerial.println("enter");
     for (;;)
     {
         // Выбираем команду
@@ -231,20 +229,27 @@ void processCommand(char cmd)
             
             default:
                 Error(11);
-                break;
+                swSerial.print("err");
+                return;
         }
 
         // Смотрим на оставшиеся биты и решаем, пора ли выходить
         bytesLeft--;
         if(bytesLeft < 0)
         {
+            swSerial.print("exit");
             return;
+        }
+        else
+        {
+            swSerial.println(bytesLeft);
         }
 
         // Счетчик не выгоняет, еще можно поиграть.
         // Читаем следующий бит
         cmd = Serial.read();
     }
+    swSerial.print("impossible");
 }
 
 void on(bool force = false)
@@ -444,7 +449,7 @@ void sendData(byte* data, int length)
     Serial.println("AT+CIPSEND=" + String(id) + ',' + String(length + 1));
     
     // Ждем у моря погоды
-    delay(100);
+    delay(5);
     
     Serial.write(data, length);
     Serial.write(';');

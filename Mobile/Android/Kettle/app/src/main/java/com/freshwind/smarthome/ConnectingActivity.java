@@ -200,9 +200,6 @@ public class ConnectingActivity extends AppCompatActivity
     {
         try
         {
-//            String message = Arrays.toString(data);
-//            Log.d(TAG, message);
-//            tcpClient.sendMessage(message);
             tcpClient.sendBytes(data);
         }
         catch (Exception exc)

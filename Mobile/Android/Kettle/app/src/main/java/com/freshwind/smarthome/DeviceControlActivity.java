@@ -1,20 +1,14 @@
 package com.freshwind.smarthome;
 
+import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
-import android.bluetooth.BluetoothGattCharacteristic;
-import android.bluetooth.BluetoothGattService;
-import android.content.BroadcastReceiver;
-import android.content.ComponentName;
-import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.Handler;
-import android.os.IBinder;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.os.Bundle;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -48,6 +42,7 @@ public class DeviceControlActivity extends AppCompatActivity
     private Fragment elephantFragment;
     private Fragment connectionErrorFragment;
     private FragmentTransaction transaction;
+    private AsyncTcpClient tcpClient;
 
 
     private final OnClickListener heatOnClickListener = new OnClickListener() {
@@ -67,6 +62,7 @@ public class DeviceControlActivity extends AppCompatActivity
     };
 
 
+    @SuppressLint("StaticFieldLeak")
     @Override
     protected void onCreate(Bundle savedInstanceState)
     {
@@ -140,6 +136,36 @@ public class DeviceControlActivity extends AppCompatActivity
         connectionErrorFragment = new ConnectionErrorFragment();
 
         receivedData = new ArrayList<>();
+
+        tcpClient = new AsyncTcpClient(kettle.selfIP, kettle.port) {
+            @Override
+            protected void onProgressUpdate(Integer... values)
+            {
+                super.onProgressUpdate(values);
+                //response received from server
+                Log.d(TAG, "response " + values[0]);
+                char _byte = (char) (int) values[0];
+                if (';' == _byte && receivedData.size() > 0)
+                {
+                    // Код символа ';' = 59, поэтому показание с датчика, равное 59
+                    // может быть ошибочно принято за разделитель. Отсекаем этот случай.
+                    if ('T' == receivedData.get(0) && 2 == receivedData.size())
+                    {
+                        receivedData.add((byte) _byte);
+                        return;
+                    }
+
+                    processInputData(receivedData);
+                    Log.d(TAG, "received: " + receivedData);
+                    receivedData.clear();
+                }
+                else
+                {
+                    receivedData.add((byte) _byte);
+                }
+            }
+        };
+        tcpClient.execute();
     }
 
     @Override
@@ -171,9 +197,12 @@ public class DeviceControlActivity extends AppCompatActivity
     protected void onDestroy()
     {
         super.onDestroy();
-
         handler.removeCallbacks(getTemperature);
         handler.removeCallbacks(getWaterLevel);
+        if (tcpClient != null)
+        {
+            tcpClient.stopClient();
+        }
     }
 
     private void sendData(String message)
@@ -186,10 +215,7 @@ public class DeviceControlActivity extends AppCompatActivity
     {
         try
         {
-            if(mConnected)
-            {
-                // TODO сделать логику отправки сообщений
-            }
+            tcpClient.sendBytes(data);
         }
         catch (Exception exc)
         {
@@ -227,34 +253,12 @@ public class DeviceControlActivity extends AppCompatActivity
                     case 5:
                         byte waterLevel = data.get(2);
                         waterProgressBar.setProgress(waterLevel);
-
-                        if (waterLevel / 10.0 > waterLimit)
-                        {
-                            if (!elephantShown)
-                            {
-                                transaction = getFragmentManager().beginTransaction();
-                                transaction.add(R.id.fragmentLayout, elephantFragment);
-                                transaction.commit();
-                                elephantShown = true;
-                            }
-                        }
-                        else
-                        {
-                            if (elephantShown)
-                            {
-                                transaction = getFragmentManager().beginTransaction();
-                                transaction.remove(elephantFragment);
-                                transaction.commit();
-                                elephantShown = false;
-                            }
-                        }
-
+                        checkElephant(waterLevel);
                         break;
 
                     case 6:
                         byte temperature = data.get(2);
                         tempProgressBar.setProgress(temperature);
-
                         break;
                 }
                 break;
@@ -293,6 +297,30 @@ public class DeviceControlActivity extends AppCompatActivity
                 launchBtn.setOnClickListener(heatOnClickListener);
                 launchBtn.setText(R.string.launch);
                 break;
+        }
+    }
+
+    private void checkElephant(byte waterLevel)
+    {
+        if (waterLevel > waterLimit * 10)
+        {
+            if (!elephantShown)
+            {
+                transaction = getFragmentManager().beginTransaction();
+                transaction.add(R.id.fragmentLayout, elephantFragment);
+                transaction.commit();
+                elephantShown = true;
+            }
+        }
+        else
+        {
+            if (elephantShown)
+            {
+                transaction = getFragmentManager().beginTransaction();
+                transaction.remove(elephantFragment);
+                transaction.commit();
+                elephantShown = false;
+            }
         }
     }
 
