@@ -105,7 +105,10 @@
     <string name="default_attempt_text">Подключаюсь к чайнику… Попытка №</string>
     <string name="self_ap">Оставить</string>
     <string name="router">Подключить к роутеру</string>
-    <string name="select_connect">Сейчас ваш телефон подключен к Wi-Fi чайника. Если у вас есть роутер, чайник можно к нему подключить.</string>
+    <string name="select_connect">Сейчас ваш телефон подключен к точке доступа чайника. Если у вас есть роутер, чайник можно к нему подключить.</string>
+    <string name="router_done">Ок</string>
+    <string name="router_ssid">Имя сети</string>
+    <string name="router_password">Пароль</string>
 
 
 </resources>
