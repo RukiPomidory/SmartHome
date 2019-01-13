@@ -103,6 +103,9 @@
     <string name="connecting_first_state">Попытка 1</string>
     <string name="ap_connected">Успешное подключение к точке доступа!\nПопытка соединения с сервером…</string>
     <string name="default_attempt_text">Подключаюсь к чайнику… Попытка №</string>
+    <string name="self_ap">Оставить</string>
+    <string name="router">Подключить к роутеру</string>
+    <string name="select_connect">Сейчас ваш телефон подключен к Wi-Fi чайника. Если у вас есть роутер, чайник можно к нему подключить.</string>
 
 
 </resources>
