@@ -14,6 +14,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.View.OnClickListener;
 import android.widget.TextView;
 
 import java.io.BufferedWriter;
@@ -22,7 +23,7 @@ import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ConnectingActivity extends AppCompatActivity
+public class ConnectingActivity extends AppCompatActivity implements OnClickListener
 {
     public static final String EXTRAS_DEVICE = "KETTLE";
 
@@ -38,6 +39,8 @@ public class ConnectingActivity extends AppCompatActivity
     private WifiManager wifiManager;
     private TextView description;
     private GetRouterInfoFragment infoFragment;
+    private SelectConnectionFragment selectConnectionFragment;
+    private FragmentTransaction transaction;
     private Runnable preTask = new Runnable() {
         @Override
         public void run()
@@ -125,6 +128,11 @@ public class ConnectingActivity extends AppCompatActivity
         if (Kettle.Connection.selfAp == kettle.connection)
         {
             startTcpClient();
+
+            SelectConnectionFragment selectConnectionFragment;
+            selectConnectionFragment = new SelectConnectionFragment();
+            selectConnectionFragment.setOnClickListener(this);
+            showConnectionDialog();
         }
         else
         {
@@ -136,6 +144,41 @@ public class ConnectingActivity extends AppCompatActivity
         // Данные иногда теряются и нам не нужно запрашивать
         // повторно то, что мы уже получили.
         checkList = new boolean[] {false, false, false};
+    }
+
+    @Override
+    public void onClick(View v)
+    {
+        int id = v.getId();
+        switch(id)
+        {
+            case R.id.select_self_ap_btn:
+                // TODO: check if fragmentManager don't contains fragment
+                transaction = getFragmentManager().beginTransaction();
+                transaction.remove(selectConnectionFragment);
+                transaction.commit();
+                break;
+
+            case R.id.select_router_btn:
+                connectToRouter();
+                break;
+        }
+    }
+
+    private void showConnectionDialog()
+    {
+        transaction = getFragmentManager().beginTransaction();
+        transaction.add(R.id.fragmentLayout, selectConnectionFragment);
+        transaction.commit();
+    }
+
+    private void connectToRouter()
+    {
+        final Intent connect = new Intent(this, ConnectingActivity.class);
+        kettle.connection = Kettle.Connection.router;
+        connect.putExtra(ConnectingActivity.EXTRAS_DEVICE, kettle);
+        startActivity(connect);
+        finish();
     }
 
     @SuppressLint("StaticFieldLeak")

@@ -22,7 +22,7 @@ import java.util.List;
 
 import static com.freshwind.smarthome.ConnectingActivity.EXTRAS_DEVICE;
 
-public class DeviceControlActivity extends AppCompatActivity implements OnClickListener
+public class DeviceControlActivity extends AppCompatActivity
 {
     private static final String TAG = "Main";
     private boolean mConnected = false;
@@ -39,7 +39,6 @@ public class DeviceControlActivity extends AppCompatActivity implements OnClickL
     private Runnable getWaterLevel;
     private Runnable reconnect;
     private Kettle kettle;
-    private SelectConnectionFragment selectConnectionFragment;
     private Fragment elephantFragment;
     private Fragment connectionErrorFragment;
     private FragmentTransaction transaction;
@@ -167,34 +166,9 @@ public class DeviceControlActivity extends AppCompatActivity implements OnClickL
             }
         };
         tcpClient.execute();
-
-
-        if (Kettle.Connection.selfAp == kettle.connection)
-        {
-            selectConnectionFragment = new SelectConnectionFragment();
-            selectConnectionFragment.setOnClickListener(this);
-            showConnectionDialog();
-        }
     }
 
-    @Override
-    public void onClick(View v)
-    {
-        int id = v.getId();
-        switch(id)
-        {
-            case R.id.select_self_ap_btn:
-                // TODO: check if fragmentManager don't contains fragment
-                transaction = getFragmentManager().beginTransaction();
-                transaction.remove(selectConnectionFragment);
-                transaction.commit();
-                break;
 
-            case R.id.select_router_btn:
-                connectToRouter();
-                break;
-        }
-    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
@@ -365,21 +339,5 @@ public class DeviceControlActivity extends AppCompatActivity implements OnClickL
         transaction = getFragmentManager().beginTransaction();
         transaction.remove(connectionErrorFragment);
         transaction.commit();
-    }
-
-    private void showConnectionDialog()
-    {
-        transaction = getFragmentManager().beginTransaction();
-        transaction.add(R.id.fragmentLayout, selectConnectionFragment);
-        transaction.commit();
-    }
-
-    private void connectToRouter()
-    {
-        final Intent connect = new Intent(this, ConnectingActivity.class);
-        kettle.connection = Kettle.Connection.router;
-        connect.putExtra(ConnectingActivity.EXTRAS_DEVICE, kettle);
-        startActivity(connect);
-        finish();
     }
 }
