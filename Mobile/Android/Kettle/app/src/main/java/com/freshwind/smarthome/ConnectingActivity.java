@@ -2,25 +2,24 @@ package com.freshwind.smarthome;
 
 
 import android.annotation.SuppressLint;
+import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.TextView;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ConnectingActivity extends AppCompatActivity
@@ -38,6 +37,7 @@ public class ConnectingActivity extends AppCompatActivity
     private ArrayList<Byte> receivedData;
     private WifiManager wifiManager;
     private TextView description;
+    private GetRouterInfoFragment infoFragment;
     private Runnable preTask = new Runnable() {
         @Override
         public void run()
@@ -359,7 +359,25 @@ public class ConnectingActivity extends AppCompatActivity
 
     private void routerConnection()
     {
-        description.setText("Запрашиваю у пользователя данные...");
 
+
+        description.setText("Запрашиваю у пользователя данные...");
+        infoFragment = new GetRouterInfoFragment();
+        infoFragment.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                // TODO: connection
+
+                FragmentTransaction transaction = getFragmentManager().beginTransaction();
+                transaction.remove(infoFragment);
+                transaction.commit();
+                description.setText("Подключаю чайник к точке доступа...");
+            }
+        });
+
+        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        transaction.add(R.id.connect_frame_layout, infoFragment);
+        transaction.commit();
     }
 }
