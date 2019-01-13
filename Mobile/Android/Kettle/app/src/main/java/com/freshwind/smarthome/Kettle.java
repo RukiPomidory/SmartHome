@@ -6,6 +6,32 @@ import android.os.Parcelable;
 
 public class Kettle implements Parcelable
 {
+    public enum Connection
+    {
+        /**
+         *  В этом виде смартфон подключен к точке доступа
+         *  самого чайника и, следовательно, не может
+         *  подключаться к роутеру или использовать мобильный
+         *  интернет. Другими словами, смартфон в таком подключении
+         *  не способен пользоваться интернетом и общаться с
+         *  чайником одновременно.
+         */
+        selfAp,
+
+        /**
+         *  Чайник связан с роутером и общается через него
+         *  с смартфоном. Это позволяет смартвону выходить
+         *  в интернет и управлять чайником.
+         */
+        router,
+
+        /**
+         *  Подключения к чайнику нет.
+         */
+        disconnected
+    }
+
+
     // Имя чайника
     public String name;
 
@@ -34,6 +60,9 @@ public class Kettle implements Parcelable
     // Конфигурация Wi-Fi
     public WifiConfiguration configuration;
 
+    // Метод соединения с телефоном
+    public Connection connection = Connection.disconnected;
+
     protected Kettle(Parcel in)
     {
         name = in.readString();
@@ -49,6 +78,7 @@ public class Kettle implements Parcelable
         state = in.readByte();
 
         configuration = in.readParcelable(WifiConfiguration.class.getClassLoader());
+        connection = Connection.valueOf(in.readString());
     }
 
     public Kettle() { }
@@ -97,5 +127,6 @@ public class Kettle implements Parcelable
         dest.writeByte(state);
 
         dest.writeParcelable(configuration, flags);
+        dest.writeString(connection.name());
     }
 }

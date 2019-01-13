@@ -101,7 +101,6 @@ public class ConnectingActivity extends AppCompatActivity
     // ЭТО ВРЕМЕННОЕ РЕШЕНИЕ
 
 
-    @SuppressLint("StaticFieldLeak")
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState)
     {
@@ -123,6 +122,25 @@ public class ConnectingActivity extends AppCompatActivity
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         assert wifiManager != null;
 
+        if (Kettle.Connection.selfAp == kettle.connection)
+        {
+            startTcpClient();
+        }
+        else
+        {
+            routerConnection();
+        }
+
+        // TODO: Инкапсулировать функционал в Kettle вместо этого дерьма
+        // Список того, что нужно запросить у чайника.
+        // Данные иногда теряются и нам не нужно запрашивать
+        // повторно то, что мы уже получили.
+        checkList = new boolean[] {false, false, false};
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    private void startTcpClient()
+    {
         tcpClient = new AsyncTcpClient(kettle.selfIP, kettle.port)
         {
             @Override
@@ -166,13 +184,6 @@ public class ConnectingActivity extends AppCompatActivity
             }
         });
         tcpClient.execute();
-
-
-        // TODO: Инкапсулировать функционал в Kettle вместо этого дерьма
-        // Список того, что нужно запросить у чайника.
-        // Данные иногда теряются и нам не нужно запрашивать
-        // повторно то, что мы уже получили.
-        checkList = new boolean[] {false, false, false};
     }
 
     @Override
@@ -344,5 +355,11 @@ public class ConnectingActivity extends AppCompatActivity
                 Log.w(TAG, new IllegalStateException());
                 break;
         }
+    }
+
+    private void routerConnection()
+    {
+        description.setText("Запрашиваю у пользователя данные...");
+
     }
 }

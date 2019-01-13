@@ -138,7 +138,7 @@ public class ScanActivity extends AppCompatActivity
                 // TODO переместить куда-нибудь в настройки или константы
                 kettle.selfIP = "192.168.42.1";
                 kettle.port = 3333;
-
+                kettle.connection = Kettle.Connection.selfAp;
                 intent.putExtra(EXTRAS_DEVICE, kettle);
 
                 startActivity(intent);
