@@ -142,6 +142,7 @@ public class ScanActivity extends AppCompatActivity
                 intent.putExtra(EXTRAS_DEVICE, kettle);
 
                 startActivity(intent);
+                finish();
             }
         });
 

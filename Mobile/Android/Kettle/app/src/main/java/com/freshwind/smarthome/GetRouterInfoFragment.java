@@ -6,27 +6,47 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.EditText;
 
 public class GetRouterInfoFragment extends Fragment
 {
     private View.OnClickListener listener;
+    private boolean hasPassword;
 
     public void setOnClickListener(View.OnClickListener listener)
     {
         this.listener = listener;
     }
 
+    public boolean hasPassword()
+    {
+        return hasPassword;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
-        View root = inflater.inflate(R.layout.get_router_info, null);
-        Button done = root.findViewById(R.id.router_done);
-        done.setOnClickListener(listener);
+        final View root = inflater.inflate(R.layout.get_router_info, null);
+        final Button done = root.findViewById(R.id.router_done);
+        final EditText passView = root.findViewById(R.id.router_password);
+        final CheckBox checkHasPassword = root.findViewById(R.id.checkHasPassword);
 
-//        EditText ssid = root.findViewById(R.id.router_ssid);
-//        EditText password = root.findViewById(R.id.router_password);
+        done.setOnClickListener(listener);
+        checkHasPassword.setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton buttonView, boolean isChecked)
+            {
+                hasPassword = !isChecked;
+                passView.setEnabled(!isChecked);
+                if (isChecked)
+                {
+                    passView.getText().clear();
+                }
+            }
+        });
 
         return root;
     }

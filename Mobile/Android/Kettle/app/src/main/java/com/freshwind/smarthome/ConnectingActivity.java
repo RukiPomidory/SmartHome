@@ -5,8 +5,10 @@ import android.annotation.SuppressLint;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
+import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.net.wifi.hotspot2.PasspointConfiguration;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
@@ -15,12 +17,14 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
+import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 public class ConnectingActivity extends AppCompatActivity implements OnClickListener
@@ -32,6 +36,9 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     private static final int attemptCount = 5;
 
     private int attempt;
+    private String ssid;
+    private String password;
+    private boolean hasPassword;
 
     private Kettle kettle;
     private AsyncTcpClient tcpClient;
@@ -128,11 +135,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         if (Kettle.Connection.selfAp == kettle.connection)
         {
             startTcpClient();
-
-            SelectConnectionFragment selectConnectionFragment;
-            selectConnectionFragment = new SelectConnectionFragment();
-            selectConnectionFragment.setOnClickListener(this);
-            showConnectionDialog();
         }
         else
         {
@@ -153,32 +155,79 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         switch(id)
         {
             case R.id.select_self_ap_btn:
-                // TODO: check if fragmentManager don't contains fragment
-                transaction = getFragmentManager().beginTransaction();
-                transaction.remove(selectConnectionFragment);
-                transaction.commit();
+                removeFragment();
+                startMain();
                 break;
 
             case R.id.select_router_btn:
-                connectToRouter();
+                kettle.connection = Kettle.Connection.router;
+                hasPassword = infoFragment.hasPassword();
+
+
+
+                removeFragment();
+                connectKettleToRouter();
                 break;
         }
     }
 
-    private void showConnectionDialog()
+    private void removeFragment()
     {
+        if (Kettle.Connection.router == kettle.connection)
+        {
+            View fragment = infoFragment.getView();
+            assert fragment !=  null;
+            EditText ssidView = fragment.findViewById(R.id.router_ssid);
+            EditText passwordView = fragment.findViewById(R.id.router_password);
+
+            ssid = ssidView.getText().toString();
+            password = passwordView.getText().toString();
+        }
+
+        // TODO: check if fragmentManager don't contains fragment
         transaction = getFragmentManager().beginTransaction();
-        transaction.add(R.id.fragmentLayout, selectConnectionFragment);
+        transaction.remove(selectConnectionFragment);
         transaction.commit();
     }
 
-    private void connectToRouter()
+    private void showConnectionDialog()
     {
-        final Intent connect = new Intent(this, ConnectingActivity.class);
-        kettle.connection = Kettle.Connection.router;
-        connect.putExtra(ConnectingActivity.EXTRAS_DEVICE, kettle);
-        startActivity(connect);
-        finish();
+        selectConnectionFragment = new SelectConnectionFragment();
+        selectConnectionFragment.setOnClickListener(this);
+
+        transaction = getFragmentManager().beginTransaction();
+        transaction.add(R.id.connect_frame_layout, selectConnectionFragment);
+        transaction.commit();
+    }
+
+    private void connectKettleToRouter()
+    {
+        String text = "Отправляю данные чайнику...";
+        description.setText(text);
+
+        // TODO: остановть процесс цикличной проверки коннекта
+
+        // TODO: сделать процесс цикличной проверки коннекта, чтобы здесь его останавливать
+
+        String data = "A" + ssid + (char)0 + password + (char)0;
+        sendData(data);
+        // TODO: проверка получения данных спустя определенное время
+    }
+
+    private void connectSelfToRouter()
+    {
+        WifiConfiguration config = new WifiConfiguration();
+        config.SSID = "\"" + ssid + "\"";
+        if (hasPassword)
+        {
+            config.preSharedKey = "\"" + password + "\"";
+        }
+
+        int id = wifiManager.addNetwork(config);
+
+        wifiManager.disconnect();
+        wifiManager.enableNetwork(id, true);
+        wifiManager.reconnect();
     }
 
     @SuppressLint("StaticFieldLeak")
@@ -280,6 +329,18 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         }
     }
 
+    private void sendData(String data)
+    {
+        try
+        {
+            tcpClient.sendString(data);
+        }
+        catch (Exception exc)
+        {
+            Log.d(TAG, "dataSend failed");
+        }
+    }
+
     private void sendData(byte[] data)
     {
         try
@@ -315,8 +376,10 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                     catch (InterruptedException e) { e.printStackTrace(); }
                     need = check();
                 }
+                String text = "Чайник готов к работе!";
+                description.setText(text);
 
-                startMain();
+                showConnectionDialog();
             }
         };
 
@@ -371,6 +434,47 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                         break;
                 }
             }
+            else if ('O' == data.get(0))
+            {
+                if ('K' == data.get(1))
+                {
+                    String text = "Чайник подключился к точке доступа, ждем адрес...";
+                    description.setText(text);
+                }
+            }
+            else if('I' == data.get(0))
+            {
+                if ('P' == data.get(1))
+                {
+                    StringBuilder builder = new StringBuilder();
+
+                    if (data.size() != 9)
+                    {
+                        Log.e(TAG, "BAD IP SIZE");
+                        return;
+                    }
+
+                    int i;
+                    for (i = 2; i + 1 < data.size(); i += 2)
+                    {
+                        builder.append(data.get(i));
+                        if(':' != data.get(i + 1))
+                        {
+                            Log.e(TAG, "':' expected at " + i + " in \"" + Arrays.toString(data.toArray()) + "\"");
+                            return;
+                        }
+                    }
+                    builder.append(data.get(i));
+
+                    kettle.localNetIP = builder.toString();
+                    sendData(new byte[] {'O'});
+
+                    String text = "IP чайника получен, подключаемся к роутеру...";
+                    description.setText(text);
+
+                    connectSelfToRouter();
+                }
+            }
             else if ('E' == data.get(0))
             {
                 Error(data.get(1));
@@ -402,8 +506,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
     private void routerConnection()
     {
-
-
         description.setText("Запрашиваю у пользователя данные...");
         infoFragment = new GetRouterInfoFragment();
         infoFragment.setOnClickListener(new View.OnClickListener() {

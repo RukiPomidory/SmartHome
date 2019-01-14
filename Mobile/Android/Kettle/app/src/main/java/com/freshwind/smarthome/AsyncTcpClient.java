@@ -66,7 +66,7 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
         stateListener = null;
     }
 
-    public void sendMessage(final String message)
+    public void sendString(final String message)
     {
         Runnable sending = new Runnable() {
             @Override
