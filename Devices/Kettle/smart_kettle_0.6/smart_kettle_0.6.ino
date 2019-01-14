@@ -600,21 +600,22 @@ void sendIp()
         ip[1] = 'P';
 
         while (Serial.available() < 15) { delay(1); }
-        Serial.println("AFTER WAIT");
+        
         char c = Serial.read();
-        Serial.println("READ");
-        Serial.println("CHECKED");
+        if (c != '"')
+        {
+            Error(15);
+            return;
+        }
+        
         c = Serial.read();
         while (c != '"' && counter < 17)
         {
             ip[counter] = c;
             counter++;
-            char c = Serial.read();
-            Serial.println(String(ip));
+            c = Serial.read();
         }
-        Serial.println("BEFORE SEND_DATA");
         sendData(ip, counter);
-        Serial.println(String(counter));
     }
     else
     {
