@@ -489,7 +489,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         }
     }
 
-    
+
 
     private void Error(byte code)
     {

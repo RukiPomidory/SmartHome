@@ -539,8 +539,9 @@ void connectToAccessPoint()
     char password[passLength + 3];
     password[0] = '"';
     password[passLength + 1] = '"';
-    
-    password[passLength + 2] = 0;   // Принудительно выставляем конец строки в стиле C, потому что без этого не работает
+
+    // Принудительно выставляем конец строки в стиле C, потому что без этого не работает
+    password[passLength + 2] = 0;
     
     for (byte i = 0; i < passLength; i++)
     {
@@ -563,23 +564,25 @@ void connectToAccessPoint()
 
 void sendIp()
 {
-    Serial.println("AT+CIPSTA?"); // Запрашиваем данные 
-    char target[] = "+CIPSTA:ip:";
-    start = millis();
+    Serial.println("AT+CIPSTA?");   // Запрашиваем данные 
+    char target[] = "+CIPSTA:ip:";  // Строка, которую мы ищем
+    start = millis();   // Инициализируем счетчик времени
 
     bool got = false;
-    while (millis() - start < 1000)
+    while (millis() - start < 1000) // Лимит ожидания - 1000мс (это дофига, кстати)
     {
         if (Serial.available() >= sizeof(target)/sizeof(target[0]))
         {
             got = true;
+            
+            // Берем размер на 1 меньше, т.к. в длину массива входит символ окончания строки
             for (int i = 0; i < sizeof(target)/sizeof(target[0]) - 1; i++)
             {
+                // Проверяем посимвольно совпадение с эталоном
                 char c = Serial.read();
                 if (c != target[i])
                 {
                     got = false;
-                    if (i != 0) Serial.print("NO HOPE. EXPECTED '" + String(target[i]) + "', BUT GOT '" + c + "'");
                     break;
                 }
             }
@@ -599,15 +602,18 @@ void sendIp()
         ip[0] = 'I';
         ip[1] = 'P';
 
+        // Ждем, пока прогрузятся все символы, чтобы не нахватать мусора
         while (Serial.available() < 15) { delay(1); }
         
-        char c = Serial.read();
+        char c = Serial.read(); // Проверяем, что сейчас действительно пойдет IP-адрес
         if (c != '"')
         {
-            Error(15);
+            Error(15);  // Код ошибки получения IP-адреса
             return;
         }
-        
+
+        // Начинаем читать сам IP и заканчиваем, когда натыкаемся
+        // на вторую кавычку или выходим за границы разумного
         c = Serial.read();
         while (c != '"' && counter < 17)
         {
@@ -619,7 +625,7 @@ void sendIp()
     }
     else
     {
-        Error(15);
+        Error(16);  // Код ошибки лимита времени ожидания
     }
 }
 
