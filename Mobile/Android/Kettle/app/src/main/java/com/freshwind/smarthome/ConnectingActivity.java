@@ -141,7 +141,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         }
         else
         {
-            routerConnection();
+            showInputFragment();
         }
 
         // TODO: Инкапсулировать функционал в Kettle вместо этого дерьма
@@ -158,33 +158,37 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         switch(id)
         {
             case R.id.select_self_ap_btn:
-                removeFragment();
+                removeSelectionFragment();
                 startMain();
                 break;
 
             case R.id.select_router_btn:
                 kettle.connection = Kettle.Connection.router;
-                routerConnection();
+                showInputFragment();
                 hasPassword = infoFragment.hasPassword();
-                removeFragment();
+                removeSelectionFragment();
                 connectKettleToRouter();
                 break;
         }
     }
 
-    private void removeFragment()
+    private void removeInputFragment()
     {
-        if (Kettle.Connection.router == kettle.connection)
-        {
-            View fragment = infoFragment.getRoot();
-            assert fragment != null;
-            EditText ssidView = fragment.findViewById(R.id.router_ssid);
-            EditText passwordView = fragment.findViewById(R.id.router_password);
+        View fragment = infoFragment.getRoot();
+        assert fragment != null;
+        EditText ssidView = fragment.findViewById(R.id.router_ssid);
+        EditText passwordView = fragment.findViewById(R.id.router_password);
 
-            ssid = ssidView.getText().toString();
-            password = passwordView.getText().toString();
-        }
+        ssid = ssidView.getText().toString();
+        password = passwordView.getText().toString();
 
+        transaction = getFragmentManager().beginTransaction();
+        transaction.remove(infoFragment);
+        transaction.commit();
+    }
+
+    private void removeSelectionFragment()
+    {
         // TODO: check if fragmentManager don't contains fragment
         transaction = getFragmentManager().beginTransaction();
         transaction.remove(selectConnectionFragment);
@@ -263,15 +267,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                 switch(state)
                 {
                     case AsyncTcpClient.CONNECTED:
-//                        description.post(new Runnable() {
-//                            @Override
-//                            public void run()
-//                            {
-//                                description.setText("Успешное соединение с сервером!");
-//                            }
-//                        });
                         setAsyncDescription("Успешное соединение с сервером!");
-
                         request();
                         break;
                 }
@@ -493,6 +489,8 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         }
     }
 
+    
+
     private void Error(byte code)
     {
         switch(code)
@@ -511,7 +509,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         }
     }
 
-    private void routerConnection()
+    private void showInputFragment()
     {
         description.setText("Запрашиваю у пользователя данные...");
         infoFragment = new GetRouterInfoFragment();
@@ -521,14 +519,13 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             {
                 // TODO: connection
 
-                FragmentTransaction transaction = getFragmentManager().beginTransaction();
-                transaction.remove(infoFragment);
-                transaction.commit();
+                removeInputFragment();
                 description.setText("Подключаю чайник к точке доступа...");
+
             }
         });
 
-        FragmentTransaction transaction = getFragmentManager().beginTransaction();
+        transaction = getFragmentManager().beginTransaction();
         transaction.add(R.id.connect_frame_layout, infoFragment);
         transaction.commit();
     }

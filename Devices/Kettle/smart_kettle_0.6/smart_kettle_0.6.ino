@@ -218,14 +218,14 @@ void processCommand(char cmd)
                 sendSensorData();
                 break;
     
-            // Калибровка датчиков
-            case 'C':
-                calibrate();
-                break;
-    
             // Вкл/Выкл потока информации с датчиков
             case 'F':
                 flowHandler();
+                break;
+
+            // Получение SSID и пароля сетки, к которой надо подключиться
+            case 'A':
+                connectToAccessPoint();
                 break;
             
             default:
@@ -458,6 +458,64 @@ void sendData(byte* data, int length)
     Serial.flush();
     delay(10);
 }
+
+void connectToAccessPoint()
+{
+    byte ssidLength = Serial.read();
+    char ssid[ssidLength + 4]; // берем с запасом для кавычек, запятой и символа конца строки
+
+    ssid[0] = '"';
+    
+    for (byte i = 0; i < ssidLength; i++)
+    {
+        ssid[i + 1] = Serial.read();
+    }
+    ssid[ssidLength + 1] = '"';
+    ssid[ssidLength + 2] = ',';
+    ssid[ssidLength + 3] = 0;
+    
+    byte assertion = Serial.read();
+    if (assertion != 0)
+    {
+        Error(13);
+        return;
+    }
+
+    byte passLength = Serial.read();
+
+    // Здесь у нас сеть без пароля
+    if (0 == passLength) 
+    {
+        String request = "AT+CWJAP_CUR=" + String(ssid) + "\"\""; //Изменяем параметры подключения к точке доступа: ssid в кавычках, запятая и пустой пароль ""
+        Serial.println(request);
+        Serial.flush();
+        return;
+    }
+
+    char password[passLength + 3];
+    password[0] = '"';
+    password[passLength + 1] = '"';
+    
+    password[passLength + 2] = 0;   // Принудительно выставляем конец строки в стиле C, потому что без этого не работает
+    
+    for (byte i = 0; i < passLength; i++)
+    {
+        password[i + 1] = Serial.read();
+    }
+
+    assertion = Serial.read();
+    if (assertion != 0)
+    {
+        Error(13);
+        return;
+    }
+
+    String request = "AT+CWJAP_CUR=" + String(ssid) + "|" + String(password);
+    Serial.println(request);
+    Serial.flush();
+}
+
+
 
 void Error(byte id)
 {
