@@ -117,7 +117,8 @@ void loop()
     {
         digitalWrite(LED_BUILTIN, HIGH);
         // Проверяем на наличие данных
-        if(detectInputData())
+        int state = detectInputData();
+        if(1 == state)
         {
             // Здесь мы читаем запятую, которая
             // разделяет команду и следующую цифру
@@ -156,6 +157,14 @@ void loop()
             bytesLeft--;
             processCommand(cmd);
         }
+        else if (2 == state)
+        {
+            Error(14);
+        }
+        else if (3 == state)
+        {
+            sendIp();
+        }
         
     }
     else
@@ -165,35 +174,62 @@ void loop()
     delay(5);
 }
 
-bool detectInputData()
+int detectInputData()
 {
-    // Нам нужно обнаружить команду "+IPD", которая 
-    // в ESP8266 обозначает наличие входных даных
+    // Выходные значения:
+    // 0 - данные не распознаны
+    // 1 - "+IPD" - пришли новые данные
+    // 2 - "FAIL" - не удалось подключиться к точке доступа
+    // 3 - "WIFI GOT IP" - удачное подключение к точке доступа
+
     char c = Serial.read();
+    switch(c)
+    {
+        case '+':
+            c = Serial.read();
+            if ('I' != c) return 0;
+            c = Serial.read();
+            if ('P' != c) return 0;
+            c = Serial.read();
+            if ('D' != c) return 0;
+            return 1;
+            
+        case 'F':
+            c = Serial.read();
+            if ('A' != c) return 0;
+            c = Serial.read();
+            if ('I' != c) return 0;
+            c = Serial.read();
+            if ('L' != c) return 0;
+            return 2;
+
+        case 'W':
+            c = Serial.read();
+            if ('I' != c) return 0;
+            c = Serial.read(); 
+            if ('F' != c) return 0;
+            c = Serial.read();
+            if ('I' != c) return 0;
+            c = Serial.read();
+            if (' ' != c) return 0;
+            c = Serial.read();
+            if ('G' != c) return 0;
+            c = Serial.read();
+            if ('O' != c) return 0;
+            c = Serial.read();
+            if ('T' != c) return 0;
+            return 3;
+
+        default:
+            return 0;
+    }
+    
     if ('+' != c)
     {
         return false;
     }
     
-    c = Serial.read();
-    if ('I' != c)
-    {
-        return false;
-    }
-    
-    c = Serial.read();
-    if ('P' != c)
-    {
-        return false;
-    }
-    
-    c = Serial.read();
-    if ('D' != c)
-    {
-        return false;
-    }
-
-    return true;
+    return 0;
 }
 
 void processCommand(char cmd)
@@ -226,6 +262,10 @@ void processCommand(char cmd)
             // Получение SSID и пароля сетки, к которой надо подключиться
             case 'A':
                 connectToAccessPoint();
+                break;
+
+            case 'I':
+                sendIp();
                 break;
             
             default:
@@ -462,6 +502,7 @@ void sendData(byte* data, int length)
 void connectToAccessPoint()
 {
     byte ssidLength = Serial.read();
+    bytesLeft--;
     char ssid[ssidLength + 4]; // берем с запасом для кавычек, запятой и символа конца строки
 
     ssid[0] = '"';
@@ -469,12 +510,14 @@ void connectToAccessPoint()
     for (byte i = 0; i < ssidLength; i++)
     {
         ssid[i + 1] = Serial.read();
+        bytesLeft--;
     }
     ssid[ssidLength + 1] = '"';
     ssid[ssidLength + 2] = ',';
     ssid[ssidLength + 3] = 0;
     
     byte assertion = Serial.read();
+    bytesLeft--;
     if (assertion != 0)
     {
         Error(13);
@@ -482,6 +525,7 @@ void connectToAccessPoint()
     }
 
     byte passLength = Serial.read();
+    bytesLeft--;
 
     // Здесь у нас сеть без пароля
     if (0 == passLength) 
@@ -501,21 +545,82 @@ void connectToAccessPoint()
     for (byte i = 0; i < passLength; i++)
     {
         password[i + 1] = Serial.read();
+        bytesLeft--;
     }
 
     assertion = Serial.read();
+    bytesLeft--;
     if (assertion != 0)
     {
         Error(13);
         return;
     }
 
-    String request = "AT+CWJAP_CUR=" + String(ssid) + "|" + String(password);
+    String request = "AT+CWJAP_DEF=" + String(ssid) + String(password);
     Serial.println(request);
     Serial.flush();
 }
 
+void sendIp()
+{
+    Serial.println("AT+CIPSTA?"); // Запрашиваем данные 
+    char target[] = "+CIPSTA:ip:";
+    start = millis();
 
+    bool got = false;
+    while (millis() - start < 1000)
+    {
+        if (Serial.available() >= sizeof(target)/sizeof(target[0]))
+        {
+            got = true;
+            for (int i = 0; i < sizeof(target)/sizeof(target[0]) - 1; i++)
+            {
+                char c = Serial.read();
+                if (c != target[i])
+                {
+                    got = false;
+                    if (i != 0) Serial.print("NO HOPE. EXPECTED '" + String(target[i]) + "', BUT GOT '" + c + "'");
+                    break;
+                }
+            }
+        }
+        
+        if (got)
+        {
+            break;
+        }
+    }
+
+    if (got)
+    {
+        
+        int counter = 2; // Считает действительное количество символов в массиве ip
+        char ip[17]; // 255:255:255:255 - 12 + 3 символа, + место для первых двух символов "IP"
+        ip[0] = 'I';
+        ip[1] = 'P';
+
+        while (Serial.available() < 15) { delay(1); }
+        Serial.println("AFTER WAIT");
+        char c = Serial.read();
+        Serial.println("READ");
+        Serial.println("CHECKED");
+        c = Serial.read();
+        while (c != '"' && counter < 17)
+        {
+            ip[counter] = c;
+            counter++;
+            char c = Serial.read();
+            Serial.println(String(ip));
+        }
+        Serial.println("BEFORE SEND_DATA");
+        sendData(ip, counter);
+        Serial.println(String(counter));
+    }
+    else
+    {
+        Error(15);
+    }
+}
 
 void Error(byte id)
 {
