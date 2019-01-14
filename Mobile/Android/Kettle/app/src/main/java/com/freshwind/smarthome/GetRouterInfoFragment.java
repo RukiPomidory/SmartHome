@@ -13,6 +13,7 @@ import android.widget.EditText;
 public class GetRouterInfoFragment extends Fragment
 {
     private View.OnClickListener listener;
+    private View root;
     private boolean hasPassword;
 
     public void setOnClickListener(View.OnClickListener listener)
@@ -25,11 +26,16 @@ public class GetRouterInfoFragment extends Fragment
         return hasPassword;
     }
 
+    public View getRoot()
+    {
+        return root;
+    }
+
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
-        final View root = inflater.inflate(R.layout.get_router_info, null);
+        root = inflater.inflate(R.layout.get_router_info, null);
         final Button done = root.findViewById(R.id.router_done);
         final EditText passView = root.findViewById(R.id.router_password);
         final CheckBox checkHasPassword = root.findViewById(R.id.checkHasPassword);

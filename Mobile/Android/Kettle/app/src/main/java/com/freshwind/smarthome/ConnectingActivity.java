@@ -8,7 +8,6 @@ import android.content.Intent;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
-import android.net.wifi.hotspot2.PasspointConfiguration;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.v7.app.ActionBar;
@@ -69,14 +68,16 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                     return;
                 }
 
-                description.post(new Runnable() {
-                    @Override
-                    public void run()
-                    {
-                        String text = getString(R.string.default_attempt_text) + String.valueOf(attempt);
-                        description.setText(text);
-                    }
-                });
+//                description.post(new Runnable() {
+//                    @Override
+//                    public void run()
+//                    {
+//                        String text = getString(R.string.default_attempt_text) + String.valueOf(attempt);
+//                        description.setText(text);
+//                    }
+//                });
+                String text = getString(R.string.default_attempt_text) + String.valueOf(attempt);
+                setAsyncDescription(text);
 
                 try { Thread.sleep(1000); }
                 catch (InterruptedException ignored) { }
@@ -91,6 +92,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                     description.setText(R.string.ap_connected);
                 }
             });
+            //setAsyncDescription(R.string.ap_connected);
 
             try
             {
@@ -132,6 +134,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         assert wifiManager != null;
 
+        //TODO: это чо?
         if (Kettle.Connection.selfAp == kettle.connection)
         {
             startTcpClient();
@@ -161,10 +164,8 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
             case R.id.select_router_btn:
                 kettle.connection = Kettle.Connection.router;
+                routerConnection();
                 hasPassword = infoFragment.hasPassword();
-
-
-
                 removeFragment();
                 connectKettleToRouter();
                 break;
@@ -175,8 +176,8 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     {
         if (Kettle.Connection.router == kettle.connection)
         {
-            View fragment = infoFragment.getView();
-            assert fragment !=  null;
+            View fragment = infoFragment.getRoot();
+            assert fragment != null;
             EditText ssidView = fragment.findViewById(R.id.router_ssid);
             EditText passwordView = fragment.findViewById(R.id.router_password);
 
@@ -262,13 +263,14 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                 switch(state)
                 {
                     case AsyncTcpClient.CONNECTED:
-                        description.post(new Runnable() {
-                            @Override
-                            public void run()
-                            {
-                                description.setText("Успешное соединение с сервером!");
-                            }
-                        });
+//                        description.post(new Runnable() {
+//                            @Override
+//                            public void run()
+//                            {
+//                                description.setText("Успешное соединение с сервером!");
+//                            }
+//                        });
+                        setAsyncDescription("Успешное соединение с сервером!");
 
                         request();
                         break;
@@ -363,21 +365,15 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                 while(need > 0)
                 {
                     final int finalNeed = need;
-                    description.post(new Runnable() {
-                        @Override
-                        public void run()
-                        {
-                            String text = "Опрашиваю датчики...\nНе хватает: " + String.valueOf(finalNeed);
-                            description.setText(text);
-                        }
-                    });
+                    String text = "Опрашиваю датчики...\nНе хватает: " + String.valueOf(finalNeed);
+                    setAsyncDescription(text);
 
                     try { Thread.sleep(delay); }
                     catch (InterruptedException e) { e.printStackTrace(); }
                     need = check();
                 }
                 String text = "Чайник готов к работе!";
-                description.setText(text);
+                setAsyncDescription(text);
 
                 showConnectionDialog();
             }
@@ -385,6 +381,17 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
         Thread thread = new Thread(checking);
         thread.start();
+    }
+
+    private void setAsyncDescription(final String message)
+    {
+        description.post(new Runnable() {
+            @Override
+            public void run()
+            {
+                description.setText(message);
+            }
+        });
     }
 
     private int check()
