@@ -213,10 +213,14 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
         // TODO: сделать процесс цикличной проверки коннекта, чтобы здесь его останавливать
 
-        String data = "A" + ssid + (char)0 + password + (char)0;
+        int ssidLength = ssid.getBytes().length;
+        int passLength = password.getBytes().length;
+        String data = "A" + (char)ssidLength + ssid + (char)0 + "" + (char) passLength + password + (char)0;
 
         Log.d(TAG, "ssid: " + ssid);
+        Log.d(TAG, "length: " + ssid.getBytes().length);
         Log.d(TAG, "pass: " + password);
+        Log.d(TAG, "length: " + password.getBytes().length);
         sendData(data);
         // TODO: проверка получения данных спустя определенное время
     }
