@@ -167,7 +167,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                 showInputFragment();
                 hasPassword = infoFragment.hasPassword();
                 removeSelectionFragment();
-                connectKettleToRouter();
                 break;
         }
     }
@@ -215,6 +214,9 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         // TODO: сделать процесс цикличной проверки коннекта, чтобы здесь его останавливать
 
         String data = "A" + ssid + (char)0 + password + (char)0;
+
+        Log.d(TAG, "ssid: " + ssid);
+        Log.d(TAG, "pass: " + password);
         sendData(data);
         // TODO: проверка получения данных спустя определенное время
     }
@@ -521,7 +523,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
                 removeInputFragment();
                 description.setText("Подключаю чайник к точке доступа...");
-
+                connectKettleToRouter();
             }
         });
 
