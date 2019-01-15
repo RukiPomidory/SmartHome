@@ -157,11 +157,11 @@ void loop()
             bytesLeft--;
             processCommand(cmd);
         }
-        else if (2 == state)
+        else if (2 == state)    // state "FAILED"
         {
             Error(14);
         }
-        else if (3 == state)
+        else if (3 == state)    // state "WIFI GOT"
         {
             sendIp();
         }
@@ -564,12 +564,42 @@ void connectToAccessPoint()
 
 void sendIp()
 {
+    start = millis();
+    bool firstRead = false; // Запоминаем, была ли прочитана первая буква сообщения "OK"
+    
+    for(;;)
+    {
+        if (Serial.available())
+        {
+            char c = Serial.read();
+            if (firstRead)
+            {
+                if (c == 'K')
+                {
+                    break;
+                }
+            }
+            else
+            {
+                if (c == 'O')
+                {
+                    firstRead = true;
+                }
+            }
+        }
+        if(millis() - start > 3000)
+        {
+            break;
+        }
+    }
+
     Serial.println("AT+CIPSTA?");   // Запрашиваем данные 
+    
     char target[] = "+CIPSTA:ip:";  // Строка, которую мы ищем
     start = millis();   // Инициализируем счетчик времени
 
     bool got = false;
-    while (millis() - start < 1000) // Лимит ожидания - 1000мс (это дофига, кстати)
+    while (millis() - start < 2000) // Лимит ожидания - 1000мс (это дофига, кстати)
     {
         if (Serial.available() >= sizeof(target)/sizeof(target[0]))
         {
@@ -590,6 +620,8 @@ void sendIp()
         
         if (got)
         {
+            
+            swSerial.println(millis() - start);
             break;
         }
     }
@@ -604,6 +636,7 @@ void sendIp()
 
         // Ждем, пока прогрузятся все символы, чтобы не нахватать мусора
         while (Serial.available() < 15) { delay(1); }
+        delay(10);
         
         char c = Serial.read(); // Проверяем, что сейчас действительно пойдет IP-адрес
         if (c != '"')
