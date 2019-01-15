@@ -14,7 +14,7 @@ public class GetRouterInfoFragment extends Fragment
 {
     private View.OnClickListener listener;
     private View root;
-    private boolean hasPassword;
+    private boolean hasPassword = true;
 
     public void setOnClickListener(View.OnClickListener listener)
     {

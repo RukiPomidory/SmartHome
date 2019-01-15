@@ -23,7 +23,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 public class ConnectingActivity extends AppCompatActivity implements OnClickListener
@@ -68,14 +67,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                     return;
                 }
 
-//                description.post(new Runnable() {
-//                    @Override
-//                    public void run()
-//                    {
-//                        String text = getString(R.string.default_attempt_text) + String.valueOf(attempt);
-//                        description.setText(text);
-//                    }
-//                });
                 String text = getString(R.string.default_attempt_text) + String.valueOf(attempt);
                 setAsyncDescription(text);
 
@@ -457,23 +448,10 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                 {
                     StringBuilder builder = new StringBuilder();
 
-                    if (data.size() != 9)
+                    for (int i = 2; i < data.size(); i++)
                     {
-                        Log.e(TAG, "BAD IP SIZE");
-                        return;
+                        builder.append((char)data.get(i).byteValue());
                     }
-
-                    int i;
-                    for (i = 2; i + 1 < data.size(); i += 2)
-                    {
-                        builder.append(data.get(i));
-                        if(':' != data.get(i + 1))
-                        {
-                            Log.e(TAG, "':' expected at " + i + " in \"" + Arrays.toString(data.toArray()) + "\"");
-                            return;
-                        }
-                    }
-                    builder.append(data.get(i));
 
                     kettle.localNetIP = builder.toString();
                     sendData(new byte[] {'O'});
@@ -523,8 +501,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             @Override
             public void onClick(View v)
             {
-                // TODO: connection
-
                 removeInputFragment();
                 description.setText("Подключаю чайник к точке доступа...");
                 connectKettleToRouter();
