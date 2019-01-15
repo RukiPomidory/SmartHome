@@ -564,6 +564,12 @@ void connectToAccessPoint()
 
 void sendIp()
 {
+    // Чтобы получить OK даже будучи сферическим конем в вакууме, 
+    // отправляем дефолтную команду (потому что запросить IP можно и командой
+    // извне просто так, без установления связи и получения "OK" до этого)
+    // Заодно проверяем, готов ли модуль исполнять наши команды
+    Serial.println("AT");
+    
     start = millis();
     bool firstRead = false; // Запоминаем, была ли прочитана первая буква сообщения "OK"
     
@@ -620,14 +626,15 @@ void sendIp()
         
         if (got)
         {
-            
-            swSerial.println(millis() - start);
+//            swSerial.println(millis() - start);
+//            swSerial.flush();
             break;
         }
     }
-
+    
     if (got)
     {
+        
         
         int counter = 2; // Считает действительное количество символов в массиве ip
         char ip[17]; // 255:255:255:255 - 12 + 3 символа, + место для первых двух символов "IP"
@@ -645,6 +652,7 @@ void sendIp()
             return;
         }
 
+        int dotCounter = 0;
         // Начинаем читать сам IP и заканчиваем, когда натыкаемся
         // на вторую кавычку или выходим за границы разумного
         c = Serial.read();
@@ -653,7 +661,13 @@ void sendIp()
             ip[counter] = c;
             counter++;
             c = Serial.read();
+            if (c == '.')
+            {
+                dotCounter++;
+            }
+            delay(5); // Проверка: влияет ли задержка на читаемые данные
         }
+        Serial.print("[" + String(dotCounter) + "]");
         sendData(ip, counter);
     }
     else
