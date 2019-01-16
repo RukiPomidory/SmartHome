@@ -48,7 +48,7 @@ public class ScanActivity extends AppCompatActivity
 
     private boolean isScanning = false;
 
-    BroadcastReceiver wifiScanReceiver = new BroadcastReceiver() {
+    private BroadcastReceiver wifiScanReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context c, Intent intent) {
             boolean success = true;

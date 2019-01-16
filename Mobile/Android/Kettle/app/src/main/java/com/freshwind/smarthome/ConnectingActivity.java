@@ -5,11 +5,19 @@ import android.annotation.SuppressLint;
 import android.app.FragmentTransaction;
 import android.content.Context;
 import android.content.Intent;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
+import android.net.NetworkRequest;
+import android.net.Uri;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiInfo;
 import android.net.wifi.WifiManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.provider.Settings;
 import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -34,6 +42,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     private static final int attemptCount = 5;
 
     private int attempt;
+    private int selfNetId;
     private String ssid;
     private String password;
     private boolean hasPassword;
@@ -46,15 +55,58 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     private GetRouterInfoFragment infoFragment;
     private SelectConnectionFragment selectConnectionFragment;
     private FragmentTransaction transaction;
+    // TODO: BroadcastReceiver
     private Runnable preTask = new Runnable() {
         @Override
         public void run()
         {
             // Подключение к точке доступа
             int networkId = wifiManager.addNetwork(kettle.configuration);
+            wifiManager.isPreferredNetworkOffloadSupported();
+            selfNetId = networkId;
             wifiManager.disconnect();
             wifiManager.enableNetwork(networkId, true);
             wifiManager.reconnect();
+
+            // region dark magic
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+            {
+
+                final ConnectivityManager manager = (ConnectivityManager)
+                        getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+                NetworkRequest.Builder builder = new NetworkRequest.Builder();
+                builder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+
+                if (manager != null)
+                {
+                    manager.requestNetwork(builder.build(), new ConnectivityManager.NetworkCallback() {
+                        @RequiresApi(api = Build.VERSION_CODES.M)
+                        @Override
+                        public void onAvailable(Network network)
+                        {
+//                            if (!Settings.System.canWrite(ConnectingActivity.this))
+//                            {
+//                                Intent goToSettings = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
+//                                goToSettings.setData(Uri.parse("package:" + getPackageName()));
+//                                startActivity(goToSettings);
+//                            }
+
+                            manager.bindProcessToNetwork(null);
+                            manager.bindProcessToNetwork(network);
+                        }
+                    });
+
+                }
+                else
+                {
+                    Log.e(TAG, "ConnectivityManager IS NULL");
+                    finish();
+                    return;
+                }
+            }
+            // endregion
+
             WifiInfo info = wifiManager.getConnectionInfo();
 
             attempt = 0;
@@ -225,9 +277,13 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             config.preSharedKey = "\"" + password + "\"";
         }
 
+        // TODO: вывести в spinner выбора типа шифрования
+        config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+
         int id = wifiManager.addNetwork(config);
 
         wifiManager.disconnect();
+        wifiManager.enableNetwork(selfNetId, false);
         wifiManager.enableNetwork(id, true);
         wifiManager.reconnect();
     }

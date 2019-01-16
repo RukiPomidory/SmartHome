@@ -129,4 +129,9 @@ public class Kettle implements Parcelable
         dest.writeParcelable(configuration, flags);
         dest.writeString(connection.name());
     }
+
+    public void connect(Connection type)
+    {
+        throw new UnsupportedOperationException();
+    }
 }
