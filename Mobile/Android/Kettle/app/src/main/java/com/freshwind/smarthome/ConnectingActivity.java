@@ -65,8 +65,9 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             wifiManager.isPreferredNetworkOffloadSupported();
             selfNetId = networkId;
             wifiManager.disconnect();
+            wifiManager.disableNetwork(wifiManager.getConnectionInfo().getNetworkId());
             wifiManager.enableNetwork(networkId, true);
-            wifiManager.reconnect();
+
 
             // region dark magic
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
@@ -85,15 +86,11 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                         @Override
                         public void onAvailable(Network network)
                         {
-//                            if (!Settings.System.canWrite(ConnectingActivity.this))
-//                            {
-//                                Intent goToSettings = new Intent(Settings.ACTION_MANAGE_WRITE_SETTINGS);
-//                                goToSettings.setData(Uri.parse("package:" + getPackageName()));
-//                                startActivity(goToSettings);
-//                            }
-
                             manager.bindProcessToNetwork(null);
                             manager.bindProcessToNetwork(network);
+                            manager.unregisterNetworkCallback(this);
+                            Log.d(TAG, "in onAvailable()");
+                            wifiManager.reconnect();
                         }
                     });
 
@@ -127,6 +124,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
                 info = wifiManager.getConnectionInfo();
             }
+            Log.d(TAG, "WiFi SSID: " + info.getSSID());
 
             description.post(new Runnable() {
                 @Override
@@ -276,14 +274,14 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         {
             config.preSharedKey = "\"" + password + "\"";
         }
-
-        // TODO: вывести в spinner выбора типа шифрования
-        config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.WPA_PSK);
+        else
+        {
+            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+        }
 
         int id = wifiManager.addNetwork(config);
 
         wifiManager.disconnect();
-        wifiManager.enableNetwork(selfNetId, false);
         wifiManager.enableNetwork(id, true);
         wifiManager.reconnect();
     }

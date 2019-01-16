@@ -122,7 +122,7 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
 
             Socket socket = null;
             int i = 0;
-            while(null == socket)
+            while(null == socket && running)
             {
                 Log.d(TAG, "Попытка " + String.valueOf(i));
                 socket = createSocket(serverIP, port);
