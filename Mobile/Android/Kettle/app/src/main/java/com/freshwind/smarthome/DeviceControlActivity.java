@@ -203,7 +203,7 @@ public class DeviceControlActivity extends AppCompatActivity
         handler.removeCallbacks(getWaterLevel);
         if (tcpClient != null)
         {
-            tcpClient.stopClient();
+            tcpClient.stop();
         }
     }
 

@@ -1,11 +1,23 @@
 package com.freshwind.smarthome;
 
+import android.annotation.SuppressLint;
 import android.net.wifi.WifiConfiguration;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.util.Log;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class Kettle implements Parcelable
 {
+    private static final String TAG = "Kettle";
+
+    public interface OnDataReceived
+    {
+        void dataReceived(List<Byte> data);
+    }
+
     public enum Connection
     {
         /**
@@ -30,7 +42,6 @@ public class Kettle implements Parcelable
          */
         disconnected
     }
-
 
     // Имя чайника
     public String name;
@@ -63,8 +74,27 @@ public class Kettle implements Parcelable
     // Метод соединения с телефоном
     public Connection connection = Connection.disconnected;
 
+
+    // Клиент TCP сервера
+    private AsyncTcpClient tcpClient;
+
+    // Буфер для хранения полученных от сервера данных
+    private ArrayList<Byte> buffer;
+
+    // То, что выполнится асинхронно перед подключением к серверу
+    private Runnable preTask;
+
+    // Обработчик изменения состояния клиента
+    private AsyncTcpClient.OnStateChanged onStateChangedListener;
+
+    // Обработчик данных с сервера
+    private OnDataReceived listener;
+
+    // TODO: наследование
     protected Kettle(Parcel in)
     {
+        this();
+
         name = in.readString();
         MAC = in.readString();
         model = in.readString();
@@ -81,7 +111,10 @@ public class Kettle implements Parcelable
         connection = Connection.valueOf(in.readString());
     }
 
-    public Kettle() { }
+    public Kettle()
+    {
+        buffer = new ArrayList<>();
+    }
 
     public Kettle(String name, String MAC)
     {
@@ -94,17 +127,114 @@ public class Kettle implements Parcelable
         this(name.toString(), MAC.toString());
     }
 
-    public static final Creator<Kettle> CREATOR = new Creator<Kettle>() {
-        @Override
-        public Kettle createFromParcel(Parcel in) {
-            return new Kettle(in);
+    public void stop()
+    {
+        if(tcpClient != null)
+        {
+            tcpClient.stop();
+        }
+    }
+
+    public void setSelfIP(String ip)
+    {
+        selfIP = ip;
+    }
+
+    public void setPreTask(Runnable task)
+    {
+        preTask = task;
+    }
+
+    public void setOnDataReceivedListener(OnDataReceived listener)
+    {
+        this.listener = listener;
+    }
+
+    public void setOnStateChangedListener(AsyncTcpClient.OnStateChanged listener)
+    {
+        onStateChangedListener = listener;
+    }
+
+    @SuppressLint("StaticFieldLeak")
+    public void connectToTcpServer(Connection type)
+    {
+        String ip;
+        if (Connection.router == type)
+        {
+            ip = localNetIP;
+        }
+        else
+        {
+            ip = selfIP;
         }
 
-        @Override
-        public Kettle[] newArray(int size) {
-            return new Kettle[size];
+        tcpClient = new AsyncTcpClient(ip, port)
+        {
+            @Override
+            protected void onProgressUpdate(Integer... values)
+            {
+                super.onProgressUpdate(values);
+                char _byte = (char) (int) values[0];
+                if (';' == _byte && buffer.size() > 0)
+                {
+                    // Хрен знает, почему я решил так сделать
+//                    try
+//                    {
+//                        ArrayList<Byte> data = (ArrayList<Byte>) buffer.clone();
+//                        if (listener != null)
+//                        {
+//                            listener.dataReceived(data);
+//                        }
+//                        buffer.clear();
+//                    }
+//                    catch (ClassCastException exc)
+//                    {
+//                        Log.e(TAG, "impossible cast exception");
+//                    }
+
+                    if (listener != null)
+                    {
+                        listener.dataReceived(buffer);
+                    }
+                    buffer.clear();
+                }
+                else
+                {
+                    buffer.add((byte) _byte);
+                }
+            }
+        };
+        tcpClient.setPreTask(preTask);
+        tcpClient.setOnStateChangedListener(onStateChangedListener);
+        tcpClient.execute();
+    }
+
+    public void sendData(String data)
+    {
+        try
+        {
+            tcpClient.sendString(data);
         }
-    };
+        catch (Exception exc)
+        {
+            Log.d(TAG, "dataSend failed");
+        }
+    }
+
+    public void sendData(byte[] data)
+    {
+        try
+        {
+            tcpClient.sendBytes(data);
+        }
+        catch (Exception exc)
+        {
+            Log.d(TAG, "dataSend failed");
+        }
+    }
+
+
+    // implementation
 
     @Override
     public int describeContents() {
@@ -130,8 +260,15 @@ public class Kettle implements Parcelable
         dest.writeString(connection.name());
     }
 
-    public void connect(Connection type)
-    {
-        throw new UnsupportedOperationException();
-    }
+    public static final Creator<Kettle> CREATOR = new Creator<Kettle>() {
+        @Override
+        public Kettle createFromParcel(Parcel in) {
+            return new Kettle(in);
+        }
+
+        @Override
+        public Kettle[] newArray(int size) {
+            return new Kettle[size];
+        }
+    };
 }

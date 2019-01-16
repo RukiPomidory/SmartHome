@@ -51,7 +51,7 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
         state = DISCONNECTED;
     }
 
-    public void stopClient()
+    public void stop()
     {
         running = false;
 
@@ -173,7 +173,7 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
 
     public interface OnStateChanged
     {
-        public void stateChanged(int state);
+        void stateChanged(int state);
     }
 
     private Socket createSocket(InetAddress ip, int port) throws IOException
