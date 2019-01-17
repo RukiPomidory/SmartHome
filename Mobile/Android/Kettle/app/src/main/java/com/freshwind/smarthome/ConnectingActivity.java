@@ -3,8 +3,10 @@ package com.freshwind.smarthome;
 
 import android.annotation.SuppressLint;
 import android.app.FragmentTransaction;
+import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -51,8 +53,27 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     private SelectConnectionFragment selectConnectionFragment;
     private FragmentTransaction transaction;
     private Kettle.OnDataReceived dataReceivedListener;
-    // TODO: BroadcastReceiver (Wifi)
+    private AsyncTcpClient.OnStateChanged onStateChangedListener;
     private Runnable preTask;
+    private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
+        @Override
+        public void onReceive(Context context, Intent intent)
+        {
+            final String action = intent.getAction();
+            if (action != null &&
+                    action.equals(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION))
+            {
+                if (intent.getBooleanExtra(WifiManager.EXTRA_SUPPLICANT_CONNECTED, false))
+                {
+                    //do stuff
+                }
+                else
+                {
+                    // wifi connection was lost
+                }
+            }
+        }
+    };
 
 
     // TODO реализация в классе Kettle!!!
@@ -81,8 +102,13 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         assert wifiManager != null;
 
+//        IntentFilter intentFilter = new IntentFilter();
+//        intentFilter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION);
+//        registerReceiver(broadcastReceiver, intentFilter);
+
         initOnDataReceivedListener();
-        initPreTask();
+        initOnStateChangedListener();
+        initPreTask(kettle.configuration);
 
         //TODO: это чо?
         if (Kettle.Connection.selfAp == kettle.connection)
@@ -94,7 +120,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             showInputFragment();
         }
 
-        // TODO: Инкапсулировать функционал в Kettle вместо этого дерьма
+        // TODO: Пока что хрен знает, что делать с этим дерьмом
         // Список того, что нужно запросить у чайника.
         // Данные иногда теряются и нам не нужно запрашивать
         // повторно то, что мы уже получили.
@@ -154,32 +180,12 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         transaction.commit();
     }
 
-    private void connectKettleToRouter()
-    {
-        String text = "Отправляю данные чайнику...";
-        description.setText(text);
-
-        // TODO: остановть процесс цикличной проверки коннекта
-
-        // TODO: сделать процесс цикличной проверки коннекта, чтобы здесь его останавливать
-
-        int ssidLength = ssid.getBytes().length;
-        int passLength = password.getBytes().length;
-        String data = "A" + (char)ssidLength + ssid + (char)0 + "" + (char) passLength + password + (char)0;
-
-        Log.d(TAG, "ssid: " + ssid);
-        Log.d(TAG, "length: " + ssid.getBytes().length);
-        Log.d(TAG, "pass: " + password);
-        Log.d(TAG, "length: " + password.getBytes().length);
-        kettle.sendData(data);
-        // TODO: проверка получения данных спустя определенное время
-    }
-
     private void connectSelfToRouter()
     {
         if(kettle != null)
         {
             kettle.stop();
+            kettle.connection = Kettle.Connection.router;
         }
 
         WifiConfiguration config = new WifiConfiguration();
@@ -193,34 +199,27 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
         }
 
-        int id = wifiManager.addNetwork(config);
+//        int id = wifiManager.addNetwork(config);
+//
+//        wifiManager.disconnect();
+//        wifiManager.enableNetwork(id, true);
+//        wifiManager.reconnect();
 
-        wifiManager.disconnect();
-        wifiManager.enableNetwork(id, true);
-        wifiManager.reconnect();
+        initPreTask(config);
 
-
+        kettle.setOnDataReceivedListener(dataReceivedListener);
+        kettle.setOnStateChangedListener(onStateChangedListener);
+        kettle.setPreTask(preTask);
+        kettle.connectToTcpServer();
     }
 
     @SuppressLint("StaticFieldLeak")
     private void startTcpClient()
     {
         kettle.setPreTask(preTask);
-        kettle.setOnStateChangedListener(new AsyncTcpClient.OnStateChanged() {
-            @Override
-            public void stateChanged(int state)
-            {
-                switch(state)
-                {
-                    case AsyncTcpClient.CONNECTED:
-                        setAsyncDescription("Успешное соединение с сервером!");
-                        request();
-                        break;
-                }
-            }
-        });
+        kettle.setOnStateChangedListener(onStateChangedListener);
         kettle.setOnDataReceivedListener(dataReceivedListener);
-        kettle.connectToTcpServer(Kettle.Connection.selfAp);
+        kettle.connectToTcpServer();
     }
 
     @Override
@@ -295,7 +294,14 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                 String text = "Чайник готов к работе!";
                 setAsyncDescription(text);
 
-                showConnectionDialog();
+                if (Kettle.Connection.selfAp == kettle.connection)
+                {
+                    showConnectionDialog();
+                }
+                else
+                {
+                    startMain();
+                }
             }
         };
 
@@ -406,24 +412,40 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         };
     }
 
-    private void initPreTask()
+    private void initOnStateChangedListener()
+    {
+        onStateChangedListener = new AsyncTcpClient.OnStateChanged() {
+            @Override
+            public void stateChanged(int state)
+            {
+                switch(state)
+                {
+                    case AsyncTcpClient.CONNECTED:
+                        setAsyncDescription("Успешное соединение с сервером!");
+                        request();
+                        break;
+                }
+            }
+        };
+    }
+
+    private void initPreTask(final WifiConfiguration config)
     {
         preTask = new Runnable() {
             @Override
             public void run()
             {
                 // Подключение к точке доступа
-                int networkId = wifiManager.addNetwork(kettle.configuration);
+                int networkId = wifiManager.addNetwork(config);
                 wifiManager.isPreferredNetworkOffloadSupported();
                 selfNetId = networkId;
                 wifiManager.disconnect();
                 wifiManager.disableNetwork(wifiManager.getConnectionInfo().getNetworkId());
                 wifiManager.enableNetwork(networkId, true);
-
+                wifiManager.reconnect();
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
                 {
-
                     final ConnectivityManager manager = (ConnectivityManager)
                             getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
 
@@ -440,8 +462,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                                 manager.bindProcessToNetwork(null);
                                 manager.bindProcessToNetwork(network);
                                 manager.unregisterNetworkCallback(this);
-                                Log.d(TAG, "in onAvailable()");
-                                wifiManager.reconnect();
                             }
                         });
 
@@ -526,7 +546,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             {
                 removeInputFragment();
                 description.setText("Подключаю чайник к точке доступа...");
-                connectKettleToRouter();
+                kettle.connectToRouter(ssid, password);
             }
         });
 

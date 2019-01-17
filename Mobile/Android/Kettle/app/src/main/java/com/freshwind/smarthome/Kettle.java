@@ -133,6 +133,14 @@ public class Kettle implements Parcelable
         {
             tcpClient.stop();
         }
+
+        onStateChangedListener = null;
+        listener = null;
+        if (buffer != null)
+        {
+            buffer.clear();
+            buffer = null;
+        }
     }
 
     public void setSelfIP(String ip)
@@ -156,10 +164,10 @@ public class Kettle implements Parcelable
     }
 
     @SuppressLint("StaticFieldLeak")
-    public void connectToTcpServer(Connection type)
+    public void connectToTcpServer()
     {
         String ip;
-        if (Connection.router == type)
+        if (Connection.router == connection)
         {
             ip = localNetIP;
         }
@@ -196,7 +204,11 @@ public class Kettle implements Parcelable
                     {
                         listener.dataReceived(buffer);
                     }
-                    buffer.clear();
+
+                    if(buffer != null)
+                    {
+                        buffer.clear();
+                    }
                 }
                 else
                 {
@@ -207,6 +219,20 @@ public class Kettle implements Parcelable
         tcpClient.setPreTask(preTask);
         tcpClient.setOnStateChangedListener(onStateChangedListener);
         tcpClient.execute();
+    }
+
+    public void connectToRouter(String ssid, String password)
+    {
+        // TODO: остановть процесс цикличной проверки коннекта
+
+        // TODO: сделать процесс цикличной проверки коннекта, чтобы здесь его останавливать
+
+        int ssidLength = ssid.getBytes().length;
+        int passLength = password.getBytes().length;
+        String data = "A" + (char)ssidLength + ssid + (char)0 + "" + (char) passLength + password + (char)0;
+        sendData(data);
+
+        // TODO: проверка получения данных спустя определенное время
     }
 
     public void sendData(String data)
