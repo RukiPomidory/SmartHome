@@ -185,20 +185,13 @@ public class Kettle implements Parcelable
                 char _byte = (char) (int) values[0];
                 if (';' == _byte && buffer.size() > 0)
                 {
-                    // Хрен знает, почему я решил так сделать
-//                    try
-//                    {
-//                        ArrayList<Byte> data = (ArrayList<Byte>) buffer.clone();
-//                        if (listener != null)
-//                        {
-//                            listener.dataReceived(data);
-//                        }
-//                        buffer.clear();
-//                    }
-//                    catch (ClassCastException exc)
-//                    {
-//                        Log.e(TAG, "impossible cast exception");
-//                    }
+                    // Код символа ';' = 59, поэтому показание с датчика, равное 59
+                    // может быть ошибочно принято за разделитель. Отсекаем этот случай.
+                    if ('T' == buffer.get(0) && 2 == buffer.size())
+                    {
+                        buffer.add((byte) _byte);
+                        return;
+                    }
 
                     if (listener != null)
                     {

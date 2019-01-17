@@ -42,14 +42,15 @@ public class DeviceControlActivity extends AppCompatActivity
     private Fragment elephantFragment;
     private Fragment connectionErrorFragment;
     private FragmentTransaction transaction;
-    private AsyncTcpClient tcpClient;
+    private Kettle.OnDataReceived onDataReceivedListener;
+    private AsyncTcpClient.OnStateChanged onStateChangedListener;
 
 
     private final OnClickListener heatOnClickListener = new OnClickListener() {
         public void onClick(View view)
         {
             // heating
-            sendData("H");
+            kettle.sendData(new byte[] {'H'});
         }
     };
 
@@ -57,7 +58,7 @@ public class DeviceControlActivity extends AppCompatActivity
         public void onClick(View view)
         {
             // kill
-            sendData("K");
+            kettle.sendData(new byte[] {'K'});
         }
     };
 
@@ -107,7 +108,7 @@ public class DeviceControlActivity extends AppCompatActivity
             @Override
             public void run()
             {
-                sendData(new byte[] {0x52, 6});
+                kettle.sendData(new byte[] {0x52, 6});
                 handler.postDelayed(this, delayMillis);
             }
         };
@@ -116,7 +117,7 @@ public class DeviceControlActivity extends AppCompatActivity
             @Override
             public void run()
             {
-                sendData(new byte[] {0x52, 5});
+                kettle.sendData(new byte[] {0x52, 5});
                 handler.postDelayed(this, delayMillis);
             }
         };
@@ -137,35 +138,12 @@ public class DeviceControlActivity extends AppCompatActivity
 
         receivedData = new ArrayList<>();
 
-        tcpClient = new AsyncTcpClient(kettle.selfIP, kettle.port) {
-            @Override
-            protected void onProgressUpdate(Integer... values)
-            {
-                super.onProgressUpdate(values);
-                //response received from server
-                Log.d(TAG, "response " + values[0]);
-                char _byte = (char) (int) values[0];
-                if (';' == _byte && receivedData.size() > 0)
-                {
-                    // Код символа ';' = 59, поэтому показание с датчика, равное 59
-                    // может быть ошибочно принято за разделитель. Отсекаем этот случай.
-                    if ('T' == receivedData.get(0) && 2 == receivedData.size())
-                    {
-                        receivedData.add((byte) _byte);
-                        return;
-                    }
+        initOnStateChangedListener();
+        initOnDataReceivedListener();
 
-                    processInputData(receivedData);
-                    Log.d(TAG, "received: " + receivedData);
-                    receivedData.clear();
-                }
-                else
-                {
-                    receivedData.add((byte) _byte);
-                }
-            }
-        };
-        tcpClient.execute();
+        kettle.setOnDataReceivedListener(onDataReceivedListener);
+        kettle.setOnStateChangedListener(onStateChangedListener);
+        kettle.connectToTcpServer();
     }
 
 
@@ -201,27 +179,9 @@ public class DeviceControlActivity extends AppCompatActivity
         super.onDestroy();
         handler.removeCallbacks(getTemperature);
         handler.removeCallbacks(getWaterLevel);
-        if (tcpClient != null)
+        if (kettle != null)
         {
-            tcpClient.stop();
-        }
-    }
-
-    private void sendData(String message)
-    {
-        final byte[] data = message.getBytes();
-        sendData(data);
-    }
-
-    private void sendData(byte[] data)
-    {
-        try
-        {
-            tcpClient.sendBytes(data);
-        }
-        catch (Exception exc)
-        {
-            Log.d(TAG, "dataSend failed");
+            kettle.stop();
         }
     }
 
@@ -238,68 +198,75 @@ public class DeviceControlActivity extends AppCompatActivity
     }
 
 
-    /**
-     * Обрабатывает полученные по bluetooth данные
-     * @param data данные
-     */
-    private void processInputData(List<Byte> data)
+    private void initOnDataReceivedListener()
     {
-        char command = (char) (byte) data.get(0);
-
-        switch (command)
-        {
-            case 'T':
-
-                switch (data.get(1))
+        onDataReceivedListener = new Kettle.OnDataReceived() {
+            @Override
+            public void dataReceived(List<Byte> data)
+            {
+                char command = (char) (byte) data.get(0);
+                switch (command)
                 {
-                    case 5:
-                        byte waterLevel = data.get(2);
-                        waterProgressBar.setProgress(waterLevel);
-                        checkElephant(waterLevel);
+                    case 'T':
+
+                        switch (data.get(1))
+                        {
+                            case 5:
+                                byte waterLevel = data.get(2);
+                                waterProgressBar.setProgress(waterLevel);
+                                checkElephant(waterLevel);
+                                break;
+
+                            case 6:
+                                byte temperature = data.get(2);
+                                tempProgressBar.setProgress(temperature);
+                                break;
+                        }
                         break;
 
-                    case 6:
-                        byte temperature = data.get(2);
-                        tempProgressBar.setProgress(temperature);
+                    case 'E':
+                        String message = null;
+
+                        switch (data.get(1))
+                        {
+                            case 1:
+                                message = "Мало воды!";
+                                break;
+
+                            case 2:
+                                message = "Слишком много воды!";
+                                break;
+                        }
+
+                        if (message != null)
+                        {
+                            Snackbar
+                                    .make(launchBtn, message, Snackbar.LENGTH_LONG)
+                                    .show();
+                        }
+
+                        break;
+
+                    case 'H':
+                        assert launchBtn != null;
+                        launchBtn.setOnClickListener(coldOnClickListener);
+                        launchBtn.setText(R.string.turn_off);
+                        break;
+
+                    case 'K':
+                        assert launchBtn != null;
+                        launchBtn.setOnClickListener(heatOnClickListener);
+                        launchBtn.setText(R.string.launch);
                         break;
                 }
-                break;
+            }
+        };
+    }
 
-            case 'E':
-                String message = null;
-
-                switch (data.get(1))
-                {
-                    case 1:
-                        message = "Мало воды!";
-                        break;
-
-                    case 2:
-                        message = "Слишком много воды!";
-                        break;
-                }
-
-                if (message != null)
-                {
-                    Snackbar
-                            .make(launchBtn, message, Snackbar.LENGTH_LONG)
-                            .show();
-                }
-
-                break;
-
-            case 'H':
-                assert launchBtn != null;
-                launchBtn.setOnClickListener(coldOnClickListener);
-                launchBtn.setText(R.string.turn_off);
-                break;
-
-            case 'K':
-                assert launchBtn != null;
-                launchBtn.setOnClickListener(heatOnClickListener);
-                launchBtn.setText(R.string.launch);
-                break;
-        }
+    private void initOnStateChangedListener()
+    {
+        // Пока без него.
+        // Здесь будем обрабатывать потерю и восстановление соединения
     }
 
     private void checkElephant(byte waterLevel)
