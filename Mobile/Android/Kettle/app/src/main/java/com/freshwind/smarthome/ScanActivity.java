@@ -1,21 +1,12 @@
 package com.freshwind.smarthome;
 
-import android.Manifest;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.content.pm.PackageManager;
-import android.location.LocationManager;
 import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
-import android.os.Build;
 import android.os.Bundle;
-import android.os.Handler;
 import android.support.annotation.Nullable;
-import android.support.design.widget.Snackbar;
-import android.support.v4.content.ContextCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -25,12 +16,10 @@ import android.view.LayoutInflater;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
-import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.TextView;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import static com.freshwind.smarthome.ConnectingActivity.EXTRAS_DEVICE;
@@ -41,55 +30,10 @@ public class ScanActivity extends AppCompatActivity
     private static final String ssidRegex = "SMART_.+";
 
     private DevicesAdapter devicesAdapter;
-    private Handler handler;
     private RecyclerView recyclerView;
     private LinearLayoutManager layoutManager;
     private WifiManager wifiManager;
-
-    private boolean isScanning = false;
-
-    private BroadcastReceiver wifiScanReceiver = new BroadcastReceiver() {
-        @Override
-        public void onReceive(Context c, Intent intent) {
-            boolean success = true;
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.M)
-            {
-                success = intent.getBooleanExtra(
-                        WifiManager.EXTRA_RESULTS_UPDATED, false);
-            }
-
-            if (success)
-            {
-                scanSuccess();
-            }
-            else
-            {
-                scanFailure();
-            }
-
-            isScanning = false;
-            invalidateOptionsMenu();
-        }
-    };
-
-    private void scanSuccess()
-    {
-        List<ScanResult> results = wifiManager.getScanResults();
-        for (ScanResult result : results)
-        {
-            if (result.SSID.matches(ssidRegex))
-            {
-                devicesAdapter.addDevice(result);
-            }
-        }
-
-        devicesAdapter.notifyDataSetChanged();
-    }
-
-    private void scanFailure()
-    {
-        Log.w(TAG, "scan FAILED");
-    }
+    private WifiScanner scanner;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState)
@@ -97,17 +41,43 @@ public class ScanActivity extends AppCompatActivity
         super.onCreate(savedInstanceState);
         setContentView(R.layout.scan);
 
-        handler = new Handler();
         recyclerView = findViewById(R.id.list);
 
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
         actionBar.setDisplayHomeAsUpEnabled(true);
 
+        scanner = new WifiScanner(this);
+        scanner.setViewForTestFeature(recyclerView);
+        scanner.setOnResultListener(new WifiScanner.ScanResultListener() {
+            @Override
+            public void onScanSuccess()
+            {
+                List<ScanResult> results = wifiManager.getScanResults();
+                for (ScanResult result : results)
+                {
+                    if (result.SSID.matches(ssidRegex))
+                    {
+                        devicesAdapter.addDevice(result);
+                    }
+                }
 
-        IntentFilter intentFilter = new IntentFilter();
-        intentFilter.addAction(WifiManager.SCAN_RESULTS_AVAILABLE_ACTION);
-        getApplicationContext().registerReceiver(wifiScanReceiver, intentFilter);
+                devicesAdapter.notifyDataSetChanged();
+            }
+
+            @Override
+            public void onScanFailure()
+            {
+                Log.w(TAG, "scan FAILED");
+            }
+        });
+        scanner.setOnStateChangedListener(new WifiScanner.ScanStateListener() {
+            @Override
+            public void onScanStateChanged(boolean isScanning)
+            {
+                invalidateOptionsMenu();
+            }
+        });
 
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
@@ -146,14 +116,14 @@ public class ScanActivity extends AppCompatActivity
             }
         });
 
-        scan();
+        scanner.scan();
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu)
     {
         getMenuInflater().inflate(R.menu.scan_menu, menu);
-        if (!isScanning)
+        if (!scanner.isScanning())
         {
             menu.findItem(R.id.menu_scan).setVisible(true);
             menu.findItem(R.id.menu_refresh).setActionView(null);
@@ -175,7 +145,7 @@ public class ScanActivity extends AppCompatActivity
             case R.id.menu_scan:
                 devicesAdapter.clear();
                 devicesAdapter.notifyDataSetChanged();
-                scan();
+                scanner.scan();
                 break;
 
             case android.R.id.home:
@@ -186,100 +156,15 @@ public class ScanActivity extends AppCompatActivity
         return true;
     }
 
-    private boolean checkPermissions()
-    {
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.CHANGE_WIFI_STATE)
-                != PackageManager.PERMISSION_GRANTED)
-        {
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            {
-                //Toast.makeText(this, "Не удалось выполнить поиск устройств", Toast.LENGTH_SHORT).show();
-                requestPermissions(new String[] {Manifest.permission.CHANGE_WIFI_STATE}, 0);
-
-            }
-            return false;
-        }
-
-        if(ContextCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION)
-                != PackageManager.PERMISSION_GRANTED)
-        {
-
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-            {
-                //Toast.makeText(this, "Не удалось выполнить поиск устройств", Toast.LENGTH_SHORT).show();
-                requestPermissions(new String[] {Manifest.permission.ACCESS_COARSE_LOCATION}, 0);
-
-            }
-            return false;
-        }
-        return true;
-    }
-
-    private void scan()
-    {
-        Log.d(TAG, Arrays.toString(wifiManager.getScanResults().toArray()));
-
-        if(!checkPermissions())
-        {
-            return;
-        }
-
-        if (!wifiManager.isWifiEnabled())
-        {
-            // TODO create warning "enable WIFI" view
-            Snackbar
-                    .make(recyclerView, "Wi-Fi выключен", Snackbar.LENGTH_LONG)
-                    .setAction("включить", new OnClickListener() {
-                        @Override
-                        public void onClick(View v)
-                        {
-                            wifiManager.setWifiEnabled(true);
-                        }
-                    })
-                    .show();
-
-            return;
-        }
-
-        if(!isGeoEnabled() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
-        {
-            // TODO create warning "enable Location" view
-            Snackbar
-                    .make(recyclerView, "Не удалось выполнить поиск сетей: GPS выключен", Snackbar.LENGTH_LONG)
-                    .setAction("включить", new OnClickListener() {
-                        @Override
-                        public void onClick(View v)
-                        {
-                            startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-                        }
-                    })
-                    .show();
-            return;
-        }
-
-        isScanning = true;
-        wifiManager.startScan();
-        invalidateOptionsMenu();
-    }
-
-    public boolean isGeoEnabled()
-    {
-        LocationManager mLocationManager = (LocationManager) getSystemService(Context.LOCATION_SERVICE);
-        boolean mIsGPSEnabled = mLocationManager.isProviderEnabled(LocationManager.GPS_PROVIDER);
-        boolean mIsNetworkEnabled = mLocationManager.isProviderEnabled(LocationManager.NETWORK_PROVIDER);
-        return mIsGPSEnabled || mIsNetworkEnabled;
-    }
-
     private class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.DeviceViewHolder>{
         public ArrayList<ScanResult> scanResults;
         private LayoutInflater inflater;
 
-        public class DeviceViewHolder extends RecyclerView.ViewHolder
+        class DeviceViewHolder extends RecyclerView.ViewHolder
         {
             View device;
 
-            public DeviceViewHolder(View device) {
+            DeviceViewHolder(View device) {
                 super(device);
                 this.device = device;
             }
@@ -299,12 +184,12 @@ public class ScanActivity extends AppCompatActivity
             scanResults.addAll(results);
         }
 
-        public void clear()
+        void clear()
         {
             scanResults.clear();
         }
 
-        public DevicesAdapter(ArrayList<ScanResult> devices)
+        DevicesAdapter(ArrayList<ScanResult> devices)
         {
             scanResults = devices;
             inflater = ScanActivity.this.getLayoutInflater();
@@ -313,9 +198,7 @@ public class ScanActivity extends AppCompatActivity
         @Override
         public DeviceViewHolder onCreateViewHolder(ViewGroup parent, int viewType)
         {
-            View view = LayoutInflater
-                    .from(parent.getContext())
-                    .inflate(R.layout.listitem_device, parent, false);
+            View view = inflater.inflate(R.layout.listitem_device, parent, false);
 
             return new DeviceViewHolder(view);
         }
