@@ -1,12 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="340dp"
     android:layout_height="450dp">
 
     <android.support.v7.widget.RecyclerView
-        android:id="@+id/recyclerView"
+        android:id="@+id/scanRecycler"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_marginBottom="160dp"
@@ -30,7 +29,7 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintHorizontal_bias="0.0"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/recyclerView"
+        app:layout_constraintTop_toBottomOf="@+id/scanRecycler"
         app:layout_constraintVertical_bias="0.100000024"
         app:passwordToggleEnabled="true"
         app:passwordToggleTint="@color/neutral_700">
@@ -51,7 +50,7 @@
         android:layout_marginBottom="16dp"
         android:layout_marginEnd="16dp"
         android:background="@color/primary_500"
-        android:text="Button"
+        android:text="Далее"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 

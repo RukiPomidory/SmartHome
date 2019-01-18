@@ -47,6 +47,8 @@ public class ScanActivity extends AppCompatActivity
         assert actionBar != null;
         actionBar.setDisplayHomeAsUpEnabled(true);
 
+        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
+
         scanner = new WifiScanner(this);
         scanner.setViewForTestFeature(recyclerView);
         scanner.setOnResultListener(new WifiScanner.ScanResultListener() {
@@ -78,8 +80,6 @@ public class ScanActivity extends AppCompatActivity
                 invalidateOptionsMenu();
             }
         });
-
-        wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
         layoutManager = new LinearLayoutManager(this);
         recyclerView.setLayoutManager(layoutManager);

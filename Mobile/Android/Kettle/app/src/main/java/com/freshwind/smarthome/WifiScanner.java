@@ -12,7 +12,6 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.support.design.widget.Snackbar;
 import android.support.v4.content.ContextCompat;
-import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.View;
 
@@ -27,7 +26,6 @@ public class WifiScanner
     private View recyclerView;
     private Activity activity;
     private WifiManager wifiManager;
-    private RecyclerView.Adapter<RecyclerView.ViewHolder> adapter;
     private ScanResultListener resultListener;
     private ScanStateListener stateListener;
 
@@ -51,7 +49,10 @@ public class WifiScanner
             }
 
             isScanning = false;
-            stateListener.onScanStateChanged(false);
+            if (stateListener != null)
+            {
+                stateListener.onScanStateChanged(false);
+            }
         }
     };
 
@@ -85,7 +86,7 @@ public class WifiScanner
         return isScanning;
     }
 
-    public boolean checkPermissions()
+    private boolean checkPermissions()
     {
         if(ContextCompat.checkSelfPermission(activity, Manifest.permission.CHANGE_WIFI_STATE)
                 != PackageManager.PERMISSION_GRANTED)
@@ -157,10 +158,13 @@ public class WifiScanner
 
         wifiManager.startScan();
         isScanning = true;
-        stateListener.onScanStateChanged(true);
+        if (stateListener != null)
+        {
+            stateListener.onScanStateChanged(true);
+        }
     }
 
-    public boolean isGeoEnabled()
+    private boolean isGeoEnabled()
     {
         LocationManager mLocationManager = (LocationManager) activity.getSystemService(Context.LOCATION_SERVICE);
         if (mLocationManager == null)
