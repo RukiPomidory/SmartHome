@@ -33,6 +33,7 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
 
     public static final int DISCONNECTED = 0;
     public static final int CONNECTED = 1;
+    public static final int UNREACHABLE_NET = 2;
 
     public void setPreTask(Runnable task)
     {
@@ -122,12 +123,24 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
 
             Socket socket = null;
             int i = 0;
-            while(null == socket && running)
+            while(running)
             {
+                i++;
                 Log.d(TAG, "Попытка " + String.valueOf(i));
                 socket = createSocket(serverIP, port);
-                i++;
+                if (socket != null)
+                {
+                    break;
+                }
+
+                Thread.sleep(100);
+                if (i > 10)
+                {
+                    stateListener.stateChanged(UNREACHABLE_NET);
+                    return null;
+                }
             }
+
             Log.d(TAG, "Сеть найдена, сокет готов!");
 
             try
@@ -135,7 +148,6 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
                 // TODO buffer здесь излишен. Упростить.
                 // Используется для отправки данных на сервер
                 bufferOut = new PrintWriter(new BufferedWriter(new OutputStreamWriter(socket.getOutputStream())), true);
-
 
                 rawOutputStream = socket.getOutputStream();
 

@@ -225,7 +225,6 @@ public class ScanActivity extends AppCompatActivity
             return;
         }
 
-
         if (!wifiManager.isWifiEnabled())
         {
             // TODO create warning "enable WIFI" view
@@ -256,6 +255,7 @@ public class ScanActivity extends AppCompatActivity
                         }
                     })
                     .show();
+            return;
         }
 
         isScanning = true;

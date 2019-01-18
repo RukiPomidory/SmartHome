@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
+import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
 import android.net.NetworkRequest;
@@ -50,6 +51,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     private WifiManager wifiManager;
     private TextView description;
     private GetRouterInfoFragment infoFragment;
+    private ScanFragment scanFragment;
     private SelectConnectionFragment selectConnectionFragment;
     private FragmentTransaction transaction;
     private Kettle.OnDataReceived dataReceivedListener;
@@ -141,7 +143,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             case R.id.select_router_btn:
                 kettle.connection = Kettle.Connection.router;
                 showInputFragment();
-                hasPassword = infoFragment.hasPassword();
+//                hasPassword = infoFragment.hasPassword();
                 removeSelectionFragment();
                 break;
         }
@@ -309,6 +311,11 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         thread.start();
     }
 
+    private void setAsyncDescription(int resource)
+    {
+        setAsyncDescription(getResources().getString(resource));
+    }
+
     private void setAsyncDescription(final String message)
     {
         description.post(new Runnable() {
@@ -424,6 +431,11 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                         setAsyncDescription("Успешное соединение с сервером!");
                         request();
                         break;
+
+                    case AsyncTcpClient.UNREACHABLE_NET:
+                        setAsyncDescription("Не удалось подключиться к серверу");
+                        kettle.stop();
+                        break;
                 }
             }
         };
@@ -442,7 +454,8 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                 wifiManager.disconnect();
                 wifiManager.disableNetwork(wifiManager.getConnectionInfo().getNetworkId());
                 wifiManager.enableNetwork(networkId, true);
-                wifiManager.reconnect();
+
+                final boolean[] using = {false};
 
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
                 {
@@ -459,9 +472,24 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                             @Override
                             public void onAvailable(Network network)
                             {
+                                super.onAvailable(network);
                                 manager.bindProcessToNetwork(null);
                                 manager.bindProcessToNetwork(network);
                                 manager.unregisterNetworkCallback(this);
+                                wifiManager.reconnect();
+                                using[0] = true;
+                            }
+
+                            @Override
+                            public void onCapabilitiesChanged(Network network, NetworkCapabilities networkCapabilities)
+                            {
+                                super.onCapabilitiesChanged(network, networkCapabilities);
+                            }
+
+                            @Override
+                            public void onLinkPropertiesChanged(Network network, LinkProperties linkProperties)
+                            {
+                                super.onLinkPropertiesChanged(network, linkProperties);
                             }
                         });
 
@@ -494,24 +522,20 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
                     info = wifiManager.getConnectionInfo();
                 }
+
                 Log.d(TAG, "WiFi SSID: " + info.getSSID());
 
-                description.post(new Runnable() {
-                    @Override
-                    public void run()
-                    {
-                        description.setText(R.string.ap_connected);
-                    }
-                });
-                //setAsyncDescription(R.string.ap_connected);
+                setAsyncDescription(R.string.ap_connected);
 
-                try
+                while (!using[0])
                 {
-                    Thread.sleep(1000);
-                }
-                catch (InterruptedException e)
-                {
-                    e.printStackTrace();
+                    try
+                    {
+                        Thread.sleep(1);
+                    } catch (InterruptedException e)
+                    {
+                        e.printStackTrace();
+                    }
                 }
             }
         };
@@ -539,19 +563,30 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     private void showInputFragment()
     {
         description.setText("Запрашиваю у пользователя данные...");
-        infoFragment = new GetRouterInfoFragment();
-        infoFragment.setOnClickListener(new View.OnClickListener() {
+//        infoFragment = new GetRouterInfoFragment();
+//        infoFragment.setOnClickListener(new View.OnClickListener() {
+//            @Override
+//            public void onClick(View v)
+//            {
+//                removeInputFragment();
+//                description.setText("Подключаю чайник к точке доступа...");
+//                kettle.connectToRouter(ssid, password);
+//            }
+//        });
+        scanFragment = new ScanFragment();
+        scanFragment.setOnclickListener(new OnClickListener() {
             @Override
             public void onClick(View v)
             {
-                removeInputFragment();
-                description.setText("Подключаю чайник к точке доступа...");
-                kettle.connectToRouter(ssid, password);
+                transaction = getFragmentManager().beginTransaction();
+                transaction.remove(scanFragment);
+                transaction.commit();
             }
         });
 
         transaction = getFragmentManager().beginTransaction();
-        transaction.add(R.id.connect_frame_layout, infoFragment);
+        //transaction.add(R.id.connect_frame_layout, infoFragment);
+        transaction.add(R.id.connect_frame_layout, scanFragment);
         transaction.commit();
     }
 }
