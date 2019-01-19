@@ -24,8 +24,11 @@ public class ScanFragment extends Fragment
 {
     private static final String TAG = "ScanFragment";
 
+    private int defaultColor;
+    private int selectedColor;
     private View.OnClickListener listener;
     private View root;
+    private View prevSelectedItem;
     private Button accept;
     private EditText passwordView;
     private Activity activity;
@@ -76,15 +79,20 @@ public class ScanFragment extends Fragment
             @Override
             public void onItemClick(RecyclerView recyclerView, View itemView, int position)
             {
+                if (prevSelectedItem != null)
+                {
+                    prevSelectedItem.setBackgroundColor(defaultColor);
+                }
+                itemView.setBackgroundColor(selectedColor);
+                prevSelectedItem = itemView;
+
                 config = new WifiConfiguration();
                 ScanResult result = adapter.scanResults.get(position);
 
                 config.SSID = "\"" + result.SSID + "\"";
                 config.BSSID = "\"" + result.BSSID + "\"";
-
             }
         });
-
 
         final WifiManager wifiManager = (WifiManager) activity.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
@@ -105,6 +113,10 @@ public class ScanFragment extends Fragment
         });
 
         scanner.scan();
+
+        defaultColor = getResources().getColor(R.color.neutral_500);
+        selectedColor = getResources().getColor(R.color.redAccent_300);
+
         return root;
     }
 

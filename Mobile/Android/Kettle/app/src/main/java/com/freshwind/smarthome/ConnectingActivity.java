@@ -187,17 +187,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             kettle.connection = Kettle.Connection.router;
         }
 
-//        WifiConfiguration config = new WifiConfiguration();
-//        config.SSID = "\"" + ssid + "\"";
-//        if (hasPassword)
-//        {
-//            config.preSharedKey = "\"" + password + "\"";
-//        }
-//        else
-//        {
-//            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-//        }
-
         int id = wifiManager.addNetwork(config);
 
         wifiManager.disconnect();
