@@ -228,6 +228,17 @@ public class Kettle implements Parcelable
         // TODO: проверка получения данных спустя определенное время
     }
 
+    public void connectToRouter(WifiConfiguration config)
+    {
+        String ssid = config.SSID;
+        ssid = ssid.substring(1, ssid.length() - 1);
+
+        String password = config.preSharedKey;
+        password = password.substring(1, password.length() - 1);
+
+        connectToRouter(ssid, password);
+    }
+
     public void sendData(String data)
     {
         try

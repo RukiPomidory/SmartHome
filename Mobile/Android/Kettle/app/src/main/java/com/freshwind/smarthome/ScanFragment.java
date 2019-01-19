@@ -7,6 +7,7 @@ import android.net.wifi.ScanResult;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -26,10 +27,12 @@ public class ScanFragment extends Fragment
     private View.OnClickListener listener;
     private View root;
     private Button accept;
-    private EditText password;
+    private EditText passwordView;
     private Activity activity;
     private WifiScanner scanner;
+    private DevicesAdapter adapter;
     private RecyclerView recyclerView;
+    private WifiConfiguration config;
 
     public void setOnclickListener(View.OnClickListener listener)
     {
@@ -40,9 +43,16 @@ public class ScanFragment extends Fragment
         }
     }
 
-    public String getPassword()
+    public WifiConfiguration getConfig()
     {
-        return password.getText().toString();
+        String password = passwordView.getText().toString();
+        config.preSharedKey = '\"' + password + '\"';
+        return config;
+    }
+
+    public View getRoot()
+    {
+        return root;
     }
 
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
@@ -50,7 +60,7 @@ public class ScanFragment extends Fragment
     {
         root = inflater.inflate(R.layout.scan_fragment, null);
         activity = getActivity();
-        password = root.findViewById(R.id.scan_fragment_password);
+        passwordView = root.findViewById(R.id.scan_fragment_password);
         accept = root.findViewById(R.id.acceptRouterBtn);
         if (listener != null)
         {
@@ -58,8 +68,23 @@ public class ScanFragment extends Fragment
         }
 
         recyclerView = root.findViewById(R.id.scanRecycler);
-        final DevicesAdapter adapter = new DevicesAdapter();
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(activity);
+        recyclerView.setLayoutManager(new LinearLayoutManager(activity));
+        adapter = new DevicesAdapter();
         recyclerView.setAdapter(adapter);
+        recyclerView.addOnItemTouchListener(new RecyclerClickListener(activity) {
+            @Override
+            public void onItemClick(RecyclerView recyclerView, View itemView, int position)
+            {
+                config = new WifiConfiguration();
+                ScanResult result = adapter.scanResults.get(position);
+
+                config.SSID = "\"" + result.SSID + "\"";
+                config.BSSID = "\"" + result.BSSID + "\"";
+
+            }
+        });
+
 
         final WifiManager wifiManager = (WifiManager) activity.getApplicationContext().getSystemService(Context.WIFI_SERVICE);
 
@@ -133,14 +158,16 @@ public class ScanFragment extends Fragment
         }
 
         @Override
-        public void onBindViewHolder(DevicesAdapter.DeviceViewHolder holder, int position)
+        public void onBindViewHolder(DeviceViewHolder holder, int position)
         {
             View view = holder.device;
 
             TextView nameTextView = view.findViewById(R.id.device_name);
             TextView addressTextView = view.findViewById(R.id.device_address);
 
-            String name = scanResults.get(position).SSID;
+            ScanResult result = scanResults.get(position);
+
+            String name = result.SSID;
             if (null != name && name.length() > 0)
             {
                 nameTextView.setText(name);
@@ -150,7 +177,7 @@ public class ScanFragment extends Fragment
                 nameTextView.setText(R.string.unknown_device);
             }
 
-            addressTextView.setText(scanResults.get(position).BSSID);
+            addressTextView.setText(result.BSSID);
         }
 
         @Override

@@ -43,20 +43,18 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
     private int attempt;
     private int selfNetId;
-    private String ssid;
-    private String password;
     private boolean hasPassword;
 
     private Kettle kettle;
     private WifiManager wifiManager;
     private TextView description;
-    private GetRouterInfoFragment infoFragment;
     private ScanFragment scanFragment;
     private SelectConnectionFragment selectConnectionFragment;
     private FragmentTransaction transaction;
     private Kettle.OnDataReceived dataReceivedListener;
     private AsyncTcpClient.OnStateChanged onStateChangedListener;
     private Runnable preTask;
+    private WifiConfiguration config;
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent)
@@ -149,18 +147,17 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         }
     }
 
-    private void removeInputFragment()
+    private void removeScanFragment()
     {
-        View fragment = infoFragment.getRoot();
+        View fragment = scanFragment.getRoot();
         assert fragment != null;
-        EditText ssidView = fragment.findViewById(R.id.router_ssid);
-        EditText passwordView = fragment.findViewById(R.id.router_password);
+//        EditText ssidView = fragment.findViewById(R.id.router_ssid);
+//        EditText passwordView = fragment.findViewById(R.id.router_password);
 
-        ssid = ssidView.getText().toString();
-        password = passwordView.getText().toString();
+        config = scanFragment.getConfig();
 
         transaction = getFragmentManager().beginTransaction();
-        transaction.remove(infoFragment);
+        transaction.remove(scanFragment);
         transaction.commit();
     }
 
@@ -190,22 +187,22 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             kettle.connection = Kettle.Connection.router;
         }
 
-        WifiConfiguration config = new WifiConfiguration();
-        config.SSID = "\"" + ssid + "\"";
-        if (hasPassword)
-        {
-            config.preSharedKey = "\"" + password + "\"";
-        }
-        else
-        {
-            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
-        }
+//        WifiConfiguration config = new WifiConfiguration();
+//        config.SSID = "\"" + ssid + "\"";
+//        if (hasPassword)
+//        {
+//            config.preSharedKey = "\"" + password + "\"";
+//        }
+//        else
+//        {
+//            config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
+//        }
 
-//        int id = wifiManager.addNetwork(config);
-//
-//        wifiManager.disconnect();
-//        wifiManager.enableNetwork(id, true);
-//        wifiManager.reconnect();
+        int id = wifiManager.addNetwork(config);
+
+        wifiManager.disconnect();
+        wifiManager.enableNetwork(id, true);
+        wifiManager.reconnect();
 
         initPreTask(config);
 
@@ -578,9 +575,9 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             @Override
             public void onClick(View v)
             {
-                transaction = getFragmentManager().beginTransaction();
-                transaction.remove(scanFragment);
-                transaction.commit();
+                removeScanFragment();
+                description.setText("Подключаю чайник к точке доступа...");
+                kettle.connectToRouter(config);
             }
         });
 
