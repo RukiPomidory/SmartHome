@@ -1,27 +1,24 @@
 package com.freshwind.smarthome;
 
 import android.content.Intent;
+import android.net.wifi.WifiConfiguration;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
-import android.view.Gravity;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
 
-import org.w3c.dom.Text;
-
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.zip.Inflater;
+
+import static com.freshwind.smarthome.ConnectingActivity.EXTRAS_DEVICE;
 
 public class MainActivity extends AppCompatActivity {
     private final static String TAG = "CHOOSING";
@@ -84,9 +81,14 @@ public class MainActivity extends AppCompatActivity {
                 BufferedReader reader = new BufferedReader(new InputStreamReader(openFileInput(file.getName())));
 
                 Kettle device = new Kettle();
+                device.configuration = new WifiConfiguration();
 
                 device.name = reader.readLine();
-                device.MAC = reader.readLine();
+                device.connection = Kettle.Connection.valueOf(reader.readLine());
+                device.configuration.SSID = reader.readLine();
+                device.configuration.BSSID = reader.readLine();
+                device.selfIP = reader.readLine();
+                device.localNetIP = reader.readLine();
                 device.model = reader.readLine();
 
                 reader.close();
@@ -108,7 +110,7 @@ public class MainActivity extends AppCompatActivity {
         table.removeAllViews();
     }
 
-    private void add(Kettle device)
+    private void add(final Kettle device)
     {
         int count = table.getChildCount();
         TableRow row = (TableRow) table.getChildAt(count - 1);
@@ -121,10 +123,27 @@ public class MainActivity extends AppCompatActivity {
         View deviceView = inflater.inflate(R.layout.device, null);
 
         TextView name = deviceView.findViewById(R.id.device_title);
-        TextView MAC = deviceView.findViewById(R.id.device_mac);
+        TextView ip = deviceView.findViewById(R.id.device_ip);
 
-        name.setText(device.name);
-        MAC.setText(device.MAC);
+        name.setText(device.configuration.SSID);
+        if (Kettle.Connection.router == device.connection)
+        {
+            ip.setText(device.localNetIP);
+        }
+        else
+        {
+            ip.setText(device.selfIP);
+        }
+
+        deviceView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                Intent intent = new Intent(MainActivity.this, ConnectingActivity.class);
+                intent.putExtra(EXTRAS_DEVICE, device);
+                startActivity(intent);
+            }
+        });
 
         row.addView(deviceView);
     }

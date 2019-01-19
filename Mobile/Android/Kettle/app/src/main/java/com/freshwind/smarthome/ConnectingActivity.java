@@ -235,8 +235,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     {
         final Intent intent = new Intent(this, DeviceControlActivity.class);
         intent.putExtra(EXTRAS_DEVICE, kettle);
-        // сохранять будем потом
-        //saveDevice(kettle);
+        saveDevice(kettle);
         startActivity(intent);
         Log.d(TAG, "LAUNCH DeviceControlActivity");
         finish();
@@ -246,11 +245,15 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     {
         try
         {
-            String fileName = device.MAC;
+            String fileName = device.configuration.BSSID;
             BufferedWriter writer = new BufferedWriter((new OutputStreamWriter(openFileOutput(fileName, MODE_PRIVATE))));
 
             writer.write(device.name + '\n');
-            writer.write(device.MAC + '\n');
+            writer.write(device.connection.name() + '\n');
+            writer.write(device.configuration.SSID + '\n');
+            writer.write(device.configuration.BSSID + '\n');
+            writer.write(device.selfIP + '\n');
+            writer.write(device.localNetIP + '\n');
             writer.write("in developing\n");
 
             writer.close();

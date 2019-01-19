@@ -20,7 +20,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@color/cyanAccent_500"
-        android:text="@string/exampleMAC"
+        android:text="@string/default_ip"
         android:textColor="@color/cyanAccent_100"
         android:textSize="12sp" />
 </LinearLayout>

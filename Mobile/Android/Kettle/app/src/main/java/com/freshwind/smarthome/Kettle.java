@@ -6,12 +6,16 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
+
 
 public class Kettle implements Parcelable
 {
     private static final String TAG = "Kettle";
+    private static final String defaultSelfIP = "192.168.42.1";
+    private static final int defaultPort = 3333;
 
     public interface OnDataReceived
     {
@@ -43,11 +47,8 @@ public class Kettle implements Parcelable
         disconnected
     }
 
-    // Имя чайника
+    // Пользовательское имя чайника
     public String name;
-
-    // Bluetooth MAC-адрес
-    public String MAC;
 
     // Модель чайника
     public String model;
@@ -90,13 +91,12 @@ public class Kettle implements Parcelable
     // Обработчик данных с сервера
     private OnDataReceived listener;
 
-    // TODO: наследование
-    protected Kettle(Parcel in)
+
+    private Kettle(Parcel in)
     {
         this();
 
         name = in.readString();
-        MAC = in.readString();
         model = in.readString();
 
         selfIP = in.readString();
@@ -114,17 +114,8 @@ public class Kettle implements Parcelable
     public Kettle()
     {
         buffer = new ArrayList<>();
-    }
-
-    public Kettle(String name, String MAC)
-    {
-        this.name = name;
-        this.MAC = MAC;
-    }
-
-    public Kettle(CharSequence name, CharSequence MAC)
-    {
-        this(name.toString(), MAC.toString());
+        selfIP = defaultSelfIP;
+        port = defaultPort;
     }
 
     public void stop()
@@ -141,11 +132,6 @@ public class Kettle implements Parcelable
             buffer.clear();
             buffer = null;
         }
-    }
-
-    public void setSelfIP(String ip)
-    {
-        selfIP = ip;
     }
 
     public void setPreTask(Runnable task)
@@ -181,6 +167,11 @@ public class Kettle implements Parcelable
             @Override
             protected void onProgressUpdate(Integer... values)
             {
+                if (buffer == null)
+                {
+                    return;
+                }
+
                 super.onProgressUpdate(values);
                 char _byte = (char) (int) values[0];
                 if (';' == _byte && buffer.size() > 0)
@@ -198,7 +189,7 @@ public class Kettle implements Parcelable
                         listener.dataReceived(buffer);
                     }
 
-                    if(buffer != null)
+                    if (buffer != null)
                     {
                         buffer.clear();
                     }
@@ -275,7 +266,6 @@ public class Kettle implements Parcelable
     public void writeToParcel(Parcel dest, int flags)
     {
         dest.writeString(name);
-        dest.writeString(MAC);
         dest.writeString(model);
 
         dest.writeString(selfIP);

@@ -93,8 +93,6 @@ public class ScanActivity extends AppCompatActivity
             public void onItemClick(RecyclerView recyclerView, View itemView, int position)
             {
                 final Intent intent = new Intent(ScanActivity.this, ConnectingActivity.class);
-                TextView textName = itemView.findViewById(R.id.device_name);
-                TextView textAddress = itemView.findViewById(R.id.device_address);
 
                 WifiConfiguration config = new WifiConfiguration();
                 ScanResult result = devicesAdapter.scanResults.get(position);
@@ -103,7 +101,7 @@ public class ScanActivity extends AppCompatActivity
                 config.BSSID = "\"" + result.BSSID + "\"";
                 config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
 
-                Kettle kettle = new Kettle(textName.getText(), textAddress.getText());
+                Kettle kettle = new Kettle();
                 kettle.configuration = config;
                 // TODO переместить куда-нибудь в настройки или константы
                 kettle.selfIP = "192.168.42.1";
