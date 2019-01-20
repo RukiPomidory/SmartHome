@@ -9,12 +9,12 @@ import android.os.Handler;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
+import android.widget.ImageView;
 import android.widget.NumberPicker;
 
 import java.util.ArrayList;
@@ -44,6 +44,7 @@ public class DeviceControlActivity extends AppCompatActivity
     private FragmentTransaction transaction;
     private Kettle.OnDataReceived onDataReceivedListener;
     private AsyncTcpClient.OnStateChanged onStateChangedListener;
+    private ImageView temperatureImage;
 
 
     private final OnClickListener heatOnClickListener = new OnClickListener() {
@@ -144,6 +145,8 @@ public class DeviceControlActivity extends AppCompatActivity
         kettle.setOnDataReceivedListener(onDataReceivedListener);
         kettle.setOnStateChangedListener(onStateChangedListener);
         kettle.connectToTcpServer();
+
+        temperatureImage = findViewById(R.id.heatingState);
     }
 
 
@@ -251,12 +254,23 @@ public class DeviceControlActivity extends AppCompatActivity
                         assert launchBtn != null;
                         launchBtn.setOnClickListener(coldOnClickListener);
                         launchBtn.setText(R.string.turn_off);
+                        temperatureImage.setImageResource(R.drawable.ic_temperature);
                         break;
 
                     case 'K':
                         assert launchBtn != null;
                         launchBtn.setOnClickListener(heatOnClickListener);
                         launchBtn.setText(R.string.launch);
+                        temperatureImage.setImageResource(R.drawable.ic_temperature_off);
+                        break;
+
+                    case 'D':
+                        Snackbar
+                                .make(launchBtn, "Вода вскипела!", Snackbar.LENGTH_LONG)
+                                .show();
+                        launchBtn.setOnClickListener(heatOnClickListener);
+                        launchBtn.setText(R.string.launch);
+                        temperatureImage.setImageResource(R.drawable.ic_temperature_off);
                         break;
                 }
             }

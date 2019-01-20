@@ -109,6 +109,7 @@
     <string name="router_ssid">Имя сети</string>
     <string name="router_password">Пароль</string>
     <string name="without_password">Сеть без пароля</string>
+    <string name="heating_state">heating state</string>
 
 
 </resources>
