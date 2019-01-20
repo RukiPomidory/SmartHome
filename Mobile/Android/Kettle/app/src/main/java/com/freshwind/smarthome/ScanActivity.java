@@ -102,7 +102,7 @@ public class ScanActivity extends AppCompatActivity
                 config.allowedKeyManagement.set(WifiConfiguration.KeyMgmt.NONE);
 
                 Kettle kettle = new Kettle();
-                kettle.configuration = config;
+                kettle.selfApConfiguration = config;
                 // TODO переместить куда-нибудь в настройки или константы
                 kettle.selfIP = "192.168.42.1";
                 kettle.port = 3333;

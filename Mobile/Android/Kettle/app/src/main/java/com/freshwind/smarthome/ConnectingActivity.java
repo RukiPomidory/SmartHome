@@ -6,7 +6,6 @@ import android.app.FragmentTransaction;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
@@ -25,7 +24,6 @@ import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.View.OnClickListener;
-import android.widget.EditText;
 import android.widget.TextView;
 
 import java.io.BufferedWriter;
@@ -53,8 +51,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     private FragmentTransaction transaction;
     private Kettle.OnDataReceived dataReceivedListener;
     private AsyncTcpClient.OnStateChanged onStateChangedListener;
-    private Runnable preTask;
-    private WifiConfiguration config;
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent)
@@ -108,7 +104,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
         initOnDataReceivedListener();
         initOnStateChangedListener();
-        initPreTask(kettle.configuration);
 
         //TODO: это чо?
         if (Kettle.Connection.selfAp == kettle.connection)
@@ -149,12 +144,8 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
     private void removeScanFragment()
     {
-        View fragment = scanFragment.getRoot();
-        assert fragment != null;
-//        EditText ssidView = fragment.findViewById(R.id.router_ssid);
-//        EditText passwordView = fragment.findViewById(R.id.router_password);
-
-        config = scanFragment.getConfig();
+        kettle.routerConfiguration = scanFragment.getConfig();
+        kettle.routerKey = scanFragment.getPassword();
 
         transaction = getFragmentManager().beginTransaction();
         transaction.remove(scanFragment);
@@ -163,10 +154,16 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
     private void removeSelectionFragment()
     {
-        // TODO: check if fragmentManager don't contains fragment
-        transaction = getFragmentManager().beginTransaction();
-        transaction.remove(selectConnectionFragment);
-        transaction.commit();
+        try
+        {
+            transaction = getFragmentManager().beginTransaction();
+            transaction.remove(selectConnectionFragment);
+            transaction.commit();
+        }
+        catch (Exception exc)
+        {
+            exc.printStackTrace();
+        }
     }
 
     private void showConnectionDialog()
@@ -181,19 +178,16 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
     private void connectSelfToRouter()
     {
-        if(kettle != null)
-        {
-            kettle.stop();
-            kettle.connection = Kettle.Connection.router;
-        }
+        kettle.stop();
+        kettle.connection = Kettle.Connection.router;
 
-        int id = wifiManager.addNetwork(config);
+        int id = wifiManager.addNetwork(kettle.routerConfiguration);
 
         wifiManager.disconnect();
         wifiManager.enableNetwork(id, true);
         wifiManager.reconnect();
 
-        initPreTask(config);
+        Runnable preTask = createPreTask(kettle.routerConfiguration);
 
         kettle.setOnDataReceivedListener(dataReceivedListener);
         kettle.setOnStateChangedListener(onStateChangedListener);
@@ -204,6 +198,8 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     @SuppressLint("StaticFieldLeak")
     private void startTcpClient()
     {
+        Runnable preTask = createPreTask(kettle.selfApConfiguration);
+
         kettle.setPreTask(preTask);
         kettle.setOnStateChangedListener(onStateChangedListener);
         kettle.setOnDataReceivedListener(dataReceivedListener);
@@ -243,20 +239,19 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
     private void saveDevice(Kettle device)
     {
-        try
+        String fileName = device.selfApConfiguration.BSSID;
+        try (BufferedWriter writer = new BufferedWriter((new OutputStreamWriter(openFileOutput(fileName, MODE_PRIVATE)))))
         {
-            String fileName = device.configuration.BSSID;
-            BufferedWriter writer = new BufferedWriter((new OutputStreamWriter(openFileOutput(fileName, MODE_PRIVATE))));
 
             writer.write(device.name + '\n');
             writer.write(device.connection.name() + '\n');
-            writer.write(device.configuration.SSID + '\n');
-            writer.write(device.configuration.BSSID + '\n');
+            writer.write(device.selfApConfiguration.SSID + '\n');
+            writer.write(device.selfApConfiguration.BSSID + '\n');
             writer.write(device.selfIP + '\n');
             writer.write(device.localNetIP + '\n');
             writer.write("in developing\n");
-
-            writer.close();
+            writer.write(device.selfKey + '\n');
+            writer.write(device.routerKey + '\n');
         }
         catch (IOException | NullPointerException exc)
         {
@@ -430,9 +425,9 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         };
     }
 
-    private void initPreTask(final WifiConfiguration config)
+    private Runnable createPreTask(final WifiConfiguration config)
     {
-        preTask = new Runnable() {
+        return new Runnable() {
             @Override
             public void run()
             {
@@ -481,7 +476,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                                 super.onLinkPropertiesChanged(network, linkProperties);
                             }
                         });
-
                     }
                     else
                     {
@@ -521,7 +515,8 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                     try
                     {
                         Thread.sleep(1);
-                    } catch (InterruptedException e)
+                    }
+                    catch (InterruptedException e)
                     {
                         e.printStackTrace();
                     }
@@ -552,16 +547,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     private void showInputFragment()
     {
         description.setText("Запрашиваю у пользователя данные...");
-//        infoFragment = new GetRouterInfoFragment();
-//        infoFragment.setOnClickListener(new View.OnClickListener() {
-//            @Override
-//            public void onClick(View v)
-//            {
-//                removeInputFragment();
-//                description.setText("Подключаю чайник к точке доступа...");
-//                kettle.connectToRouter(ssid, password);
-//            }
-//        });
         scanFragment = new ScanFragment();
         scanFragment.setOnclickListener(new OnClickListener() {
             @Override
@@ -569,7 +554,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             {
                 removeScanFragment();
                 description.setText("Подключаю чайник к точке доступа...");
-                kettle.connectToRouter(config);
+                kettle.connectToRouter(kettle.routerConfiguration);
             }
         });
 

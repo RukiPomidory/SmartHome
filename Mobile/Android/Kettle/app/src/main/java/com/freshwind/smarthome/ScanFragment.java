@@ -53,6 +53,11 @@ public class ScanFragment extends Fragment
         return config;
     }
 
+    public String getPassword()
+    {
+        return passwordView.getText().toString();
+    }
+
     public View getRoot()
     {
         return root;

@@ -6,7 +6,6 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.util.Log;
 
-import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -69,8 +68,17 @@ public class Kettle implements Parcelable
     // Состояние - вкл/выкл
     public byte state;
 
-    // Конфигурация Wi-Fi
-    public WifiConfiguration configuration;
+    // Собственная конфигурация Wi-Fi чайника
+    public WifiConfiguration selfApConfiguration;
+
+    // Wi-Fi конфигурация роутера, к которому автоматически подключается чайник
+    public WifiConfiguration routerConfiguration;
+
+    // Пароль своей точки доступа
+    public String selfKey;
+
+    // Пароль роутера
+    public String routerKey;
 
     // Метод соединения с телефоном
     public Connection connection = Connection.disconnected;
@@ -107,7 +115,8 @@ public class Kettle implements Parcelable
         waterLevel = in.readInt();
         state = in.readByte();
 
-        configuration = in.readParcelable(WifiConfiguration.class.getClassLoader());
+        selfApConfiguration = in.readParcelable(WifiConfiguration.class.getClassLoader());
+        routerConfiguration = in.readParcelable(WifiConfiguration.class.getClassLoader());
         connection = Connection.valueOf(in.readString());
     }
 
@@ -276,7 +285,8 @@ public class Kettle implements Parcelable
         dest.writeInt(waterLevel);
         dest.writeByte(state);
 
-        dest.writeParcelable(configuration, flags);
+        dest.writeParcelable(selfApConfiguration, flags);
+        dest.writeParcelable(routerConfiguration, flags);
         dest.writeString(connection.name());
     }
 
