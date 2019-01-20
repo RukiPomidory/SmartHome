@@ -41,7 +41,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
     private int attempt;
     private int selfNetId;
-    private boolean hasPassword;
 
     private Kettle kettle;
     private WifiManager wifiManager;
@@ -108,11 +107,11 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         //TODO: это чо?
         if (Kettle.Connection.selfAp == kettle.connection)
         {
-            startTcpClient();
+            startTcpClient(createPreTask(kettle.selfApConfiguration));
         }
         else
         {
-            showInputFragment();
+            startTcpClient(createPreTask(kettle.routerConfiguration));
         }
 
         // TODO: Пока что хрен знает, что делать с этим дерьмом
@@ -196,10 +195,8 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     }
 
     @SuppressLint("StaticFieldLeak")
-    private void startTcpClient()
+    private void startTcpClient(Runnable preTask)
     {
-        Runnable preTask = createPreTask(kettle.selfApConfiguration);
-
         kettle.setPreTask(preTask);
         kettle.setOnStateChangedListener(onStateChangedListener);
         kettle.setOnDataReceivedListener(dataReceivedListener);
@@ -251,6 +248,8 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             writer.write(device.localNetIP + '\n');
             writer.write("in developing\n");
             writer.write(device.selfKey + '\n');
+            writer.write(device.routerConfiguration.SSID + '\n');
+            writer.write(device.routerConfiguration.BSSID + '\n');
             writer.write(device.routerKey + '\n');
         }
         catch (IOException | NullPointerException exc)
