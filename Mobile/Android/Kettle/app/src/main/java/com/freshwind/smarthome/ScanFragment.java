@@ -96,6 +96,9 @@ public class ScanFragment extends Fragment
 
                 config.SSID = "\"" + result.SSID + "\"";
                 config.BSSID = "\"" + result.BSSID + "\"";
+
+                adapter.setSelectedItem(position);
+                //adapter.notifyItemChanged(position);
             }
         });
 
@@ -128,7 +131,9 @@ public class ScanFragment extends Fragment
     // TODO: адаптер можно пихнуть как public класс для обоих сканеров
     private class DevicesAdapter extends RecyclerView.Adapter<DevicesAdapter.DeviceViewHolder>{
         public ArrayList<ScanResult> scanResults;
+
         private LayoutInflater inflater;
+        private int selectedPosition = -1;
 
         class DeviceViewHolder extends RecyclerView.ViewHolder
         {
@@ -158,6 +163,11 @@ public class ScanFragment extends Fragment
         void clear()
         {
             scanResults.clear();
+        }
+
+        void setSelectedItem(int position)
+        {
+            selectedPosition = position;
         }
 
         DevicesAdapter()
@@ -192,6 +202,15 @@ public class ScanFragment extends Fragment
             else
             {
                 nameTextView.setText(R.string.unknown_device);
+            }
+
+            if (position == selectedPosition)
+            {
+                view.setBackgroundColor(selectedColor);
+            }
+            else
+            {
+                view.setBackgroundColor(defaultColor);
             }
 
             addressTextView.setText(result.BSSID);
