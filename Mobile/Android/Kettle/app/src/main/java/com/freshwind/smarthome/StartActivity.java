@@ -28,6 +28,6 @@ public class StartActivity extends AppCompatActivity
                 startActivity(main);
                 finish();
             }
-        }, 5000);
+        }, 500);
     }
 }

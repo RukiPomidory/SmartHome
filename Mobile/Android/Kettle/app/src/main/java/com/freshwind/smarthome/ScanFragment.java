@@ -26,23 +26,35 @@ public class ScanFragment extends Fragment
 
     private int defaultColor;
     private int selectedColor;
-    private View.OnClickListener listener;
+    private View.OnClickListener acceptListener;
+    private View.OnClickListener refreshListener;
     private View root;
     private View prevSelectedItem;
     private Button accept;
+    private Button refresh;
     private EditText passwordView;
     private Activity activity;
     private WifiScanner scanner;
     private DevicesAdapter adapter;
     private RecyclerView recyclerView;
     private WifiConfiguration config;
+    private View refreshProgress;
 
-    public void setOnclickListener(View.OnClickListener listener)
+    public void setAcceptListener(View.OnClickListener listener)
     {
-        this.listener = listener;
+        this.acceptListener = listener;
         if (accept != null)
         {
             accept.setOnClickListener(listener);
+        }
+    }
+
+    public void setRefreshListener(View.OnClickListener listener)
+    {
+        this.refreshListener = listener;
+        if (refresh != null)
+        {
+            refresh.setOnClickListener(listener);
         }
     }
 
@@ -69,14 +81,14 @@ public class ScanFragment extends Fragment
         root = inflater.inflate(R.layout.scan_fragment, null);
         activity = getActivity();
         passwordView = root.findViewById(R.id.scan_fragment_password);
+
         accept = root.findViewById(R.id.acceptRouterBtn);
-        if (listener != null)
+        if (acceptListener != null)
         {
-            accept.setOnClickListener(listener);
+            accept.setOnClickListener(acceptListener);
         }
 
         recyclerView = root.findViewById(R.id.scanRecycler);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(activity);
         recyclerView.setLayoutManager(new LinearLayoutManager(activity));
         adapter = new DevicesAdapter();
         recyclerView.setAdapter(adapter);
@@ -98,7 +110,6 @@ public class ScanFragment extends Fragment
                 config.BSSID = "\"" + result.BSSID + "\"";
 
                 adapter.setSelectedItem(position);
-                //adapter.notifyItemChanged(position);
             }
         });
 
@@ -110,17 +121,31 @@ public class ScanFragment extends Fragment
             public void onScanSuccess()
             {
                 List<ScanResult> results = wifiManager.getScanResults();
+                refreshProgress.setVisibility(View.INVISIBLE);
                 adapter.updateDevices(results);
             }
 
             @Override
             public void onScanFailure()
             {
+                refreshProgress.setVisibility(View.INVISIBLE);
                 Log.w(TAG, "scan FAILED");
             }
         });
 
+        refreshProgress = root.findViewById(R.id.refresh_progressbar);
+
         scanner.scan();
+
+        refresh = root.findViewById(R.id.fragment_refresh);
+        refresh.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                scanner.scan();
+                refreshProgress.setVisibility(View.VISIBLE);
+            }
+        });
 
         defaultColor = getResources().getColor(R.color.neutral_500);
         selectedColor = getResources().getColor(R.color.redAccent_300);

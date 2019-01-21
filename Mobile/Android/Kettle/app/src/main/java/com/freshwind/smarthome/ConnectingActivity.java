@@ -547,7 +547,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     {
         description.setText("Запрашиваю у пользователя данные...");
         scanFragment = new ScanFragment();
-        scanFragment.setOnclickListener(new OnClickListener() {
+        scanFragment.setAcceptListener(new OnClickListener() {
             @Override
             public void onClick(View v)
             {
@@ -557,8 +557,15 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             }
         });
 
+        scanFragment.setRefreshListener(new OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+
+            }
+        });
+
         transaction = getFragmentManager().beginTransaction();
-        //transaction.add(R.id.connect_frame_layout, infoFragment);
         transaction.add(R.id.connect_frame_layout, scanFragment);
         transaction.commit();
     }

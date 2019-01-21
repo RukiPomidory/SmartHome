@@ -9,9 +9,13 @@
     <color name="primary_100">#d0faee</color>
 
     <color name="neutral_900">#212934</color>
+    <color name="neutral_800">#465263</color>
     <color name="neutral_700">#778494</color>
+    <color name="neutral_600">#9ba8b7</color>
     <color name="neutral_500">#b7c3cd</color>
+    <color name="neutral_400">#cbd5de</color>
     <color name="neutral_300">#d4dbe1</color>
+    <color name="neutral_200">#e2e7ea</color>
     <color name="neutral_100">#f7f8f9</color>
 
     <color name="redAccent_900">#611818</color>
