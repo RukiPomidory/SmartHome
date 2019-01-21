@@ -16,8 +16,8 @@ public class StartActivity extends AppCompatActivity
     {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.start_layout);
-            getSupportActionBar().hide();
-            Log.w(TAG, "getSupportActionBar() OK");
+        getSupportActionBar().hide();
+        Log.w(TAG, "getSupportActionBar() OK");
 
         final Intent main = new Intent(this, MainActivity.class);
 
@@ -28,6 +28,6 @@ public class StartActivity extends AppCompatActivity
                 startActivity(main);
                 finish();
             }
-        }, 500);
+        }, 5000);
     }
 }
