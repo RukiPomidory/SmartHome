@@ -19,6 +19,7 @@ import android.widget.NumberPicker;
 
 import com.freshwind.smarthome.fragments.ConnectionErrorFragment;
 import com.freshwind.smarthome.fragments.ElephantFragment;
+import com.freshwind.smarthome.fragments.UnableToConnectFragment;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -150,6 +151,12 @@ public class DeviceControlActivity extends AppCompatActivity
         kettle.connectToTcpServer();
 
         temperatureImage = findViewById(R.id.heatingState);
+
+        // TEST
+        transaction = getFragmentManager().beginTransaction();
+        transaction.add(R.id.fragmentLayout, new UnableToConnectFragment());
+        transaction.commit();
+        // ENDTEST
     }
 
 

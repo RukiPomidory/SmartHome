@@ -28,6 +28,7 @@ import android.widget.TextView;
 
 import com.freshwind.smarthome.fragments.ScanFragment;
 import com.freshwind.smarthome.fragments.SelectConnectionFragment;
+import com.freshwind.smarthome.fragments.UnableToConnectFragment;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -50,6 +51,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     private TextView description;
     private ScanFragment scanFragment;
     private SelectConnectionFragment selectConnectionFragment;
+    private UnableToConnectFragment unableToConnectFragment;
     private FragmentTransaction transaction;
     private Kettle.OnDataReceived dataReceivedListener;
     private AsyncTcpClient.OnStateChanged onStateChangedListener;
@@ -421,6 +423,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                     case AsyncTcpClient.UNREACHABLE_NET:
                         setAsyncDescription("Не удалось подключиться к серверу");
                         kettle.stop();
+                        showFailFragment();
                         break;
                 }
             }
@@ -570,6 +573,29 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
         transaction = getFragmentManager().beginTransaction();
         transaction.add(R.id.connect_frame_layout, scanFragment);
+        transaction.commit();
+    }
+
+    private void showFailFragment()
+    {
+        unableToConnectFragment = new UnableToConnectFragment();
+        unableToConnectFragment.setBackListener(new OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                finish();
+            }
+        });
+        unableToConnectFragment.setConnectListener(new OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                
+            }
+        });
+
+        transaction = getFragmentManager().beginTransaction();
+        transaction.add(R.id.connect_frame_layout, unableToConnectFragment);
         transaction.commit();
     }
 }

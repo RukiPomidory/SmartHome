@@ -22,9 +22,12 @@
         <item name="android:background">@drawable/launch_button</item>
     </style>
 
-
     <style name="TimeManagerButton">
         <item name="android:background">@drawable/time_manager_button</item>
+    </style>
+
+    <style name="DialogButton">
+        <item name="android:background">@drawable/dialog_button</item>
     </style>
 
     <style name="Toolbar">
