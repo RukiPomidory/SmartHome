@@ -17,6 +17,9 @@ import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.NumberPicker;
 
+import com.freshwind.smarthome.fragments.ConnectionErrorFragment;
+import com.freshwind.smarthome.fragments.ElephantFragment;
+
 import java.util.ArrayList;
 import java.util.List;
 

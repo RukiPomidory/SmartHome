@@ -1,4 +1,4 @@
-package com.freshwind.smarthome;
+package com.freshwind.smarthome.fragments;
 
 import android.app.Activity;
 import android.app.Fragment;
@@ -16,6 +16,10 @@ import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+
+import com.freshwind.smarthome.R;
+import com.freshwind.smarthome.RecyclerClickListener;
+import com.freshwind.smarthome.WifiScanner;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -135,7 +139,7 @@ public class ScanFragment extends Fragment
 
         refreshProgress = root.findViewById(R.id.refresh_progressbar);
 
-        scanner.scan();
+//        scanner.scan();
 
         refresh = root.findViewById(R.id.fragment_refresh);
         refresh.setOnClickListener(new View.OnClickListener() {

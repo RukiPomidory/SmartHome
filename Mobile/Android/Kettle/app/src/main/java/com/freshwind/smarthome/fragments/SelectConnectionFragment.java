@@ -1,4 +1,4 @@
-package com.freshwind.smarthome;
+package com.freshwind.smarthome.fragments;
 
 import android.app.Fragment;
 import android.os.Bundle;
@@ -7,6 +7,8 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.view.ViewGroup;
 import android.widget.Button;
+
+import com.freshwind.smarthome.R;
 
 public class SelectConnectionFragment extends Fragment
 {

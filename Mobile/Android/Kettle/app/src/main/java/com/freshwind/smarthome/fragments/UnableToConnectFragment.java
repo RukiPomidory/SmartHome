@@ -1,17 +1,19 @@
-package com.freshwind.smarthome;
+package com.freshwind.smarthome.fragments;
 
-import android.app.Fragment;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
-public class ConnectionErrorFragment extends Fragment
+import com.freshwind.smarthome.R;
+
+public class UnableToConnectFragment
 {
     public View onCreateView(LayoutInflater inflater, ViewGroup container,
                              Bundle savedInstanceState)
     {
+        View root = inflater.inflate(R.layout.unable_to_connect_fragment, null);
 
-        return inflater.inflate(R.layout.connection_error, null);
+        return root;
     }
 }

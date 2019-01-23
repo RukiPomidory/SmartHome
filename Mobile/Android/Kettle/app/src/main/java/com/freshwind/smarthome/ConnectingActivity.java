@@ -26,6 +26,9 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 
+import com.freshwind.smarthome.fragments.ScanFragment;
+import com.freshwind.smarthome.fragments.SelectConnectionFragment;
+
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
