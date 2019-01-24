@@ -44,7 +44,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     private static final int attemptCount = 5;
 
     private int attempt;
-    private int selfNetId;
 
     private Kettle kettle;
     private WifiManager wifiManager;
@@ -176,7 +175,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         selectConnectionFragment.setOnClickListener(this);
 
         transaction = getFragmentManager().beginTransaction();
-        transaction.add(R.id.connect_frame_layout, selectConnectionFragment);
+        transaction.add(R.id.router_frame_layout, selectConnectionFragment);
         transaction.commit();
     }
 
@@ -439,7 +438,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                 // Подключение к точке доступа
                 int networkId = wifiManager.addNetwork(config);
                 wifiManager.isPreferredNetworkOffloadSupported();
-                selfNetId = networkId;
                 wifiManager.disconnect();
                 wifiManager.disableNetwork(wifiManager.getConnectionInfo().getNetworkId());
                 wifiManager.enableNetwork(networkId, true);
@@ -572,7 +570,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         });
 
         transaction = getFragmentManager().beginTransaction();
-        transaction.add(R.id.connect_frame_layout, scanFragment);
+        transaction.add(R.id.router_frame_layout, scanFragment);
         transaction.commit();
     }
 
@@ -590,12 +588,12 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             @Override
             public void onClick(View v)
             {
-                
+
             }
         });
 
         transaction = getFragmentManager().beginTransaction();
-        transaction.add(R.id.connect_frame_layout, unableToConnectFragment);
+        transaction.add(R.id.error_frame_layout, unableToConnectFragment);
         transaction.commit();
     }
 }

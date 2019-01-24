@@ -134,7 +134,7 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
                 }
 
                 Thread.sleep(100);
-                if (i > 10)
+                if (i > 5)
                 {
                     stateListener.stateChanged(UNREACHABLE_NET);
                     return null;

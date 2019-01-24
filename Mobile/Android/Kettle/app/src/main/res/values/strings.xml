@@ -16,7 +16,7 @@
     <string name="exampleName">Device Name</string>
     <string name="timemanager">TimeManager</string>
     <string name="turn_off">Остановить</string>
-    <string name="back">back</string>
+    <string name="back">Назад</string>
     <string name="elephant_title">Слон</string>
     <string name="elephantDescription">Вероятно, на ваш чайник наступил слон. Чтобы избежать поломки датчиков, уберите чайник из-под слона.</string>
     <string name="title_activity_settings">Settings</string>
