@@ -6,6 +6,7 @@ import android.app.FragmentTransaction;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.content.IntentFilter;
 import android.net.ConnectivityManager;
 import android.net.LinkProperties;
 import android.net.Network;
@@ -62,13 +63,11 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             if (action != null &&
                     action.equals(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION))
             {
-                if (intent.getBooleanExtra(WifiManager.EXTRA_SUPPLICANT_CONNECTED, false))
+                boolean state = intent.getBooleanExtra(WifiManager.EXTRA_SUPPLICANT_CONNECTED, false);
+                if (!state)
                 {
-                    //do stuff
-                }
-                else
-                {
-                    // wifi connection was lost
+                    // Wi-Fi отключился
+                    showFailFragment();
                 }
             }
         }
@@ -101,9 +100,9 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         wifiManager = (WifiManager) getApplicationContext().getSystemService(Context.WIFI_SERVICE);
         assert wifiManager != null;
 
-//        IntentFilter intentFilter = new IntentFilter();
-//        intentFilter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION);
-//        registerReceiver(broadcastReceiver, intentFilter);
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION);
+        registerReceiver(broadcastReceiver, intentFilter);
 
         initOnDataReceivedListener();
         initOnStateChangedListener();
@@ -437,7 +436,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             {
                 // Подключение к точке доступа
                 int networkId = wifiManager.addNetwork(config);
-                wifiManager.isPreferredNetworkOffloadSupported();
                 wifiManager.disconnect();
                 wifiManager.disableNetwork(wifiManager.getConnectionInfo().getNetworkId());
                 wifiManager.enableNetwork(networkId, true);
@@ -496,17 +494,19 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                     attempt++;
                     if (attempt > attemptCount)
                     {
-                        // TODO уведомление о неудаче и прекращение процесса подключения
+                        setAsyncDescription("Превышен лимит попыток подключения");
+                        showFailFragment();
                         return;
                     }
 
                     String text = getString(R.string.default_attempt_text) + String.valueOf(attempt);
                     setAsyncDescription(text);
 
-                    try { Thread.sleep(1000); }
+                    try { Thread.sleep(2000); }
                     catch (InterruptedException ignored) { }
 
                     info = wifiManager.getConnectionInfo();
+                    Log.d(TAG, "[" + String.valueOf(attempt) + "]" + info.getSSID());
                 }
 
                 Log.d(TAG, "WiFi SSID: " + info.getSSID());

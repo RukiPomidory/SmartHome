@@ -139,7 +139,7 @@ public class ScanFragment extends Fragment
 
         refreshProgress = root.findViewById(R.id.refresh_progressbar);
 
-//        scanner.scan();
+        scanner.scan();
 
         refresh = root.findViewById(R.id.fragment_refresh);
         refresh.setOnClickListener(new View.OnClickListener() {

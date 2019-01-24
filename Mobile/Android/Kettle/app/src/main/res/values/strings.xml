@@ -99,7 +99,7 @@
     <string name="unnamed">Безымянный</string>
     <string name="default_ip">192.168.0.0</string>
     <string name="connecting">Подключение…</string>
-    <string name="connecting_first_state">Попытка 1</string>
+    <string name="connecting_first_state">Подготовка…</string>
     <string name="ap_connected">Успешное подключение к точке доступа!\nПопытка соединения с сервером…</string>
     <string name="default_attempt_text">Подключаюсь к чайнику… Попытка №</string>
     <string name="self_ap">Оставить</string>

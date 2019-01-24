@@ -7,6 +7,7 @@ import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
+import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.LinearLayoutManager;
@@ -78,6 +79,39 @@ public class ScanActivity extends AppCompatActivity
             public void onScanStateChanged(boolean isScanning)
             {
                 invalidateOptionsMenu();
+            }
+        });
+        scanner.setAvailableListener(new WifiScanner.ScanAvailableListener() {
+            @Override
+            public void onGpsRequired()
+            {
+                // TODO create warning "enable Location" view
+                Snackbar
+                        .make(recyclerView, "Не удалось выполнить поиск сетей: GPS выключен", Snackbar.LENGTH_LONG)
+                        .setAction("включить", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v)
+                            {
+                                startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
+                            }
+                        })
+                        .show();
+            }
+
+            @Override
+            public void onWifiDisabled()
+            {
+                // TODO create warning "enable WIFI" view
+                Snackbar
+                        .make(recyclerView, "Wi-Fi выключен", Snackbar.LENGTH_LONG)
+                        .setAction("включить", new View.OnClickListener() {
+                            @Override
+                            public void onClick(View v)
+                            {
+                                wifiManager.setWifiEnabled(true);
+                            }
+                        })
+                        .show();
             }
         });
 

@@ -1,5 +1,6 @@
 package com.freshwind.smarthome;
 
+import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.net.wifi.WifiConfiguration;
 import android.net.wifi.WifiManager;
@@ -28,7 +29,6 @@ public class MainActivity extends AppCompatActivity {
 
     private TableLayout table;
     private LayoutInflater inflater;
-    private FloatingActionButton addButton;
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState)
@@ -38,7 +38,7 @@ public class MainActivity extends AppCompatActivity {
 
         inflater = getLayoutInflater();
         table = findViewById(R.id.devices_table);
-        addButton = findViewById(R.id.add_button);
+        FloatingActionButton addButton = findViewById(R.id.add_button);
 
         addButton.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -120,6 +120,7 @@ public class MainActivity extends AppCompatActivity {
         table.removeAllViews();
     }
 
+    @SuppressLint("InflateParams")
     private void add(final Kettle device)
     {
         int count = table.getChildCount();

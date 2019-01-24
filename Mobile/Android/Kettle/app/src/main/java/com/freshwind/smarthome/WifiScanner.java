@@ -28,8 +28,9 @@ public class WifiScanner
     private WifiManager wifiManager;
     private ScanResultListener resultListener;
     private ScanStateListener stateListener;
+    private ScanAvailableListener availableListener;
 
-    private BroadcastReceiver wifiScanReceiver = new BroadcastReceiver() {
+    private final BroadcastReceiver wifiScanReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context c, Intent intent) {
             boolean success = true;
@@ -81,6 +82,11 @@ public class WifiScanner
         resultListener = listener;
     }
 
+    public void setAvailableListener(ScanAvailableListener listener)
+    {
+        availableListener = listener;
+    }
+
     public boolean isScanning()
     {
         return isScanning;
@@ -124,35 +130,15 @@ public class WifiScanner
             return;
         }
 
-        if (!wifiManager.isWifiEnabled())
+        if (!wifiManager.isWifiEnabled() && availableListener != null)
         {
-            // TODO create warning "enable WIFI" view
-            Snackbar
-                    .make(recyclerView, "Wi-Fi выключен", Snackbar.LENGTH_LONG)
-                    .setAction("включить", new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v)
-                        {
-                            wifiManager.setWifiEnabled(true);
-                        }
-                    })
-                    .show();
+            availableListener.onWifiDisabled();
             return;
         }
 
-        if(!isGeoEnabled() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+        if(!isGeoEnabled() && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M && availableListener != null)
         {
-            // TODO create warning "enable Location" view
-            Snackbar
-                    .make(recyclerView, "Не удалось выполнить поиск сетей: GPS выключен", Snackbar.LENGTH_LONG)
-                    .setAction("включить", new View.OnClickListener() {
-                        @Override
-                        public void onClick(View v)
-                        {
-                            activity.startActivity(new Intent(android.provider.Settings.ACTION_LOCATION_SOURCE_SETTINGS));
-                        }
-                    })
-                    .show();
+            availableListener.onGpsRequired();
             return;
         }
 
@@ -186,5 +172,11 @@ public class WifiScanner
     public interface ScanStateListener
     {
         void onScanStateChanged(boolean isScanning);
+    }
+
+    public interface ScanAvailableListener
+    {
+        void onGpsRequired();
+        void onWifiDisabled();
     }
 }

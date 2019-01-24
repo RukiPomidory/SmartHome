@@ -31,6 +31,7 @@ public class DeviceControlActivity extends AppCompatActivity
     private static final String TAG = "Main";
     private boolean mConnected = false;
     private boolean elephantShown;
+    private boolean waitingForSnackbar;
     private int reconnectTimeout = 2000;
     private float waterLimit = 2.1f;
 
@@ -54,8 +55,18 @@ public class DeviceControlActivity extends AppCompatActivity
     private final OnClickListener heatOnClickListener = new OnClickListener() {
         public void onClick(View view)
         {
-            // heating
+            waitingForSnackbar = true;
+
+            // H - heating
+            // Отправляем данные несколько раз, чтобы повысить вероятность получения их чайником
             kettle.sendData(new byte[] {'H'});
+            handler.postDelayed(new Runnable() {
+                @Override
+                public void run()
+                {
+                    kettle.sendData(new byte[] {'H'});
+                }
+            }, 100);
         }
     };
 
@@ -151,14 +162,7 @@ public class DeviceControlActivity extends AppCompatActivity
         kettle.connectToTcpServer();
 
         temperatureImage = findViewById(R.id.heatingState);
-
-        // TEST
-        transaction = getFragmentManager().beginTransaction();
-        transaction.add(R.id.fragmentLayout, new UnableToConnectFragment());
-        transaction.commit();
-        // ENDTEST
     }
-
 
 
     @Override
@@ -251,11 +255,13 @@ public class DeviceControlActivity extends AppCompatActivity
                                 break;
                         }
 
-                        if (message != null)
+                        if (message != null && waitingForSnackbar)
                         {
                             Snackbar
                                     .make(launchBtn, message, Snackbar.LENGTH_LONG)
                                     .show();
+
+                            waitingForSnackbar = false;
                         }
 
                         break;
@@ -289,8 +295,16 @@ public class DeviceControlActivity extends AppCompatActivity
 
     private void initOnStateChangedListener()
     {
-        // Пока без него.
-        // Здесь будем обрабатывать потерю и восстановление соединения
+        onStateChangedListener = new AsyncTcpClient.OnStateChanged() {
+            @Override
+            public void stateChanged(int state)
+            {
+                if (AsyncTcpClient.DISCONNECTED == state)
+                {
+                    connectionLost();
+                }
+            }
+        };
     }
 
     private void checkElephant(byte waterLevel)

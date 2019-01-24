@@ -173,7 +173,13 @@ public class AsyncTcpClient extends AsyncTask<Void, Integer, Void>
             {
                 exc.printStackTrace();
             }
-
+            finally
+            {
+                if(stateListener != null)
+                {
+                    stateListener.stateChanged(DISCONNECTED);
+                }
+            }
         }
         catch(Exception exc)
         {
