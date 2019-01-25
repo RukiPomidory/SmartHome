@@ -29,13 +29,13 @@ import static com.freshwind.smarthome.ConnectingActivity.EXTRAS_DEVICE;
 public class DeviceControlActivity extends AppCompatActivity
 {
     private static final String TAG = "Main";
-    private boolean mConnected = false;
     private boolean elephantShown;
     private boolean waitingForSnackbar;
+    private boolean needToHeat; //нужно ли посылать повторные сигналы о включении
+    private boolean needToCold; //то же самое с выключением
     private int reconnectTimeout = 2000;
     private float waterLimit = 2.1f;
 
-    private ArrayList<Byte> receivedData;
     private Button launchBtn;
     private CircleProgressBar tempProgressBar;
     private CircleProgressBar waterProgressBar;
@@ -43,6 +43,8 @@ public class DeviceControlActivity extends AppCompatActivity
     private Runnable getTemperature;
     private Runnable getWaterLevel;
     private Runnable reconnect;
+    private Runnable letsHeat;
+    private Runnable letsKill;
     private Kettle kettle;
     private Fragment elephantFragment;
     private Fragment connectionErrorFragment;
@@ -55,26 +57,17 @@ public class DeviceControlActivity extends AppCompatActivity
     private final OnClickListener heatOnClickListener = new OnClickListener() {
         public void onClick(View view)
         {
-            waitingForSnackbar = true;
-
-            // H - heating
-            // Отправляем данные несколько раз, чтобы повысить вероятность получения их чайником
-            kettle.sendData(new byte[] {'H'});
-            handler.postDelayed(new Runnable() {
-                @Override
-                public void run()
-                {
-                    kettle.sendData(new byte[] {'H'});
-                }
-            }, 100);
+//            waitingForSnackbar = true;
+            needToHeat = true;
+            letsHeat.run();
         }
     };
 
     private final OnClickListener coldOnClickListener = new OnClickListener() {
         public void onClick(View view)
         {
-            // kill
-            kettle.sendData(new byte[] {'K'});
+            needToCold = true;
+            letsKill.run();
         }
     };
 
@@ -88,6 +81,9 @@ public class DeviceControlActivity extends AppCompatActivity
 
         final Intent intent = getIntent();
         kettle = intent.getParcelableExtra(EXTRAS_DEVICE);
+
+        needToHeat = false;
+        needToCold = false;
 
         ActionBar actionBar = getSupportActionBar();
         assert actionBar != null;
@@ -138,6 +134,24 @@ public class DeviceControlActivity extends AppCompatActivity
             }
         };
 
+        letsHeat = new Runnable() {
+            @Override
+            public void run()
+            {
+                kettle.sendData(new byte[] {'H'});
+                if (needToHeat) handler.postDelayed(this, 100);
+            }
+        };
+
+        letsKill = new Runnable() {
+            @Override
+            public void run()
+            {
+                kettle.sendData(new byte[] {'K'});
+                if (needToCold) handler.postDelayed(this, 100);
+            }
+        };
+
         reconnect = new Runnable() {
             @Override
             public void run()
@@ -151,8 +165,6 @@ public class DeviceControlActivity extends AppCompatActivity
 
         elephantFragment = new ElephantFragment();
         connectionErrorFragment = new ConnectionErrorFragment();
-
-        receivedData = new ArrayList<>();
 
         initOnStateChangedListener();
         initOnDataReceivedListener();
@@ -176,10 +188,10 @@ public class DeviceControlActivity extends AppCompatActivity
     @Override
     public boolean onOptionsItemSelected(MenuItem item)
     {
-        // handle arrow click here
+        // Кнопка "назад"
         if (item.getItemId() == android.R.id.home)
         {
-            finish(); // close this activity and return to preview activity (if there is any)
+            finish();
         }
         else if (item.getItemId() == R.id.options)
         {
@@ -263,7 +275,6 @@ public class DeviceControlActivity extends AppCompatActivity
 
                             waitingForSnackbar = false;
                         }
-
                         break;
 
                     case 'H':
@@ -271,6 +282,7 @@ public class DeviceControlActivity extends AppCompatActivity
                         launchBtn.setOnClickListener(coldOnClickListener);
                         launchBtn.setText(R.string.turn_off);
                         temperatureImage.setImageResource(R.drawable.ic_temperature);
+                        needToHeat = false;
                         break;
 
                     case 'K':
@@ -278,6 +290,7 @@ public class DeviceControlActivity extends AppCompatActivity
                         launchBtn.setOnClickListener(heatOnClickListener);
                         launchBtn.setText(R.string.launch);
                         temperatureImage.setImageResource(R.drawable.ic_temperature_off);
+                        needToCold = false;
                         break;
 
                     case 'D':

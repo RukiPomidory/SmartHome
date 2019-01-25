@@ -107,7 +107,17 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         initOnDataReceivedListener();
         initOnStateChangedListener();
 
-        //TODO: это чо?
+        start();
+
+        // TODO: Пока что хрен знает, что делать с этим дерьмом
+        // Список того, что нужно запросить у чайника.
+        // Данные иногда теряются и нам не нужно запрашивать
+        // повторно то, что мы уже получили.
+        checkList = new boolean[] {false, false, false};
+    }
+
+    private void start()
+    {
         if (Kettle.Connection.selfAp == kettle.connection)
         {
             startTcpClient(createPreTask(kettle.selfApConfiguration));
@@ -116,12 +126,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         {
             startTcpClient(createPreTask(kettle.routerConfiguration));
         }
-
-        // TODO: Пока что хрен знает, что делать с этим дерьмом
-        // Список того, что нужно запросить у чайника.
-        // Данные иногда теряются и нам не нужно запрашивать
-        // повторно то, что мы уже получили.
-        checkList = new boolean[] {false, false, false};
     }
 
     @Override
@@ -166,6 +170,13 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         {
             exc.printStackTrace();
         }
+    }
+
+    private void removeUnableFragment()
+    {
+        transaction = getFragmentManager().beginTransaction();
+        transaction.remove(unableToConnectFragment);
+        transaction.commit();
     }
 
     private void showConnectionDialog()
@@ -496,6 +507,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                     {
                         setAsyncDescription("Превышен лимит попыток подключения");
                         showFailFragment();
+                        kettle.stop();
                         return;
                     }
 
@@ -588,7 +600,8 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             @Override
             public void onClick(View v)
             {
-
+                removeUnableFragment();
+                start();
             }
         });
 
