@@ -73,7 +73,7 @@ void setup()
     // Запускаем последовательный порт
     Serial.begin(115200);
     swSerial.begin(38400);
-    delay(50);
+    delay(500);
 
     // Запуск сервера на только что запущенном ESP8266
     Serial.println("AT+CWMODE=3");  // включаем оба режима AP и STA
