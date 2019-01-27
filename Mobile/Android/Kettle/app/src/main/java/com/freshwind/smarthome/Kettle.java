@@ -178,6 +178,7 @@ public class Kettle implements Parcelable
             {
                 if (buffer == null)
                 {
+                    buffer = new ArrayList<>();
                     return;
                 }
 

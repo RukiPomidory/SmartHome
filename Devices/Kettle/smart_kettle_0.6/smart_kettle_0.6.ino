@@ -76,14 +76,7 @@ void setup()
     delay(500);
 
     // Запуск сервера на только что запущенном ESP8266
-    Serial.println("AT+CWMODE=3");  // включаем оба режима AP и STA
-    delay(5);
-    Serial.println("AT+CIPMUX=1");  // разрешаем множественное подключение
-    delay(5);
-    Serial.println("AT+CIPSERVER=1,3333");  // запускаем сервер
-    delay(5);
-    Serial.println("ATE0"); // отрубаем echo
-    delay(10);
+    setupServer();
 
     start = millis();
 
@@ -172,6 +165,18 @@ void loop()
         digitalWrite(LED_BUILTIN, LOW);
     }
     delay(5);
+}
+
+void setupServer()
+{
+    Serial.println("ATE0"); // отрубаем echo
+    delay(5);
+    Serial.println("AT+CWMODE=3");  // включаем оба режима AP и STA
+    delay(5);
+    Serial.println("AT+CIPMUX=1");  // разрешаем множественное подключение
+    delay(5);
+    Serial.println("AT+CIPSERVER=1,3333");  // запускаем сервер
+    delay(10);
 }
 
 int detectInputData()

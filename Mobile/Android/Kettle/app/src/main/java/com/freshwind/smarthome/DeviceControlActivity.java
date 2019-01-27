@@ -9,6 +9,7 @@ import android.os.Handler;
 import android.support.design.widget.Snackbar;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -30,7 +31,7 @@ public class DeviceControlActivity extends AppCompatActivity
 {
     private static final String TAG = "Main";
     private boolean elephantShown;
-    private boolean waitingForSnackbar;
+    private boolean lowWaterShown;
     private boolean needToHeat; //нужно ли посылать повторные сигналы о включении
     private boolean needToCold; //то же самое с выключением
     private int reconnectTimeout = 2000;
@@ -267,13 +268,24 @@ public class DeviceControlActivity extends AppCompatActivity
                                 break;
                         }
 
-                        if (message != null && waitingForSnackbar)
+                        if (message != null && !lowWaterShown)
                         {
+                            needToHeat = false;
                             Snackbar
                                     .make(launchBtn, message, Snackbar.LENGTH_LONG)
+                                    .addCallback(new Snackbar.Callback()
+                                    {
+                                        @Override
+                                        public void onDismissed(Snackbar transientBottomBar, @DismissEvent int event)
+                                        {
+                                            if (DISMISS_EVENT_TIMEOUT == event)
+                                            {
+                                                lowWaterShown = false;
+                                            }
+                                        }
+                                    })
                                     .show();
-
-                            waitingForSnackbar = false;
+                            lowWaterShown = true;
                         }
                         break;
 

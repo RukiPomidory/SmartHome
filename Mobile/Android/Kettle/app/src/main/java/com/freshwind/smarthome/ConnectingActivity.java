@@ -104,9 +104,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         intentFilter.addAction(WifiManager.SUPPLICANT_CONNECTION_CHANGE_ACTION);
         registerReceiver(broadcastReceiver, intentFilter);
 
-        initOnDataReceivedListener();
-        initOnStateChangedListener();
-
         start();
 
         // TODO: Пока что хрен знает, что делать с этим дерьмом
@@ -118,6 +115,9 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
     private void start()
     {
+        initOnDataReceivedListener();
+        initOnStateChangedListener();
+
         if (Kettle.Connection.selfAp == kettle.connection)
         {
             startTcpClient(createPreTask(kettle.selfApConfiguration));
@@ -577,7 +577,8 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             @Override
             public void onClick(View v)
             {
-
+                // TODO refresh
+                throw new IllegalArgumentException();
             }
         });
 
