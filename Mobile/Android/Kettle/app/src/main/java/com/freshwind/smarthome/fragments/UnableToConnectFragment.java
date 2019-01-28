@@ -40,10 +40,10 @@ public class UnableToConnectFragment extends Fragment
     {
         View root = inflater.inflate(R.layout.unable_to_connect_fragment, null);
 
-        backBtn = root.findViewById(R.id.back_button);
+        backBtn = root.findViewById(R.id.unable_back_button);
         backBtn.setOnClickListener(backListener);
 
-        connectBtn = root.findViewById(R.id.connect_button);
+        connectBtn = root.findViewById(R.id.unable_connect_button);
         connectBtn.setOnClickListener(connectListener);
 
         return root;

@@ -41,7 +41,7 @@
         app:layout_constraintTop_toBottomOf="@+id/connectErrorTitle" />
 
     <Button
-        android:id="@+id/back_button"
+        android:id="@+id/unable_back_button"
         style="@style/DialogButton"
         android:layout_width="80dp"
         android:layout_height="35dp"
@@ -55,7 +55,7 @@
         app:layout_constraintStart_toStartOf="@+id/fancyDialogBackground" />
 
     <Button
-        android:id="@+id/connect_button"
+        android:id="@+id/unable_connect_button"
         style="@style/DialogButton"
         android:layout_width="105dp"
         android:layout_height="35dp"

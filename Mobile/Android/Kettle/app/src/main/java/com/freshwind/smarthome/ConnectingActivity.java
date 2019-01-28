@@ -142,17 +142,40 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             case R.id.select_router_btn:
                 kettle.connection = Kettle.Connection.router;
                 showInputFragment();
-//                hasPassword = infoFragment.hasPassword();
                 removeSelectionFragment();
+                break;
+
+            case R.id.acceptRouterBtn:
+                kettle.routerConfiguration = scanFragment.getConfig();
+                kettle.routerKey = scanFragment.getPassword();
+                removeScanFragment();
+
+                description.setText("Подключаю чайник к точке доступа...");
+                kettle.connectToRouter(kettle.routerConfiguration);
+                break;
+
+            case R.id.cancelRouterBtn:
+                removeScanFragment();
+                startMain();
+                break;
+
+            case R.id.fragment_refresh:
+                // TODO refresh
+                throw new IllegalArgumentException();
+
+            case R.id.unable_back_button:
+                finish();
+                break;
+
+            case R.id.unable_connect_button:
+                removeUnableFragment();
+                start();
                 break;
         }
     }
 
     private void removeScanFragment()
     {
-        kettle.routerConfiguration = scanFragment.getConfig();
-        kettle.routerKey = scanFragment.getPassword();
-
         transaction = getFragmentManager().beginTransaction();
         transaction.remove(scanFragment);
         transaction.commit();
@@ -563,24 +586,10 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     {
         description.setText("Запрашиваю у пользователя данные...");
         scanFragment = new ScanFragment();
-        scanFragment.setAcceptListener(new OnClickListener() {
-            @Override
-            public void onClick(View v)
-            {
-                removeScanFragment();
-                description.setText("Подключаю чайник к точке доступа...");
-                kettle.connectToRouter(kettle.routerConfiguration);
-            }
-        });
 
-        scanFragment.setRefreshListener(new OnClickListener() {
-            @Override
-            public void onClick(View v)
-            {
-                // TODO refresh
-                throw new IllegalArgumentException();
-            }
-        });
+        scanFragment.setAcceptListener(this);
+        scanFragment.setCancelListener(this);
+        scanFragment.setRefreshListener(this);
 
         transaction = getFragmentManager().beginTransaction();
         transaction.add(R.id.router_frame_layout, scanFragment);
@@ -590,21 +599,9 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     private void showFailFragment()
     {
         unableToConnectFragment = new UnableToConnectFragment();
-        unableToConnectFragment.setBackListener(new OnClickListener() {
-            @Override
-            public void onClick(View v)
-            {
-                finish();
-            }
-        });
-        unableToConnectFragment.setConnectListener(new OnClickListener() {
-            @Override
-            public void onClick(View v)
-            {
-                removeUnableFragment();
-                start();
-            }
-        });
+
+        unableToConnectFragment.setBackListener(this);
+        unableToConnectFragment.setConnectListener(this);
 
         transaction = getFragmentManager().beginTransaction();
         transaction.add(R.id.error_frame_layout, unableToConnectFragment);

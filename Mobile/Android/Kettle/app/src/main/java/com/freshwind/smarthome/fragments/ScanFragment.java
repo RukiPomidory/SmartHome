@@ -31,10 +31,12 @@ public class ScanFragment extends Fragment
     private int defaultColor;
     private int selectedColor;
     private View.OnClickListener acceptListener;
+    private View.OnClickListener cancelListener;
     private View.OnClickListener refreshListener;
     private View root;
     private View prevSelectedItem;
-    private Button accept;
+    private Button acceptBtn;
+    private Button cancelBtn;
     private Button refresh;
     private EditText passwordView;
     private Activity activity;
@@ -47,9 +49,18 @@ public class ScanFragment extends Fragment
     public void setAcceptListener(View.OnClickListener listener)
     {
         this.acceptListener = listener;
-        if (accept != null)
+        if (acceptBtn != null)
         {
-            accept.setOnClickListener(listener);
+            acceptBtn.setOnClickListener(listener);
+        }
+    }
+
+    public void setCancelListener(View.OnClickListener listener)
+    {
+        this.cancelListener = listener;
+        if (cancelBtn != null)
+        {
+            cancelBtn.setOnClickListener(listener);
         }
     }
 
@@ -86,10 +97,21 @@ public class ScanFragment extends Fragment
         activity = getActivity();
         passwordView = root.findViewById(R.id.scan_fragment_password);
 
-        accept = root.findViewById(R.id.acceptRouterBtn);
+        defaultColor = getResources().getColor(R.color.neutral_500);
+        selectedColor = getResources().getColor(R.color.redAccent_300);
+
+        acceptBtn = root.findViewById(R.id.acceptRouterBtn);
         if (acceptListener != null)
         {
-            accept.setOnClickListener(acceptListener);
+            acceptBtn.setOnClickListener(acceptListener);
+            acceptBtn.setEnabled(false);
+            acceptBtn.setBackgroundColor(defaultColor);
+        }
+
+        cancelBtn = root.findViewById(R.id.cancelRouterBtn);
+        if (cancelListener != null)
+        {
+            cancelBtn.setOnClickListener(cancelListener);
         }
 
         recyclerView = root.findViewById(R.id.scanRecycler);
@@ -114,6 +136,13 @@ public class ScanFragment extends Fragment
                 config.BSSID = "\"" + result.BSSID + "\"";
 
                 adapter.setSelectedItem(position);
+
+                if (!acceptBtn.isEnabled())
+                {
+                    acceptBtn.setEnabled(true);
+                    int color = getResources().getColor(R.color.primary_500);
+                    acceptBtn.setBackgroundColor(color);
+                }
             }
         });
 
@@ -150,9 +179,6 @@ public class ScanFragment extends Fragment
                 refreshProgress.setVisibility(View.VISIBLE);
             }
         });
-
-        defaultColor = getResources().getColor(R.color.neutral_500);
-        selectedColor = getResources().getColor(R.color.redAccent_300);
 
         return root;
     }
