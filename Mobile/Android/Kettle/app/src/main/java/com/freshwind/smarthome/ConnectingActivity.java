@@ -27,6 +27,7 @@ import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.TextView;
 
+import com.freshwind.smarthome.fragments.ConnectionErrorFragment;
 import com.freshwind.smarthome.fragments.ScanFragment;
 import com.freshwind.smarthome.fragments.SelectConnectionFragment;
 import com.freshwind.smarthome.fragments.UnableToConnectFragment;
@@ -576,10 +577,23 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                 Log.e(TAG, "ОШИБКА распознавания команды");
                 break;
 
+            case 14:
+                showBadPasswordFragment();
+                break;
+
             default:
                 Log.w(TAG, new IllegalStateException());
                 break;
         }
+    }
+
+    private void showBadPasswordFragment()
+    {
+        ConnectionErrorFragment fragment = new ConnectionErrorFragment();
+        fragment.setText("Не удалось подключиться к роутеру. Проверьте верность пароля и доступность точки доступа.");
+        transaction = getFragmentManager().beginTransaction();
+        transaction.add(R.id.error_frame_layout, fragment);
+        transaction.commit();
     }
 
     private void showInputFragment()
