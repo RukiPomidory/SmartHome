@@ -314,6 +314,14 @@ void on(bool force = false)
             Error(2);
             return;
         }
+
+        int temperature = round(getTemperature());
+        if (temperature >= maxTemperature)
+        {
+            off();
+            sendData('D');
+            return;
+        }
     }
     
     // Замыкаем реле
@@ -535,7 +543,7 @@ void connectToAccessPoint()
     // Здесь у нас сеть без пароля
     if (0 == passLength) 
     {
-        String request = "AT+CWJAP_CUR=" + String(ssid) + "\"\""; //Изменяем параметры подключения к точке доступа: ssid в кавычках, запятая и пустой пароль ""
+        String request = "AT+CWJAP_DEF=" + String(ssid) + "\"\""; //Изменяем параметры подключения к точке доступа: ssid в кавычках, запятая и пустой пароль ""
         Serial.println(request);
         Serial.flush();
         return;
