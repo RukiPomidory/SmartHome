@@ -95,10 +95,10 @@ public class MainActivity extends AppCompatActivity {
                 }
                 device.routerConfiguration.SSID = reader.readLine();
                 device.routerConfiguration.BSSID = reader.readLine();
-                device.routerKey = reader.readLine();
-                if (null != device.routerKey)
+                device.setRouterKey(reader.readLine());
+                if (null != device.getRouterKey())
                 {
-                    device.routerConfiguration.preSharedKey = "\"" + device.routerKey + "\"";
+                    device.routerConfiguration.preSharedKey = "\"" + device.getRouterKey() + "\"";
                 }
 
                 reader.close();

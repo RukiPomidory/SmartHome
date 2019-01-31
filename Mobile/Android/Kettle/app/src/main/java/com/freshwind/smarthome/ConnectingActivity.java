@@ -141,14 +141,14 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                 break;
 
             case R.id.select_router_btn:
-                kettle.connection = Kettle.Connection.router;
+//                kettle.connection = Kettle.Connection.router;
                 showInputFragment();
                 removeSelectionFragment();
                 break;
 
             case R.id.acceptRouterBtn:
                 kettle.routerConfiguration = scanFragment.getConfig();
-                kettle.routerKey = scanFragment.getPassword();
+                kettle.setRouterKey(scanFragment.getPassword());
                 removeScanFragment();
 
                 description.setText("Подключаю чайник к точке доступа...");
@@ -288,7 +288,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             writer.write(device.selfKey + '\n');
             writer.write(device.routerConfiguration.SSID + '\n');
             writer.write(device.routerConfiguration.BSSID + '\n');
-            writer.write(device.routerKey + '\n');
+            writer.write(device.getRouterKey() + '\n');
         }
         catch (IOException | NullPointerException exc)
         {
@@ -418,6 +418,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                                 builder.append((char)data.get(i).byteValue());
                             }
 
+                            kettle.connection = Kettle.Connection.router;
                             kettle.localNetIP = builder.toString();
                             kettle.sendData(new byte[] {'O'});
 

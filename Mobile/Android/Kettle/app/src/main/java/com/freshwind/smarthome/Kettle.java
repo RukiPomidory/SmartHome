@@ -16,6 +16,16 @@ public class Kettle implements Parcelable
     private static final String defaultSelfIP = "192.168.42.1";
     private static final int defaultPort = 3333;
 
+    public String getRouterKey()
+    {
+        return routerKey;
+    }
+
+    public void setRouterKey(String routerKey)
+    {
+        this.routerKey = routerKey;
+    }
+
     public interface OnDataReceived
     {
         void dataReceived(List<Byte> data);
@@ -78,7 +88,7 @@ public class Kettle implements Parcelable
     public String selfKey;
 
     // Пароль роутера
-    public String routerKey;
+    private String routerKey;
 
     // Метод соединения с телефоном
     public Connection connection = Connection.disconnected;
@@ -118,6 +128,9 @@ public class Kettle implements Parcelable
         selfApConfiguration = in.readParcelable(WifiConfiguration.class.getClassLoader());
         routerConfiguration = in.readParcelable(WifiConfiguration.class.getClassLoader());
         connection = Connection.valueOf(in.readString());
+
+        selfKey = in.readString();
+        routerKey = in.readString();
     }
 
     public Kettle()
@@ -289,6 +302,9 @@ public class Kettle implements Parcelable
         dest.writeParcelable(selfApConfiguration, flags);
         dest.writeParcelable(routerConfiguration, flags);
         dest.writeString(connection.name());
+
+        dest.writeString(selfKey);
+        dest.writeString(routerKey);
     }
 
     public static final Creator<Kettle> CREATOR = new Creator<Kettle>() {
