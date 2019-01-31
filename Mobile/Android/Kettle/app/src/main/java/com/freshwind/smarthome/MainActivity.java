@@ -13,6 +13,7 @@ import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
+import android.widget.ImageButton;
 import android.widget.TableLayout;
 import android.widget.TableRow;
 import android.widget.TextView;
@@ -103,7 +104,7 @@ public class MainActivity extends AppCompatActivity {
 
                 reader.close();
 
-                add(device);
+                add(device, file.getName());
             }
         }
         catch (IOException | NullPointerException exc)
@@ -121,7 +122,7 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @SuppressLint("InflateParams")
-    private void add(final Kettle device)
+    private void add(final Kettle device, final String fileName)
     {
         int count = table.getChildCount();
         TableRow row = (TableRow) table.getChildAt(count - 1);
@@ -131,10 +132,11 @@ public class MainActivity extends AppCompatActivity {
             table.addView(row);
         }
 
-        View deviceView = inflater.inflate(R.layout.device, null);
+        final View deviceView = inflater.inflate(R.layout.device, null);
 
         TextView name = deviceView.findViewById(R.id.device_title);
         TextView ip = deviceView.findViewById(R.id.device_ip);
+        ImageButton delete = deviceView.findViewById(R.id.delete_kettle);
 
         name.setText(device.selfApConfiguration.SSID);
         if (Kettle.Connection.router == device.connection)
@@ -173,6 +175,16 @@ public class MainActivity extends AppCompatActivity {
                 Intent intent = new Intent(MainActivity.this, ConnectingActivity.class);
                 intent.putExtra(EXTRAS_DEVICE, device);
                 startActivity(intent);
+            }
+        });
+
+        final TableRow finalRow = row;
+        delete.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v)
+            {
+                finalRow.removeView(deviceView);
+                deleteFile(fileName);
             }
         });
 

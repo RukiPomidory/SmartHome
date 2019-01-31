@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
     android:layout_marginBottom="10dp"
@@ -8,14 +9,36 @@
     android:orientation="vertical"
     android:background="@color/neutral_500">
 
-    <ImageView
-        android:id="@+id/device_image"
-        android:layout_width="100dp"
-        android:layout_height="100dp"
-        android:layout_marginEnd="8dp"
-        android:layout_marginStart="8dp"
-        android:contentDescription="@string/tableItemImageDescription"
-        android:src="@drawable/ic_fancy_kettle" />
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="horizontal">
+
+        <View android:layout_height="0dp"
+            android:layout_width="0dp"
+            android:layout_weight="1"/>
+
+        <ImageView
+            android:id="@+id/device_image"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_marginEnd="8dp"
+            android:layout_marginStart="8dp"
+            android:layout_weight="1"
+            android:contentDescription="@string/tableItemImageDescription"
+            android:src="@drawable/ic_fancy_kettle" />
+
+        <ImageButton
+            android:id="@+id/delete_kettle"
+            android:layout_width="0dp"
+            android:layout_height="30dp"
+            android:layout_marginEnd="5dp"
+            android:layout_marginStart="-5dp"
+            android:layout_weight="1"
+            android:background="#00000000"
+            app:srcCompat="@android:drawable/ic_delete"
+            android:contentDescription="del" />
+    </LinearLayout>
 
     <TextView
         android:id="@+id/device_title"
