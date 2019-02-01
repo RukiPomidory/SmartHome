@@ -472,13 +472,23 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
             {
                 // Подключение к точке доступа
                 int networkId = wifiManager.addNetwork(config);
-                wifiManager.disconnect();
-                wifiManager.disableNetwork(wifiManager.getConnectionInfo().getNetworkId());
-                wifiManager.enableNetwork(networkId, true);
 
                 final boolean[] using = {false};
+                String bssid = '\"' + wifiManager.getConnectionInfo().getBSSID() + '\"';
+                boolean needToConnect = !bssid.equals(config.BSSID);
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                if(needToConnect)
+                {
+                    wifiManager.disconnect();
+                    wifiManager.disableNetwork(wifiManager.getConnectionInfo().getNetworkId());
+                    wifiManager.enableNetwork(networkId, true);
+                }
+                else
+                {
+                    using[0] = true;
+                }
+
+                if (needToConnect && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
                 {
                     final ConnectivityManager manager = (ConnectivityManager)
                             getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -525,7 +535,8 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                 WifiInfo info = wifiManager.getConnectionInfo();
 
                 attempt = 0;
-                while(info.getNetworkId() == -1)
+//                while(info.getNetworkId() == -1)
+                while(info.getNetworkId() != config.networkId && needToConnect)
                 {
                     attempt++;
                     if (attempt > attemptCount)
