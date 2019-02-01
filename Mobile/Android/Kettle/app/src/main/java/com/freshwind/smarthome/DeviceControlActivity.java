@@ -51,7 +51,7 @@ public class DeviceControlActivity extends AppCompatActivity
     private Fragment connectionErrorFragment;
     private FragmentTransaction transaction;
     private Kettle.OnDataReceived onDataReceivedListener;
-    private AsyncTcpClient.OnStateChanged onStateChangedListener;
+    private Kettle.OnStateChanged onStateChangedListener;
     private ImageView temperatureImage;
 
 
@@ -320,11 +320,11 @@ public class DeviceControlActivity extends AppCompatActivity
 
     private void initOnStateChangedListener()
     {
-        onStateChangedListener = new AsyncTcpClient.OnStateChanged() {
+        onStateChangedListener = new Kettle.OnStateChanged() {
             @Override
             public void stateChanged(int state)
             {
-                if (AsyncTcpClient.DISCONNECTED == state)
+                if (Kettle.DISCONNECTED == state)
                 {
                     connectionLost();
                 }

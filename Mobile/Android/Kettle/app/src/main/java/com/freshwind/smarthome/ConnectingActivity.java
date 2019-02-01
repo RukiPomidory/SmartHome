@@ -55,7 +55,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     private UnableToConnectFragment unableToConnectFragment;
     private FragmentTransaction transaction;
     private Kettle.OnDataReceived dataReceivedListener;
-    private AsyncTcpClient.OnStateChanged onStateChangedListener;
+    private Kettle.OnStateChanged onStateChangedListener;
     private BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent)
@@ -443,18 +443,18 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
     private void initOnStateChangedListener()
     {
-        onStateChangedListener = new AsyncTcpClient.OnStateChanged() {
+        onStateChangedListener = new Kettle.OnStateChanged() {
             @Override
             public void stateChanged(int state)
             {
                 switch(state)
                 {
-                    case AsyncTcpClient.CONNECTED:
+                    case Kettle.CONNECTED:
                         setAsyncDescription("Успешное соединение с сервером!");
                         request();
                         break;
 
-                    case AsyncTcpClient.UNREACHABLE_NET:
+                    case Kettle.UNREACHABLE_NET:
                         setAsyncDescription("Не удалось подключиться к серверу");
                         kettle.stop();
                         showFailFragment();
