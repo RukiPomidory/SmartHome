@@ -9,7 +9,7 @@
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="TextView" />
+        android:text="Назовите свой чайник" />
 
     <EditText
         android:id="@+id/nameView"
@@ -17,12 +17,12 @@
         android:layout_height="83dp"
         android:ems="10"
         android:inputType="textPersonName"
-        android:text="Name" />
+        android:hint="Безымянный самовар" />
 
     <Button
         android:id="@+id/acceptName"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="end"
-        android:text="Accept" />
+        android:text="Готово"/>
 </LinearLayout>

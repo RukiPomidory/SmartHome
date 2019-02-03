@@ -28,6 +28,7 @@ import android.view.View.OnClickListener;
 import android.widget.TextView;
 
 import com.freshwind.smarthome.fragments.ConnectionErrorFragment;
+import com.freshwind.smarthome.fragments.EnterNameFragment;
 import com.freshwind.smarthome.fragments.ScanFragment;
 import com.freshwind.smarthome.fragments.SelectConnectionFragment;
 import com.freshwind.smarthome.fragments.UnableToConnectFragment;
@@ -53,6 +54,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
     private ScanFragment scanFragment;
     private SelectConnectionFragment selectConnectionFragment;
     private UnableToConnectFragment unableToConnectFragment;
+    private EnterNameFragment enterNameFragment;
     private FragmentTransaction transaction;
     private Kettle.OnDataReceived dataReceivedListener;
     private Kettle.OnStateChanged onStateChangedListener;
@@ -142,7 +144,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
             case R.id.select_router_btn:
 //                kettle.connection = Kettle.Connection.router;
-                showInputFragment();
+                showScanFragment();
                 removeSelectionFragment();
                 break;
 
@@ -172,46 +174,20 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                 removeUnableFragment();
                 start();
                 break;
+
+            case R.id.acceptName:
+                removeEnterNameFragment();
+                kettle.name = enterNameFragment.getName();
+                if (Kettle.Connection.selfAp == kettle.connection)
+                {
+                    showConnectionDialog();
+                }
+                else startMain();
+                break;
         }
     }
 
-    private void removeScanFragment()
-    {
-        transaction = getFragmentManager().beginTransaction();
-        transaction.remove(scanFragment);
-        transaction.commit();
-    }
 
-    private void removeSelectionFragment()
-    {
-        try
-        {
-            transaction = getFragmentManager().beginTransaction();
-            transaction.remove(selectConnectionFragment);
-            transaction.commit();
-        }
-        catch (Exception exc)
-        {
-            exc.printStackTrace();
-        }
-    }
-
-    private void removeUnableFragment()
-    {
-        transaction = getFragmentManager().beginTransaction();
-        transaction.remove(unableToConnectFragment);
-        transaction.commit();
-    }
-
-    private void showConnectionDialog()
-    {
-        selectConnectionFragment = new SelectConnectionFragment();
-        selectConnectionFragment.setOnClickListener(this);
-
-        transaction = getFragmentManager().beginTransaction();
-        transaction.add(R.id.router_frame_layout, selectConnectionFragment);
-        transaction.commit();
-    }
 
     private void connectSelfToRouter()
     {
@@ -316,6 +292,12 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                 }
                 String text = "Чайник готов к работе!";
                 setAsyncDescription(text);
+
+                if (null == kettle.name)
+                {
+                    showSetNameDialog();
+                    return;
+                }
 
                 if (Kettle.Connection.selfAp == kettle.connection)
                 {
@@ -608,7 +590,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         transaction.commit();
     }
 
-    private void showInputFragment()
+    private void showScanFragment()
     {
         description.setText("Запрашиваю у пользователя данные...");
         scanFragment = new ScanFragment();
@@ -631,6 +613,61 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
 
         transaction = getFragmentManager().beginTransaction();
         transaction.add(R.id.error_frame_layout, unableToConnectFragment);
+        transaction.commit();
+    }
+
+    private void showConnectionDialog()
+    {
+        selectConnectionFragment = new SelectConnectionFragment();
+        selectConnectionFragment.setOnClickListener(this);
+
+        transaction = getFragmentManager().beginTransaction();
+        transaction.add(R.id.router_frame_layout, selectConnectionFragment);
+        transaction.commit();
+    }
+
+    private void showSetNameDialog()
+    {
+        enterNameFragment = new EnterNameFragment();
+        enterNameFragment.setOnClickListener(this);
+
+        transaction = getFragmentManager().beginTransaction();
+        transaction.add(R.id.error_frame_layout, enterNameFragment);
+        transaction.commit();
+    }
+
+    private void removeScanFragment()
+    {
+        transaction = getFragmentManager().beginTransaction();
+        transaction.remove(scanFragment);
+        transaction.commit();
+    }
+
+    private void removeSelectionFragment()
+    {
+        try
+        {
+            transaction = getFragmentManager().beginTransaction();
+            transaction.remove(selectConnectionFragment);
+            transaction.commit();
+        }
+        catch (Exception exc)
+        {
+            exc.printStackTrace();
+        }
+    }
+
+    private void removeUnableFragment()
+    {
+        transaction = getFragmentManager().beginTransaction();
+        transaction.remove(unableToConnectFragment);
+        transaction.commit();
+    }
+
+    private void removeEnterNameFragment()
+    {
+        transaction = getFragmentManager().beginTransaction();
+        transaction.remove(enterNameFragment);
         transaction.commit();
     }
 }

@@ -138,7 +138,7 @@ public class MainActivity extends AppCompatActivity {
         TextView ip = deviceView.findViewById(R.id.device_ip);
         ImageButton delete = deviceView.findViewById(R.id.delete_kettle);
 
-        name.setText(device.selfApConfiguration.SSID);
+        name.setText(device.name);
         if (Kettle.Connection.router == device.connection)
         {
             ip.setText(device.localNetIP);
