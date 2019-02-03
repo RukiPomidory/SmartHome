@@ -32,10 +32,6 @@
             android:name=".ConnectingActivity"
             android:screenOrientation="portrait" />
 
-        <service
-            android:name=".BluetoothLeService"
-            android:enabled="true" />
-
         <activity
             android:name=".SettingsActivity"
             android:screenOrientation="portrait"
