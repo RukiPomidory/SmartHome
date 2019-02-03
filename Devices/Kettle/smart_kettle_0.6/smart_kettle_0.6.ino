@@ -29,6 +29,9 @@ int id = 0;
 // Для измерения временных промежутков
 unsigned long start;
 
+// Для определения бездействия модуля
+unsigned long lastData;
+
 // Количество оставшихся байтов в сообщении
 int bytesLeft = 0;
 
@@ -79,6 +82,7 @@ void setup()
     setupServer();
 
     start = millis();
+    lastData = millis();
 
     // TODO:
     //  здесь еще можно прочитать входные данные и определить
@@ -108,6 +112,7 @@ void loop()
     // Обработка входящих сообщений
     if(Serial.available())
     {
+        lastData = millis();
         digitalWrite(LED_BUILTIN, HIGH);
         // Проверяем на наличие данных
         int state = detectInputData();
@@ -164,6 +169,15 @@ void loop()
     {
         digitalWrite(LED_BUILTIN, LOW);
     }
+
+    if (millis() - lastData > 6000)
+    {
+        Serial.println("AT+RST");
+        delay(1000);
+        setupServer();
+        lastData = millis();
+    }
+    
     delay(5);
 }
 
