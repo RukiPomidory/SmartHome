@@ -470,7 +470,7 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                     using[0] = true;
                 }
 
-                if (needToConnect && Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
                 {
                     final ConnectivityManager manager = (ConnectivityManager)
                             getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);

@@ -170,7 +170,7 @@ void loop()
         digitalWrite(LED_BUILTIN, LOW);
     }
 
-    if (millis() - lastData > 6000)
+    if (millis() - lastData > 60000)
     {
         Serial.println("AT+RST");
         delay(1000);
