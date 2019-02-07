@@ -157,7 +157,7 @@ public class DeviceControlActivity extends AppCompatActivity
             @Override
             public void run()
             {
-                // TODO сделать реконнект
+                // TODO
             }
         };
 
@@ -256,6 +256,7 @@ public class DeviceControlActivity extends AppCompatActivity
 
                     case 'E':
                         String message = null;
+                        needToHeat = false;
 
                         switch (data.get(1))
                         {
@@ -270,7 +271,6 @@ public class DeviceControlActivity extends AppCompatActivity
 
                         if (message != null && !lowWaterShown)
                         {
-                            needToHeat = false;
                             Snackbar
                                     .make(launchBtn, message, Snackbar.LENGTH_LONG)
                                     .addCallback(new Snackbar.Callback()
@@ -361,7 +361,10 @@ public class DeviceControlActivity extends AppCompatActivity
         transaction = getFragmentManager().beginTransaction();
         transaction.add(R.id.fragmentLayout, connectionErrorFragment);
         transaction.commit();
-        reconnect.run();
+        //reconnect.run();
+
+        waterProgressBar.setProgress(0);
+        tempProgressBar.setProgress(0);
     }
 
     private void connectionReturned()

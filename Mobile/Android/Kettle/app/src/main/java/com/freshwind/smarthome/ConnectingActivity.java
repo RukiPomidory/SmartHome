@@ -272,7 +272,6 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
         }
     }
 
-
     private void request()
     {
         Runnable checking = new Runnable() {
