@@ -56,7 +56,7 @@
         app:bottomTextSize="15sp"
         app:max="20"
         app:progress="15"
-        app:progressBarThickness="5dp"
+        app:progressBarThickness="3dp"
         app:bottomOffset="1.63"/>
 
     <ImageView

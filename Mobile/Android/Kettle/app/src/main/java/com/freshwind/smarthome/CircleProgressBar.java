@@ -81,7 +81,6 @@ public class CircleProgressBar extends View
         }
 
         paint = new Paint(Paint.ANTI_ALIAS_FLAG);
-        paint.setStrokeWidth(strokeWidth);
 //        paint.setShadowLayer(50.0f, 5.0f, 5.0f, getResources().getColor(R.color.neutral_900));
 //        setLayerType(LAYER_TYPE_SOFTWARE, paint);
     }
@@ -106,6 +105,7 @@ public class CircleProgressBar extends View
     @Override
     protected void onDraw(Canvas canvas) {
         super.onDraw(canvas);
+        paint.setStrokeWidth(strokeWidth);
 
         float centerX = rectF.centerX();
         float centerY = rectF.centerY();
@@ -122,9 +122,6 @@ public class CircleProgressBar extends View
         float angle = 360 * progress / max;
         canvas.drawArc(rectF, startAngle, angle, false, paint);
 
-        //float dx = (float) Math.cos(Math.toRadians(angle - 90)) * (rectF.right + strokeWidth / 2) / 2;
-        //float dy = (float) Math.sin(Math.toRadians(angle - 90)) * (rectF.bottom + strokeWidth / 2) / 2;
-        //canvas.drawLine(rectF.centerX() + dx/2, rectF.centerY() + dy/2, rectF.centerX() + dx, rectF.centerY() + dy, paint);
 
         paint.setTextAlign(Paint.Align.CENTER);
         paint.setStyle(Paint.Style.FILL);
@@ -148,6 +145,30 @@ public class CircleProgressBar extends View
             paint.setTextSize(bottomTextSize);
             canvas.drawText(bottomText, centerX, centerY * bottomVerticalOffset, paint);
         }
+
+        //canvas.drawText(String.valueOf(rectF.height()), centerX, centerY * (topVerticalOffset - 1), paint);
+
+        paint.setStrokeWidth(strokeWidth / 2);
+        paint.setColor(foregroundColor);
+
+        // Рисуем верхнюю вертикальную пипку
+        canvas.drawLine(rectF.centerX(),rectF.centerY() + calculateY((float)Math.PI) * 0.8f,
+                rectF.centerX(), rectF.top - strokeWidth / 2, paint);
+
+        // Рисуем наклонную пипку
+        float dx = calculateX(angle);
+        float dy = calculateY(angle);
+        canvas.drawLine(rectF.centerX() + dx * 0.8f, rectF.centerY() + dy * 0.8f, rectF.centerX() + dx, rectF.centerY() + dy, paint);
+    }
+
+    private float calculateX(float angle)
+    {
+        return (float) Math.cos(Math.toRadians(angle - 90)) * (rectF.right + strokeWidth / 2) / 2;
+    }
+
+    private float calculateY(float angle)
+    {
+        return (float) Math.sin(Math.toRadians(angle - 90)) * (rectF.bottom + strokeWidth / 2) / 2;
     }
 
     public void setProgress(int progress)
