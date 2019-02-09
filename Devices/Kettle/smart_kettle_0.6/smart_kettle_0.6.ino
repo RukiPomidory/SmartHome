@@ -35,6 +35,10 @@ unsigned long lastData;
 // Количество оставшихся байтов в сообщении
 int bytesLeft = 0;
 
+
+int lowWaterValues[3]; // Значения ацп при нулевом уровне воды. Для калибровки
+int highWaterValues[3]; // Значения при уровне 2л
+
 // -------------- Функции --------------
 // Включение и выключение нагревателя
 void on(bool force = false); // Проверяет уровень воды и если все ок, включает нагрев. 
@@ -286,6 +290,15 @@ void processCommand(char cmd)
             case 'I':
                 sendIp();
                 break;
+
+            case 'L':
+                setLowLevel();
+                break;
+
+            case 'U':
+                setUpLevel();
+                calibrate();
+                break;
             
             default:
                 Error(11);
@@ -465,14 +478,6 @@ void sendSensorData()
         buf[2] = data;
         sendData(buf, 3);  
     }
-}
-
-void calibrate()
-{
-    off();
-    
-    Error(12);
-    
 }
 
 void flowHandler() //Не знаю, зачем я его сделал, но пусть будет
@@ -691,6 +696,44 @@ void sendIp()
     {
         Error(16);  // Код ошибки лимита времени ожидания
     }
+}
+
+void setUpLevel()
+{
+    int front = analogRead(PRESS_SENSOR_F);
+    int right = analogRead(PRESS_SENSOR_R);
+    int left = analogRead(PRESS_SENSOR_L);
+
+    highWaterValues[0] = front;
+    highWaterValues[1] = right;
+    highWaterValues[2] = left;
+
+    sendData('O');
+}
+
+void setLowLevel()
+{
+    int front = analogRead(PRESS_SENSOR_F);
+    int right = analogRead(PRESS_SENSOR_R);
+    int left = analogRead(PRESS_SENSOR_L);
+    
+    //lowWaterValues = {front, right, left};
+    lowWaterValues[0] = front;
+    lowWaterValues[1] = right;
+    lowWaterValues[2] = left;
+
+    sendData('O');
+}
+
+void calibrate()
+{
+    biasF = lowWaterValues[0];
+    biasR = lowWaterValues[1];
+    biasL = lowWaterValues[2];
+
+    kF = 2 / (highWaterValues[0] - lowWaterValues[0]);
+    kR = 2 / (highWaterValues[1] - lowWaterValues[1]);
+    kL = 2 / (highWaterValues[2] - lowWaterValues[2]);
 }
 
 void Error(byte id)
