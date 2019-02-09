@@ -1,6 +1,7 @@
 #include "Sensor.cpp"
 #include "Settings.h"
 #include <SoftwareSerial.h> // позволяет создать еще один UART-порт на любых пинах ардуино
+#include <EEPROM.h> // Долговременная память
 
 #define PRESS_SENSOR_F A0 // Передний   \|
 #define PRESS_SENSOR_L A3 // Левый      || Датчики давления
@@ -46,10 +47,10 @@ void on(bool force = false); // Проверяет уровень воды и е
 void off();
 
 // Получение температуры
-double getTemperature();
+float getTemperature();
 
 // Получение количества воды
-double getWaterAmount();
+float getWaterAmount();
 
 // Отправка значения с указанного датчика
 void sendSensorData();
@@ -66,6 +67,8 @@ Sensor temperatureSensor(temperatureSensorAlpha, TEMP_SENSOR);
 Sensor pressureSensorF(pressureSensorAlphaF, PRESS_SENSOR_F);
 Sensor pressureSensorR(pressureSensorAlphaR, PRESS_SENSOR_R);
 Sensor pressureSensorL(pressureSensorAlphaL, PRESS_SENSOR_L);
+
+Config config;
 
 void setup() 
 {
@@ -91,12 +94,18 @@ void setup()
     // TODO:
     //  здесь еще можно прочитать входные данные и определить
     //  успешность запуска, но это в следующей версии
+
+    EEPROM.get(0, config);
+    if (config.kF == 0 && config.kL == 0 && config.kR == 0)
+    {
+        initDefaultConfig(config);
+    }
 }
 
 void loop() 
 {
-    double temperature;
-    double waterAmount;
+    float temperature;
+    float waterAmount;
     
     if (millis() - start > 50)
     {
@@ -330,7 +339,7 @@ void on(bool force = false)
     if(!force)
     {
         // Проверка уровня воды
-        double water = getWaterAmount();
+        float water = getWaterAmount();
         if(water < minWaterAmount)
         {
             Error(1);
@@ -373,41 +382,41 @@ void off()
     sendData('K');
 }
 
-double getTemperature()
+float getTemperature()
 {
     // Получаем значение с АЦП и ждем
-    double value = temperatureSensor.getValue();
+    float value = temperatureSensor.getValue();
     delay(10);
     
     // Вычисляем текущее сопротивление термистора
-    double resistance = balanceR * (1023.0 / value - 1);
+    float resistance = balanceR * (1023.0 / value - 1);
 
     // Получаем температуру в кельвинах, 
     // используя перестроенное бета-уравнение
-    double tKelvin = (beta * room_t0) / 
+    float tKelvin = (beta * room_t0) / 
             (beta + (room_t0 * log(resistance / defaultR)));
 
     // Температура в градусах цельсия
-    double tempC = tKelvin - 273.15;
+    float tempC = tKelvin - 273.15;
             
     //Возвращаем температуру в градусах цельсия
     return tempC;
 }
 
-double getWaterAmount()
+float getWaterAmount()
 {
     // Получаем значения с датчиков
-    double valueF = pressureSensorF.getValue();
-    double valueR = pressureSensorR.getValue();
-    double valueL = pressureSensorL.getValue();
+    float valueF = pressureSensorF.getValue();
+    float valueR = pressureSensorR.getValue();
+    float valueL = pressureSensorL.getValue();
 
     // Считаем уровень воды отдельно для каждого
-    double amountF = (valueF - biasF) * kF;
-    double amountR = (valueR - biasR) * kR;
-    double amountL = (valueL - biasL) * kL;
+    float amountF = (valueF - config.biasF) * config.kF;
+    float amountR = (valueR - config.biasR) * config.kR;
+    float amountL = (valueL - config.biasL) * config.kL;
 
     // Берем среднее арифметическое
-    double amount = (amountF + amountR + amountL) / 3;
+    float amount = (amountF + amountR + amountL) / 3;
 
     // Убираем отрицательные значения
     if(amount < 0)
@@ -416,7 +425,7 @@ double getWaterAmount()
     }
 
     // Домножаем на общий коэффициент и возвращаем
-    return amount * K;
+    return amount;
 }
 
 void sendSensorData()
@@ -727,13 +736,26 @@ void setLowLevel()
 
 void calibrate()
 {
-    biasF = lowWaterValues[0];
-    biasR = lowWaterValues[1];
-    biasL = lowWaterValues[2];
+    config.biasF = lowWaterValues[0];
+    config.biasR = lowWaterValues[1];
+    config.biasL = lowWaterValues[2];
 
-    kF = 2 / (highWaterValues[0] - lowWaterValues[0]);
-    kR = 2 / (highWaterValues[1] - lowWaterValues[1]);
-    kL = 2 / (highWaterValues[2] - lowWaterValues[2]);
+    config.kF = 2.0 / (highWaterValues[0] - lowWaterValues[0]);
+    config.kR = 2.0 / (highWaterValues[1] - lowWaterValues[1]);
+    config.kL = 2.0 / (highWaterValues[2] - lowWaterValues[2]);
+
+    EEPROM.put(0, config);
+}
+
+void initDefaultConfig(Config conf)
+{
+    conf.biasF = biasF;
+    conf.biasR = biasR;
+    conf.biasL = biasL;
+
+    conf.kF = kF;
+    conf.kR = kR;
+    conf.kL = kL;
 }
 
 void Error(byte id)
