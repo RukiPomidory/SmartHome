@@ -3,10 +3,14 @@ package com.freshwind.smarthome;
 import android.annotation.SuppressLint;
 import android.app.Fragment;
 import android.app.FragmentTransaction;
+import android.app.NotificationManager;
+import android.arch.lifecycle.Lifecycle;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.design.widget.Snackbar;
+import android.support.v4.app.NotificationCompat;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -58,7 +62,6 @@ public class DeviceControlActivity extends AppCompatActivity
     private final OnClickListener heatOnClickListener = new OnClickListener() {
         public void onClick(View view)
         {
-//            waitingForSnackbar = true;
             needToHeat = true;
             letsHeat.run();
         }
@@ -215,19 +218,6 @@ public class DeviceControlActivity extends AppCompatActivity
         }
     }
 
-    @Override
-    protected void onResume()
-    {
-        super.onResume();
-    }
-
-    @Override
-    protected void onPause()
-    {
-        super.onPause();
-    }
-
-
     private void initOnDataReceivedListener()
     {
         onDataReceivedListener = new Kettle.OnDataReceived() {
@@ -306,9 +296,29 @@ public class DeviceControlActivity extends AppCompatActivity
                         break;
 
                     case 'D':
-                        Snackbar
-                                .make(launchBtn, "Вода вскипела!", Snackbar.LENGTH_LONG)
-                                .show();
+                        if (getLifecycle().getCurrentState() == Lifecycle.State.RESUMED)
+                        {
+                            Snackbar
+                                    .make(launchBtn, "Вода вскипела!", Snackbar.LENGTH_LONG)
+                                    .show();
+                        }
+                        else
+                        {
+
+                            Intent resIntent = new Intent(getApplicationContext(), DeviceControlActivity.class);
+
+                            NotificationCompat.Builder builder =
+                                new NotificationCompat.Builder(getApplicationContext())
+                                .setSmallIcon(R.drawable.ic_temperature)
+                                .setContentTitle(kettle.name)
+                                .setContentText("Вода вскипела, пора заваривать чай!");
+
+                            NotificationManager manager =
+                                    (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+                            manager.notify(0, builder.build());
+                        }
+
                         launchBtn.setOnClickListener(heatOnClickListener);
                         launchBtn.setText(R.string.launch);
                         temperatureImage.setImageResource(R.drawable.ic_temperature_off);

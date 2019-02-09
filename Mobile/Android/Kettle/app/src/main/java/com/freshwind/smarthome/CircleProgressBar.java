@@ -23,7 +23,8 @@ public class CircleProgressBar extends View
     /**
      * Start the progress at 12 o'clock
      */
-    private int startAngle = -90;
+    private static final int startAngle = -90;
+
     private int foregroundColor = Color.DKGRAY;
     private int backgroundColor = Color.GRAY;
     private int innerColor = Color.LTGRAY;
@@ -85,17 +86,9 @@ public class CircleProgressBar extends View
 //        setLayerType(LAYER_TYPE_SOFTWARE, paint);
     }
 
-    private int adjustAlpha(int color, float factor) {
-        int alpha = Math.round(Color.alpha(color) * factor);
-        int red = Color.red(color);
-        int green = Color.green(color);
-        int blue = Color.blue(color);
-        return Color.argb(alpha, red, green, blue);
-    }
-
     @Override
-    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec) {
-
+    protected void onMeasure(int widthMeasureSpec, int heightMeasureSpec)
+    {
         final int height = getDefaultSize(getSuggestedMinimumHeight(), heightMeasureSpec);
         final int width = getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec);
         setMeasuredDimension(width, height);
@@ -103,7 +96,8 @@ public class CircleProgressBar extends View
     }
 
     @Override
-    protected void onDraw(Canvas canvas) {
+    protected void onDraw(Canvas canvas)
+    {
         super.onDraw(canvas);
         paint.setStrokeWidth(strokeWidth);
 
