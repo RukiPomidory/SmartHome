@@ -9,15 +9,24 @@
         android:id="@+id/textView"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="Назовите свой чайник" />
+        android:text="Назовите свой чайник"
+        android:background="@color/neutral_500"/>
 
-    <EditText
-        android:id="@+id/nameView"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="83dp"
-        android:ems="10"
-        android:inputType="textPersonName"
-        android:hint="Безымянный самовар" />
+        android:orientation="horizontal"
+        android:background="@color/neutral_200">
+
+        <EditText
+            android:id="@+id/nameView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_weight="1"
+            android:ems="10"
+            android:hint="Безымянный самовар"
+            android:inputType="textPersonName" />
+    </LinearLayout>
 
     <Button
         android:id="@+id/acceptName"

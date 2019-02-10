@@ -1,6 +1,7 @@
 package com.freshwind.smarthome.fragments;
 
 import android.app.Fragment;
+import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -54,6 +55,9 @@ public class EnterNameFragment extends Fragment
         root = inflater.inflate(R.layout.enter_name, null);
 
         nameView = root.findViewById(R.id.nameView);
+//        int color = getResources().getColor(R.color.neutral_700);
+//        nameView.getBackground().setColorFilter(color, PorterDuff.Mode.SRC_IN);
+
         acceptBtn = root.findViewById(R.id.acceptName);
         if (listener != null)
         {

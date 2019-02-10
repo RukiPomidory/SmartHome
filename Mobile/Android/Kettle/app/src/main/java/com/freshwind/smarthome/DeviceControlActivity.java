@@ -304,7 +304,6 @@ public class DeviceControlActivity extends AppCompatActivity
                         }
                         else
                         {
-
                             Intent resIntent = new Intent(getApplicationContext(), DeviceControlActivity.class);
 
                             NotificationCompat.Builder builder =
