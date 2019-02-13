@@ -143,6 +143,7 @@ public class ScanActivity extends AppCompatActivity
                 kettle.connection = Kettle.Connection.selfAp;
                 intent.putExtra(EXTRAS_DEVICE, kettle);
 
+
                 startActivity(intent);
                 finish();
             }

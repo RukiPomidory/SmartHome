@@ -8,6 +8,7 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.net.ConnectivityManager;
+import android.net.ConnectivityManager.NetworkCallback;
 import android.net.LinkProperties;
 import android.net.Network;
 import android.net.NetworkCapabilities;
@@ -18,7 +19,6 @@ import android.net.wifi.WifiManager;
 import android.os.Build;
 import android.os.Bundle;
 import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 import android.support.v7.app.ActionBar;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -469,56 +469,70 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                     using[0] = true;
                 }
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+
+
+                final ConnectivityManager manager = (ConnectivityManager)
+                    getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
+
+                if (manager == null)
                 {
-                    final ConnectivityManager manager = (ConnectivityManager)
-                            getApplicationContext().getSystemService(Context.CONNECTIVITY_SERVICE);
-
-                    NetworkRequest.Builder builder = new NetworkRequest.Builder();
-                    builder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
-
-                    if (manager != null)
-                    {
-                        manager.requestNetwork(builder.build(), new ConnectivityManager.NetworkCallback() {
-                            @RequiresApi(api = Build.VERSION_CODES.M)
-                            @Override
-                            public void onAvailable(Network network)
-                            {
-                                super.onAvailable(network);
-                                manager.bindProcessToNetwork(null);
-                                manager.bindProcessToNetwork(network);
-                                manager.unregisterNetworkCallback(this);
-                                wifiManager.reconnect();
-                                using[0] = true;
-                            }
-
-                            @Override
-                            public void onCapabilitiesChanged(Network network, NetworkCapabilities networkCapabilities)
-                            {
-                                super.onCapabilitiesChanged(network, networkCapabilities);
-                            }
-
-                            @Override
-                            public void onLinkPropertiesChanged(Network network, LinkProperties linkProperties)
-                            {
-                                super.onLinkPropertiesChanged(network, linkProperties);
-                            }
-                        });
-                    }
-                    else
-                    {
-                        Log.e(TAG, "ConnectivityManager IS NULL");
-                        finish();
-                        return;
-                    }
+                    Log.e(TAG, "ConnectivityManager IS NULL");
+                    finish();
+                    return;
                 }
+
+                NetworkRequest.Builder builder = new NetworkRequest.Builder();
+                builder.addTransportType(NetworkCapabilities.TRANSPORT_WIFI);
+                NetworkRequest request = builder.build();
+
+                NetworkCallback callback = new NetworkCallback() {
+                    @Override
+                    public void onAvailable(Network network)
+                    {
+                        super.onAvailable(network);
+                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M)
+                        {
+                            //manager.bindProcessToNetwork(null);
+                            manager.bindProcessToNetwork(network);
+                        }
+
+                        if (Build.VERSION.SDK_INT == 21 || Build.VERSION.SDK_INT == 22)
+                        {
+                            ConnectivityManager.setProcessDefaultNetwork(network);
+                        }
+
+                        manager.unregisterNetworkCallback(this);
+                        wifiManager.reconnect();
+                        using[0] = true;
+                    }
+
+                    @Override
+                    public void onCapabilitiesChanged(Network network, NetworkCapabilities networkCapabilities)
+                    {
+                        super.onCapabilitiesChanged(network, networkCapabilities);
+                    }
+
+                    @Override
+                    public void onLinkPropertiesChanged(Network network, LinkProperties linkProperties)
+                    {
+                        super.onLinkPropertiesChanged(network, linkProperties);
+                    }
+                };
+
+                manager.requestNetwork(request, callback);
+
 
                 WifiInfo info = wifiManager.getConnectionInfo();
 
                 attempt = 0;
-//                while(info.getNetworkId() == -1)
-                while(info.getNetworkId() != config.networkId && needToConnect)
+
+                String currentBSSID = "\"" + info.getBSSID() + "\"";
+                String targetBSSID = config.BSSID;
+
+                while(!currentBSSID.equals(targetBSSID) && needToConnect)
                 {
+                    Log.d(TAG, "current: " + String.valueOf(currentBSSID));
+                    Log.d(TAG, "...target: " + String.valueOf(targetBSSID));
                     attempt++;
                     if (attempt > attemptCount)
                     {
@@ -535,7 +549,13 @@ public class ConnectingActivity extends AppCompatActivity implements OnClickList
                     catch (InterruptedException ignored) { }
 
                     info = wifiManager.getConnectionInfo();
+                    //wifiManager.reconnect();
+                    manager.requestNetwork(request, callback);
+
                     Log.d(TAG, "[" + String.valueOf(attempt) + "]" + info.getSSID());
+
+                    currentBSSID = "\"" + info.getBSSID() + "\"";
+                    targetBSSID = config.BSSID;
                 }
 
                 Log.d(TAG, "WiFi SSID: " + info.getSSID());

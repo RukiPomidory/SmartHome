@@ -415,6 +415,11 @@ public class Kettle implements Parcelable
                     task.run();
                 }
 
+                if (!running)
+                {
+                    return null;
+                }
+
                 InetAddress serverIP = InetAddress.getByName(IP);
 
                 Socket socket = null;
