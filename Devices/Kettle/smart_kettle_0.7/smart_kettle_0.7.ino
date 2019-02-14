@@ -36,9 +36,17 @@ unsigned long lastData;
 // Количество оставшихся байтов в сообщении
 int bytesLeft = 0;
 
-
 int lowWaterValues[3]; // Значения ацп при нулевом уровне воды. Для калибровки
 int highWaterValues[3]; // Значения при уровне 2л
+
+// Таймаут изменения температуры в мс.
+// Если температура не растет в течение 
+//      этого времени, чайник вскипел.
+int tempTimeout = 5000;
+
+// Изменение температуры до этой
+// величины не учитываются как изменение
+float deltaT = 0.5;
 
 // -------------- Функции --------------
 // Включение и выключение нагревателя
@@ -96,31 +104,60 @@ void setup()
     //  успешность запуска, но это в следующей версии
 
     EEPROM.get(0, config);
-    if (config.kF == 0 && config.kL == 0 && config.kR == 0)
+    if (config.kF == 0 || isnan(config.kF))
     {
-        initDefaultConfig(config);
+        initDefaultConfig();
+        swSerial.println("----------------------------------------------------------");
     }
 }
 
+// Говорящие переменные, которые особо не относятся к делу 
+// и нужны для определения изменения значений в цикле
+float temperature;
+float waterAmount;
+float startTemperature = 0;
+unsigned long startDeltaTempCheck;
+unsigned long dataCheckTimeout = millis();
 void loop() 
 {
-    float temperature;
-    float waterAmount;
-    
-    if (millis() - start > 50)
+    if (millis() - dataCheckTimeout > 50)
     {
         // Получаем значения температуры и уровня воды
         temperature = getTemperature();
         waterAmount = getWaterAmount();
-        swSerial.println(temperature);
-        start = millis();
+
+        // дебаг-сообщения в сериал порт для дебага
+        swSerial.print(temperature);
+        swSerial.print(' ');
+        swSerial.print(waterAmount);
+        swSerial.print(' ');
+        swSerial.print(fabs(temperature - startTemperature));
+        if (fabs(temperature - startTemperature) > deltaT)
+        {
+            startDeltaTempCheck = millis();
+            startTemperature = temperature;
+            swSerial.print(" [deltaT check has refreshed]");
+        }
+
+        swSerial.println();
+
+        // обновляем таймаут
+        dataCheckTimeout = millis();
     }
 
-    // Отключаемся при достижении максимальной температуры
-    if(round(temperature) >= maxTemperature && heating)
+    // Отключаемся при достижении максимальной температуры и других условиях
+    if(temperature >= maxTemperature && heating)
     {
-        off();
-        sendData('D');
+        unsigned long lapsed = millis() - startDeltaTempCheck;
+        if (lapsed > tempTimeout)
+        {
+            off();
+            sendData('D');
+        }
+        else
+        {
+            swSerial.println("too early!");
+        }
     }
 
     // Обработка входящих сообщений
@@ -743,15 +780,17 @@ void calibrate()
     EEPROM.put(0, config);
 }
 
-void initDefaultConfig(Config conf)
+void initDefaultConfig()
 {
-    conf.biasF = biasF;
-    conf.biasR = biasR;
-    conf.biasL = biasL;
+    config.biasF = biasF;
+    config.biasR = biasR;
+    config.biasL = biasL;
 
-    conf.kF = kF;
-    conf.kR = kR;
-    conf.kL = kL;
+    config.kF = kF;
+    config.kR = kR;
+    config.kL = kL;
+
+    EEPROM.put(0, config);
 }
 
 void Error(byte id)
