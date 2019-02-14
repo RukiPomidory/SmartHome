@@ -11,8 +11,8 @@
 #define RELAY 4         // Реле
 
 // Порты SoftwareSerial порта
-#define swRX 6
-#define swTX 7
+#define swRX 11
+#define swTX 12
 
 
 // Идет ли сейчас нагрев
@@ -43,7 +43,7 @@ int highWaterValues[3]; // Значения при уровне 2л
 // -------------- Функции --------------
 // Включение и выключение нагревателя
 void on(bool force = false); // Проверяет уровень воды и если все ок, включает нагрев. 
-							// При force=true проверка игнорируется
+                            // При force=true проверка игнорируется
 void off();
 
 // Получение температуры
@@ -112,6 +112,7 @@ void loop()
         // Получаем значения температуры и уровня воды
         temperature = getTemperature();
         waterAmount = getWaterAmount();
+        swSerial.println(temperature);
         start = millis();
     }
 
@@ -319,12 +320,7 @@ void processCommand(char cmd)
         bytesLeft--;
         if(bytesLeft < 0)
         {
-            swSerial.println("ok ");
             return;
-        }
-        else
-        {
-            swSerial.println(bytesLeft);
         }
 
         // Счетчик не выгоняет, еще можно поиграть.
