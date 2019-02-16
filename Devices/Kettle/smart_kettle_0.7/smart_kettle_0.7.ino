@@ -42,7 +42,7 @@ int highWaterValues[3]; // Значения при уровне 2л
 // Таймаут изменения температуры в мс.
 // Если температура не растет в течение 
 //      этого времени, чайник вскипел.
-int tempTimeout = 5000;
+int tempTimeout = 4000;
 
 // Изменение температуры до этой
 // величины не учитываются как изменение
@@ -52,7 +52,7 @@ float deltaT = 0.5;
 float maxTemp;
 
 // Аналогичные параметры для максимальной температуры (вторая проверка)
-float maxTempTimeout = 10000;
+float maxTempTimeout = 7000;
 float deltaMaxT = 0.3;
 
 // -------------- Функции --------------
@@ -116,6 +116,7 @@ void setup()
         initDefaultConfig();
         swSerial.println("----------------------------------------------------------");
     }
+    swSerial.println("========= S E T U P =========");
 }
 
 // Говорящие переменные, которые особо не относятся к делу 
@@ -145,7 +146,7 @@ void loop()
 //            maxTemp = temperature; 
 //        }
         
-        if (abs(temperature - startTemperature) > deltaT)
+        if (fabs(temperature - startTemperature) > deltaT)
         {
             startDeltaTempCheck = millis();
             startTemperature = temperature;
@@ -157,6 +158,9 @@ void loop()
             startDeltaMaxTempCheck = millis();
             maxTemp = temperature;
         }
+
+        swSerial.print(' ');
+        swSerial.print(maxTemp);
 
         swSerial.println();
 
