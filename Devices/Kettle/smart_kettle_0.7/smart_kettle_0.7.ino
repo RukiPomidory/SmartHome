@@ -42,7 +42,7 @@ int highWaterValues[3]; // Значения при уровне 2л
 // Таймаут изменения температуры в мс.
 // Если температура не растет в течение 
 //      этого времени, чайник вскипел.
-int tempTimeout = 7000;
+int tempTimeout = 5000;
 
 // Изменение температуры до этой
 // величины не учитываются как изменение
@@ -50,6 +50,10 @@ float deltaT = 0.5;
 
 // Текущий достигнутый максимум температуры
 float maxTemp;
+
+// Аналогичные параметры для максимальной температуры (вторая проверка)
+float maxTempTimeout = 10000;
+float deltaMaxT = 0.3;
 
 // -------------- Функции --------------
 // Включение и выключение нагревателя
@@ -120,6 +124,7 @@ float temperature;
 float waterAmount;
 float startTemperature = 0;
 unsigned long startDeltaTempCheck;
+unsigned long startDeltaMaxTempCheck;
 unsigned long dataCheckTimeout = millis();
 void loop() 
 {
@@ -135,16 +140,22 @@ void loop()
         swSerial.print(waterAmount);
         swSerial.print(' ');
         swSerial.print(temperature - startTemperature);
-        if (temperature > maxTemp)
-        {
-            maxTemp = temperature; 
-        }
+//        if (temperature > maxTemp)
+//        {
+//            maxTemp = temperature; 
+//        }
         
-        if (temperature - startTemperature > deltaT)
+        if (abs(temperature - startTemperature) > deltaT)
         {
             startDeltaTempCheck = millis();
-            startTemperature = maxTemp;
+            startTemperature = temperature;
             swSerial.print(" [deltaT check has refreshed]");
+        }
+
+        if (temperature - maxTemp > deltaMaxT)
+        {
+            startDeltaMaxTempCheck = millis();
+            maxTemp = temperature;
         }
 
         swSerial.println();
@@ -154,10 +165,13 @@ void loop()
     }
 
     // Отключаемся при достижении максимальной температуры и других условиях
-    if(temperature >= minCriticalTemp && heating)
+    if(temperature >= maxTemperature && heating)
     {
+        bool highTemp = temperature >= minCriticalTemp;
+        unsigned long lapsedMax = millis() - startDeltaMaxTempCheck;
+        
         unsigned long lapsed = millis() - startDeltaTempCheck;
-        if (lapsed > tempTimeout)
+        if (lapsed > tempTimeout || lapsedMax > maxTempTimeout)
         {
             off();
             sendData('D');
@@ -413,6 +427,7 @@ void on(bool force = false)
     sendData('H');
 
     startDeltaTempCheck = millis();
+    startDeltaMaxTempCheck = millis();
 }
 
 void off()
@@ -510,6 +525,7 @@ void sendSensorData()
         // Температура
         case 6:
             data = round(getTemperature());
+            if (data > 100 && data <= 105) data = 100;
             break;
 
         default:
