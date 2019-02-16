@@ -49,7 +49,10 @@ double pressureSensorAlphaL = 0.1;  // Левый
 int sendDataDelay = 256;
 
 // Температура отключения нагревателя (°C)
-double maxTemperature = 100;
+float maxTemperature = 100;
+
+// Температура, ниже которой не проверяется изменение температуры
+float minCriticalTemp = 90;
 
 // Минимальный уровень воды (в литрах)
 double minWaterAmount = 0.5;

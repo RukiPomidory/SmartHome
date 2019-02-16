@@ -42,11 +42,14 @@ int highWaterValues[3]; // Значения при уровне 2л
 // Таймаут изменения температуры в мс.
 // Если температура не растет в течение 
 //      этого времени, чайник вскипел.
-int tempTimeout = 5000;
+int tempTimeout = 10000;
 
 // Изменение температуры до этой
 // величины не учитываются как изменение
 float deltaT = 0.5;
+
+// Текущий достигнутый максимум температуры
+float maxTemp;
 
 // -------------- Функции --------------
 // Включение и выключение нагревателя
@@ -131,11 +134,16 @@ void loop()
         swSerial.print(' ');
         swSerial.print(waterAmount);
         swSerial.print(' ');
-        swSerial.print(fabs(temperature - startTemperature));
-        if (fabs(temperature - startTemperature) > deltaT)
+        swSerial.print(temperature - startTemperature);
+        if (temperature > maxTemp)
+        {
+            maxTemp = temperature; 
+        }
+        
+        if (temperature - startTemperature > deltaT)
         {
             startDeltaTempCheck = millis();
-            startTemperature = temperature;
+            startTemperature = maxTemp;
             swSerial.print(" [deltaT check has refreshed]");
         }
 
@@ -146,13 +154,14 @@ void loop()
     }
 
     // Отключаемся при достижении максимальной температуры и других условиях
-    if(temperature >= maxTemperature && heating)
+    if(temperature >= minCriticalTemp && heating)
     {
         unsigned long lapsed = millis() - startDeltaTempCheck;
         if (lapsed > tempTimeout)
         {
             off();
             sendData('D');
+            maxTemp = 0;
         }
         else
         {
@@ -401,6 +410,8 @@ void on(bool force = false)
 
     // Отправляем подтверждение включения
     sendData('H');
+
+    startDeltaTempCheck = millis();
 }
 
 void off()
