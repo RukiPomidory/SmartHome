@@ -33,9 +33,6 @@ unsigned long start;
 // Для определения бездействия модуля
 unsigned long lastData;
 
-// Количество оставшихся байтов в сообщении
-int bytesLeft = 0;
-
 int lowWaterValues[3]; // Значения ацп при нулевом уровне воды. Для калибровки
 int highWaterValues[3]; // Значения при уровне 2л
 
@@ -99,9 +96,6 @@ void setup()
     Serial.begin(115200);
     swSerial.begin(38400);
     delay(500);
-
-    // Запуск сервера на только что запущенном ESP8266
-    setupServer();
 
     start = millis();
     lastData = millis();
@@ -193,206 +187,56 @@ void loop()
     {
         lastData = millis();
         digitalWrite(LED_BUILTIN, HIGH);
-        // Проверяем на наличие данных
-        int state = detectInputData();
-        if(1 == state)
-        {
-            // Здесь мы читаем запятую, которая
-            // разделяет команду и следующую цифру
-            char c = Serial.read();
-            
-            bytesLeft = 0;
-            id = 0;
-                
-            // Читаем id подключенного клиента.
-            // Вряд ли в первых версиях к серверу будет подключаться
-            // больше 9 пользователей, так что пока
-            // работаем только с одной цифрой
-            c = Serial.read();
-            id = c - '0';
-            c = Serial.read();
-            if (c != ',' || id < 0 || id > 9)
-            {
-                return;
-            }
-
-            // А здесь мы принимаем первую цифру длины данных.
-            // Вот тут уже спокойно может оказаться число
-            // больше 9, так что однозначно делаем цикл
-            c = Serial.read();
-            while(c != ':')
-            {
-                bytesLeft *= 10;
-                bytesLeft += c - '0';
-                
-                c = Serial.read();
-            }
-
-            // Вот мы и добрались до заветных байтов команды.
-            // Можно их прочитать и обработать
-            char cmd = Serial.read();
-            bytesLeft--;
-            processCommand(cmd);
-        }
-        else if (2 == state)    // state "FAILED"
-        {
-            Error(14);
-        }
-        else if (3 == state)    // state "WIFI GOT"
-        {
-            sendIp();
-        }
         
+        char cmd = Serial.read();
+        processCommand(cmd);
     }
     else
     {
         digitalWrite(LED_BUILTIN, LOW);
     }
-
-    if (millis() - lastData > 60000)
-    {
-        Serial.println("AT+RST");
-        delay(1000);
-        setupServer();
-        lastData = millis();
-    }
     
     delay(5);
-}
-
-void setupServer()
-{
-    Serial.println("ATE0"); // отрубаем echo
-    delay(5);
-    Serial.println("AT+CWMODE=3");  // включаем оба режима AP и STA
-    delay(5);
-    Serial.println("AT+CIPMUX=1");  // разрешаем множественное подключение
-    delay(5);
-    Serial.println("AT+CIPSERVER=1,3333");  // запускаем сервер
-    delay(10);
-}
-
-int detectInputData()
-{
-    // Выходные значения:
-    // 0 - данные не распознаны
-    // 1 - "+IPD" - пришли новые данные
-    // 2 - "FAIL" - не удалось подключиться к точке доступа
-    // 3 - "WIFI GOT IP" - удачное подключение к точке доступа
-
-    char c = Serial.read();
-    switch(c)
-    {
-        case '+':
-            c = Serial.read();
-            if ('I' != c) return 0;
-            c = Serial.read();
-            if ('P' != c) return 0;
-            c = Serial.read();
-            if ('D' != c) return 0;
-            return 1;
-            
-        case 'F':
-            c = Serial.read();
-            if ('A' != c) return 0;
-            c = Serial.read();
-            if ('I' != c) return 0;
-            c = Serial.read();
-            if ('L' != c) return 0;
-            return 2;
-
-        case 'W':
-            c = Serial.read();
-            if ('I' != c) return 0;
-            c = Serial.read(); 
-            if ('F' != c) return 0;
-            c = Serial.read();
-            if ('I' != c) return 0;
-            c = Serial.read();
-            if (' ' != c) return 0;
-            c = Serial.read();
-            if ('G' != c) return 0;
-            c = Serial.read();
-            if ('O' != c) return 0;
-            c = Serial.read();
-            if ('T' != c) return 0;
-            return 3;
-
-        default:
-            return 0;
-    }
-    
-    if ('+' != c)
-    {
-        return false;
-    }
-    
-    return 0;
 }
 
 void processCommand(char cmd)
 {
-    for (;;)
+    switch(cmd)
     {
-        // Выбираем команду
-        switch(cmd)
-        {
-            // Включение
-            case 'H':
-                on();
-                break;
-            
-            // Выключение
-            case 'K':
-                off();
-                break;
-    
-            // Запрос значения с датчика
-            case 'R':
-                sendSensorData();
-                break;
-    
-            // Вкл/Выкл потока информации с датчиков
-            case 'F':
-                flowHandler();
-                break;
+        // Включение
+        case 'H':
+            on();
+            break;
+        
+        // Выключение
+        case 'K':
+            off();
+            break;
 
-            // Получение SSID и пароля сетки, к которой надо подключиться
-            case 'A':
-                connectToAccessPoint();
-                break;
+        // Запрос значения с датчика
+        case 'R':
+            sendSensorData();
+            break;
 
-            case 'I':
-                sendIp();
-                break;
+        // Вкл/Выкл потока информации с датчиков
+        case 'F':
+            flowHandler();
+            break;
 
-            case 'L':
-                setLowLevel();
-                break;
+        case 'L':
+            setLowLevel();
+            break;
 
-            case 'U':
-                setUpLevel();
-                calibrate();
-                break;
-            
-            default:
-                Error(11);
-                swSerial.println("err " + cmd);
-                return;
-        }
-
-        // Смотрим на оставшиеся биты и решаем, пора ли выходить
-        bytesLeft--;
-        if(bytesLeft < 0)
-        {
+        case 'U':
+            setUpLevel();
+            calibrate();
+            break;
+        
+        default:
+            Error(11);
+            swSerial.println("err " + cmd);
             return;
-        }
-
-        // Счетчик не выгоняет, еще можно поиграть.
-        // Читаем следующий бит
-        cmd = Serial.read();
     }
-    swSerial.print("impossible");
 }
 
 void on(bool force = false)
@@ -495,7 +339,6 @@ float getWaterAmount()
 void sendSensorData()
 {
     byte id = Serial.read();
-    bytesLeft--;
     
     int data;
     switch (id)
@@ -557,7 +400,6 @@ void sendSensorData()
 void flowHandler() //Не знаю, зачем я его сделал, но пусть будет
 {
     byte mode = Serial.read();
-    bytesLeft--;
     
     if (1 == mode)
     {
@@ -605,172 +447,6 @@ void sendData(byte* data, int length)
     delay(10);
 }
 
-void connectToAccessPoint()
-{
-    byte ssidLength = Serial.read();
-    bytesLeft--;
-    char ssid[ssidLength + 4]; // берем с запасом для кавычек, запятой и символа конца строки
-
-    ssid[0] = '"';
-    
-    for (byte i = 0; i < ssidLength; i++)
-    {
-        ssid[i + 1] = Serial.read();
-        bytesLeft--;
-    }
-    ssid[ssidLength + 1] = '"';
-    ssid[ssidLength + 2] = ',';
-    ssid[ssidLength + 3] = 0;
-    
-    byte assertion = Serial.read();
-    bytesLeft--;
-    if (assertion != 0)
-    {
-        Error(13);
-        return;
-    }
-
-    byte passLength = Serial.read();
-    bytesLeft--;
-
-    // Здесь у нас сеть без пароля
-    if (0 == passLength) 
-    {
-        String request = "AT+CWJAP_DEF=" + String(ssid) + "\"\""; //Изменяем параметры подключения к точке доступа: ssid в кавычках, запятая и пустой пароль ""
-        Serial.println(request);
-        Serial.flush();
-        return;
-    }
-
-    char password[passLength + 3];
-    password[0] = '"';
-    password[passLength + 1] = '"';
-
-    // Принудительно выставляем конец строки в стиле C, потому что без этого не работает
-    password[passLength + 2] = 0;
-    
-    for (byte i = 0; i < passLength; i++)
-    {
-        password[i + 1] = Serial.read();
-        bytesLeft--;
-    }
-
-    assertion = Serial.read();
-    bytesLeft--;
-    if (assertion != 0)
-    {
-        Error(13);
-        return;
-    }
-
-    String request = "AT+CWJAP_DEF=" + String(ssid) + String(password);
-    Serial.println(request);
-    Serial.flush();
-}
-
-void sendIp()
-{
-    // Чтобы получить OK даже будучи сферическим конем в вакууме, 
-    // отправляем дефолтную команду (потому что запросить IP можно и командой
-    // извне просто так, без установления связи и получения "OK" до этого)
-    // Заодно проверяем, готов ли модуль исполнять наши команды
-    Serial.println("AT");
-    
-    start = millis();
-    bool firstRead = false; // Запоминаем, была ли прочитана первая буква сообщения "OK"
-    
-    for(;;)
-    {
-        if (Serial.available())
-        {
-            char c = Serial.read();
-            if (firstRead)
-            {
-                if (c == 'K')
-                {
-                    break;
-                }
-            }
-            else
-            {
-                if (c == 'O')
-                {
-                    firstRead = true;
-                }
-            }
-        }
-        if(millis() - start > 3000)
-        {
-            break;
-        }
-    }
-
-    Serial.println("AT+CIPSTA?");   // Запрашиваем данные 
-    
-    char target[] = "+CIPSTA:ip:";  // Строка, которую мы ищем
-    start = millis();   // Инициализируем счетчик времени
-
-    bool got = false;
-    while (millis() - start < 100) // Лимит ожидания - 100мс
-    {
-        if (Serial.available() >= sizeof(target)/sizeof(target[0]))
-        {
-            got = true;
-            
-            // Берем размер на 1 меньше, т.к. в длину массива входит символ окончания строки
-            for (int i = 0; i < sizeof(target)/sizeof(target[0]) - 1; i++)
-            {
-                // Проверяем посимвольно совпадение с эталоном
-                char c = Serial.read();
-                if (c != target[i])
-                {
-                    got = false;
-                    break;
-                }
-            }
-        }
-        
-        if (got)
-        {
-            break;
-        }
-    }
-    
-    if (got)
-    {
-        int counter = 2; // Считает действительное количество символов в массиве ip
-        char ip[17]; // 255:255:255:255 - 12 + 3 символа, + место для первых двух символов "IP"
-        ip[0] = 'I';
-        ip[1] = 'P';
-
-        // Ждем, пока прогрузятся все символы, чтобы не нахватать мусора
-        while (Serial.available() < 15) { delay(1); }
-        delay(10);
-        
-        char c = Serial.read(); // Проверяем, что сейчас действительно пойдет IP-адрес
-        if (c != '"')
-        {
-            Error(15);  // Код ошибки получения IP-адреса
-            return;
-        }
-
-        // Начинаем читать сам IP и заканчиваем, когда натыкаемся
-        // на вторую кавычку или выходим за границы разумного
-        c = Serial.read();
-        while (c != '"' && counter < 17)
-        {
-            ip[counter] = c;
-            counter++;
-            c = Serial.read();
-            delay(5); // Проверка: влияет ли задержка на читаемые данные
-        }
-        sendData(ip, counter);
-    }
-    else
-    {
-        Error(16);  // Код ошибки лимита времени ожидания
-    }
-}
 
 void setUpLevel()
 {
