@@ -12,7 +12,7 @@ void setup()
     WiFi.mode(WIFI_AP);
 
     WiFi.softAPConfig(IPAddress(192,168,42,1), IPAddress(192,168,42,1), IPAddress(255,255,255,0));
-    WiFi.softAP("SMART_");
+    WiFi.softAP("SMART_T");
     
     delay(100);
 
@@ -36,6 +36,12 @@ void loop()
     {
         client = server.available();
     }
+
+    if (Serial.available())
+    {
+        char c = Serial.read();
+        client.print(c);
+    }
 }
 
 void processCommand(char cmd)
@@ -43,30 +49,6 @@ void processCommand(char cmd)
     // Выбираем команду
     switch(cmd)
     {
-        // Включение
-        case 'h':
-        case 'H':
-            redirect('H');
-            break;
-        
-        // Выключение
-        case 'k':
-        case 'K':
-            redirect('K');
-            break;
-
-        // Запрос значения с датчика
-        case 'r':
-        case 'R':
-            sendSensorData();
-            break;
-
-        // Вкл/Выкл потока информации с датчиков
-        case 'f':
-        case 'F':
-            flowHandler();
-            break;
-
         // Получение SSID и пароля сетки, к которой надо подключиться
         case 'a':
         case 'A':
@@ -77,21 +59,9 @@ void processCommand(char cmd)
         case 'I':
             sendIp();
             break;
-
-        case 'l':
-        case 'L':
-            setLowLevel();
-            break;
-
-        case 'u':
-        case 'U':
-            setUpLevel();
-            calibrate();
-            break;
-        
+            
         default:
-            Error(11);
-            swSerial.println("err " + cmd);
+            redirect(cmd);
             return; 
     }
 }
@@ -102,15 +72,30 @@ void sendIp()
     client.println(ip);
 }
 
+//void sendData(byte* data)
+//{
+//    sendData(data, sizeof(data) / (sizeof(data[0])));
+//}
+
+void sendData(String data)
+{
+    data.concat(";\n");
+    client.print(data);
+    client.flush();
+    
+    delay(10);
+}
+
 void redirect(char cmd)
 {
-    Serial.print(cmd);
+    Serial.println((int)cmd);
+    
 }
 
 void Error(byte id)
 {
     byte data[] = {'E', id};
-    sendData(data);
+    //sendData(data);
     delay(20);
 }
 
@@ -122,7 +107,6 @@ void Error(byte id)
 void connectToAccessPoint()
 {
     byte ssidLength = Serial.read();
-    bytesLeft--;
     char ssid[ssidLength + 4]; // берем с запасом для кавычек, запятой и символа конца строки
 
     ssid[0] = '"';
@@ -130,14 +114,12 @@ void connectToAccessPoint()
     for (byte i = 0; i < ssidLength; i++)
     {
         ssid[i + 1] = Serial.read();
-        bytesLeft--;
     }
     ssid[ssidLength + 1] = '"';
     ssid[ssidLength + 2] = ',';
     ssid[ssidLength + 3] = 0;
     
     byte assertion = Serial.read();
-    bytesLeft--;
     if (assertion != 0)
     {
         Error(13);
@@ -145,16 +127,6 @@ void connectToAccessPoint()
     }
 
     byte passLength = Serial.read();
-    bytesLeft--;
-
-    // Здесь у нас сеть без пароля
-    if (0 == passLength) 
-    {
-        String request = "AT+CWJAP_DEF=" + String(ssid) + "\"\""; //Изменяем параметры подключения к точке доступа: ssid в кавычках, запятая и пустой пароль ""
-        Serial.println(request);
-        Serial.flush();
-        return;
-    }
 
     char password[passLength + 3];
     password[0] = '"';
@@ -166,18 +138,12 @@ void connectToAccessPoint()
     for (byte i = 0; i < passLength; i++)
     {
         password[i + 1] = Serial.read();
-        bytesLeft--;
     }
 
     assertion = Serial.read();
-    bytesLeft--;
     if (assertion != 0)
     {
         Error(13);
         return;
     }
-
-    String request = "AT+CWJAP_DEF=" + String(ssid) + String(password);
-    Serial.println(request);
-    Serial.flush();
 }
